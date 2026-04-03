@@ -8,7 +8,7 @@
         body {
             background-color: #121212;
             color: #EEEEEE;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,38 +16,44 @@
             min-height: 100vh;
             margin: 0;
         }
-        .container { text-align: center; padding: 40px; background: #1E1E1E; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        img { max-width: 120px; margin-bottom: 10px; }
-        h1 { font-size: 2.2rem; letter-spacing: 3px; margin: 0; color: #00ADB5; }
+        .container { text-align: center; padding: 40px; background: #1E1E1E; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 90%; max-width: 400px; }
+        img { max-width: 100px; margin-bottom: 10px; }
+        h1 { font-size: 2rem; letter-spacing: 3px; margin: 0; color: #00ADB5; }
         
-        /* Device Info Styling */
-        .device-info { margin: 25px 0; }
-        .model-name { font-size: 1.2rem; font-weight: bold; color: #FFFFFF; display: block; }
-        .version-tag { 
-            display: inline-block; 
-            background: #393E46; 
-            color: #00ADB5; 
-            padding: 4px 12px; 
-            border-radius: 5px; 
-            font-size: 0.9rem; 
-            margin-top: 8px;
-            border: 1px solid #00ADB5;
-        }
+        .device-info { margin: 20px 0; }
+        .model-name { font-size: 1.1rem; font-weight: bold; color: #FFFFFF; display: block; }
+        .version-tag { display: inline-block; background: #393E46; color: #00ADB5; padding: 4px 12px; border-radius: 5px; font-size: 0.8rem; margin-top: 8px; border: 1px solid #00ADB5; }
 
-        .download-btn {
-            display: inline-block;
-            background-color: #00ADB5;
-            color: white;
-            padding: 18px 50px;
+        /* BUTTON STYLING */
+        .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        
+        .btn {
+            display: block;
+            padding: 16px;
             text-decoration: none;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: 0.3s;
-            margin-top: 20px;
+            text-align: center;
         }
-        .download-btn:hover { background-color: #008f95; transform: scale(1.05); }
-        .requirements { font-size: 0.8rem; color: #777; margin-top: 15px; }
+
+        /* APK Button (Solid) */
+        .apk-btn {
+            background-color: #00ADB5;
+            color: white;
+        }
+        .apk-btn:hover { background-color: #008f95; transform: translateY(-2px); }
+
+        /* Web UI Button (Outlined) */
+        .web-btn {
+            background-color: transparent;
+            color: #00ADB5;
+            border: 2px solid #00ADB5;
+        }
+        .web-btn:hover { background-color: rgba(0, 173, 181, 0.1); transform: translateY(-2px); }
+
+        .footer-text { font-size: 0.75rem; color: #777; margin-top: 25px; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -57,14 +63,23 @@
         
         <div class="device-info">
             <span class="model-name">FRIZH DLMS24</span>
-            <span class="version-tag">Version 1.0.0</span>
+            <span class="version-tag">System Control v1.0.0</span>
         </div>
 
-        <a href="https://github.com/FRIZH-Labs/FRIZH-Labs/releases/download/v.1.0.0/DLMS.FRIZH24.apk" class="download-btn">
-            Download for Android (.APK)
-        </a>
+        <div class="btn-group">
+            <a href="https://github.com/FRIZH-Labs/FRIZH-Labs/releases/download/v.1.0.0/DLMS.FRIZH24.apk" class="btn apk-btn">
+                Download Android App (.APK)
+            </a>
+
+            <a href="FRIZH%20DLMS24%20Web.html" class="btn web-btn">
+                Launch Web Bluetooth UI
+            </a>
+        </div>
         
-        <p class="requirements">Requires Android 8.0 or higher</p>
+        <div class="footer-text">
+            Web UI requires Google Chrome or Microsoft Edge<br>
+            Android App requires Android 8.0+
+        </div>
     </div>
 </body>
 </html>
