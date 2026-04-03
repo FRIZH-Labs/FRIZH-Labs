@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FRIZH DLMS 24</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; }
+    h2 { color: #00ffcc; text-align: center; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
+    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; }
+    .tab.active { background: #00ffcc; color: #000; }
+    .panel { display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; }
+    .panel.active { display: block; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+    .control-group { background: #222; padding: 10px; border-radius: 5px; }
+    label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; }
+    input[type=range] { width: 100%; margin: 5px 0; cursor: pointer; }
+    select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; }
+    .val-display { float: right; color: #00ffcc; font-weight: bold; font-family: monospace; }
+    .meter-container { height: 10px; background: #000; border-radius: 2px; margin-top: 5px; overflow: hidden;}
+    .fill { background: linear-gradient(to right, #0f0, #ff0, #f00); height: 100%; width: 0%; transition: width 0.1s; }
+    canvas { background: #000; width: 100%; height: 140px; border-radius: 5px; border: 1px solid #444; margin: 15px 0; display: block; }
+    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; }
+    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; font-weight: bold; width: 100%; transition: 0.2s; }
+    .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px #f00; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
+    
+    .section-header { background: #333; padding: 8px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ffcc; font-size: 0.85em; }
+    .edit-toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8em; }
+    .edit-toggle-wrap input { width: 16px; height: 16px; cursor: pointer; }
+    .dsp-section { background: #1a1a1a; padding: 10px; border: 1px solid #333; border-top: none; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
+    .dsp-section.locked { opacity: 0.4; pointer-events: none; }
+    
+    /* BLE Overlay */
+    #connect-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+    .btn-connect { padding:15px 30px; font-size:18px; background:#00ffcc; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 15px rgba(0, 255, 204, 0.4); transition: 0.2s;}
+    .btn-connect:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+  <div id="connect-overlay">
+    <h2 style="border:none;">FRIZH DLMS 24 (BLE)</h2>
+    <button class="btn-connect" onclick="connectBLE()">CONNECT VIA BLUETOOTH</button>
+    <p style="color:#888; margin-top:15px; text-align:center;">Note: Ensure Bluetooth is enabled.<br>Requires Google Chrome / Chromium based browser.</p>
+  </div>
+
+  <h2>FRIZH DLMS 24</h2>
+  
+  <div class="tabs" id="tabs">
+    <div class="tab active" onclick="switchTab('t-meters')">VU BAR</div>
+    <div class="tab" onclick="switchTab('t-inA')">IN A</div>
+    <div class="tab" onclick="switchTab('t-inB')">IN B</div>
+    <div class="tab" onclick="switchTab('t-out1')">OUT 1</div>
+    <div class="tab" onclick="switchTab('t-out2')">OUT 2</div>
+    <div class="tab" onclick="switchTab('t-out3')">OUT 3</div>
+    <div class="tab" onclick="switchTab('t-out4')">OUT 4</div>
+  </div>
+
+  <div id="t-meters" class="panel active"><div class="grid" id="meter-grid"></div></div>
+  <div id="t-inA" class="panel"><button class="btn-revert" onclick="revertTab('in', 0)">Reset A</button><div class="grid" id="ui-inA"></div></div>
+  <div id="t-inB" class="panel"><button class="btn-revert" onclick="revertTab('in', 1)">Reset B</button><div class="grid" id="ui-inB"></div></div>
+  <div id="t-out1" class="panel"></div>
+  <div id="t-out2" class="panel"></div>
+  <div id="t-out3" class="panel"></div>
+  <div id="t-out4" class="panel"></div>
+
+  <script>
+    let dspState = {};
+    let initialState = null;
+    let timers = {};
+    
+    // Web Bluetooth Variables
+    let bleDevice, bleServer, bleService, rxChar, txChar;
+    let bleQueue = [];
+    let isWriting = false;
+    let jsonBuffer = "";
+
+    async function connectBLE() {
+      try {
+        bleDevice = await navigator.bluetooth.requestDevice({
+          filters: [{ name: 'FRIZH_DLMS_24' }],
+          optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+        });
+        bleDevice.addEventListener('gattserverdisconnected', () => { location.reload(); });
+        bleServer = await bleDevice.gatt.connect();
+        bleService = await bleServer.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
+        rxChar = await bleService.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
+        txChar = await bleService.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+        
+        await txChar.startNotifications();
+        txChar.addEventListener('characteristicvaluechanged', handleNotifications);
+        
+        document.getElementById('connect-overlay').style.display = 'none';
+        
+        // Request Initial State Dump
+        sendBLE('/api/dump');
+      } catch(e) { console.error("BLE Error:", e); alert("Bluetooth Connection Failed."); }
+    }
+
+    async function processBleQueue() {
+      if(isWriting || bleQueue.length === 0 || !rxChar) return;
+      isWriting = true;
+      let cmd = bleQueue.shift();
+      try {
+        let enc = new TextEncoder();
+        await rxChar.writeValueWithoutResponse(enc.encode(cmd));
+      } catch(e) { console.log("BLE Write Error", e); }
+      isWriting = false;
+      setTimeout(processBleQueue, 15); // Slight delay for BLE Stack
+    }
+
+    function sendBLE(cmd) {
+      bleQueue.push(cmd);
+      processBleQueue();
+    }
+
+    function handleNotifications(event) {
+      let val = new TextDecoder().decode(event.target.value);
+      if(val.startsWith("S:")) {
+        // Status Update
+        let p = val.substring(2).split(',');
+        if(document.getElementById('t-meters').classList.contains('active')) {
+          for(let i=0; i<6; i++) {
+            let db = 20 * Math.log10(parseFloat(p[i]) || 1e-9);
+            let mtr = document.getElementById(`mtr-${i}`);
+            if(mtr) mtr.style.width = Math.max(0, Math.min(100, (db + 60) * (100 / 60))) + '%';
+          }
+        }
+        if (dspState.in_mute !== undefined) {
+          for(let i=0; i<2; i++) {
+            dspState.in_mute[i] = (p[6+i] === '1');
+            let btn = document.getElementById(`btn-mute-in-${i}`);
+            if(btn) btn.classList.toggle('active', dspState.in_mute[i]);
+          }
+          for(let i=0; i<4; i++) {
+            dspState.out_mute[i] = (p[8+i] === '1');
+            let btn = document.getElementById(`btn-mute-out-${i}`);
+            if(btn) btn.classList.toggle('active', dspState.out_mute[i]);
+          }
+        }
+      } else if (val.startsWith("J:")) {
+        // JSON Chunk
+        jsonBuffer += val.substring(2);
+        if(jsonBuffer.endsWith("}")) {
+          try {
+              dspState = JSON.parse(jsonBuffer);
+              initialState = JSON.stringify(dspState);
+              buildUI();
+          } catch(e) { console.log("JSON Parse err", e); }
+          jsonBuffer = "";
+        }
+      }
+    }
+
+    function toggleMute(type, ch) {
+      let isMuted = false;
+      if (type === 'in') {
+          dspState.in_mute[ch] = !dspState.in_mute[ch];
+          isMuted = dspState.in_mute[ch];
+      } else {
+          dspState.out_mute[ch] = !dspState.out_mute[ch];
+          isMuted = dspState.out_mute[ch];
+      }
+      document.getElementById(`btn-mute-${type}-${ch}`).classList.toggle('active', isMuted);
+      sendBLE(`/api/mute?type=${type}&ch=${ch}`);
+    }
+
+    function switchTab(id) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+      if(id.startsWith('t-out')) drawGraph(parseInt(id.slice(-1)) - 1);
+    }
+
+    function sendUpdate(type, ch, param, val, band = '') {
+      clearTimeout(timers[type+ch+param+band]);
+      timers[type+ch+param+band] = setTimeout(() => {
+        let url = `/api/set?type=${type}&ch=${ch}&p=${param}&v=${val}${band !== '' ? '&b='+band : ''}`;
+        sendBLE(url);
+      }, 50); // Fast 50ms throttle for BLE
+    }
+
+    function handleSliderInput(el) {
+      let type = el.getAttribute('data-type');
+      let ch = parseInt(el.getAttribute('data-ch'));
+      let p = el.getAttribute('data-p');
+      let b = el.getAttribute('data-b');
+      let unit = el.getAttribute('data-unit');
+      let step = el.getAttribute('step');
+      let isFreq = (p === 'f' || p === 'fl' || p === 'fh');
+      
+      let realVal = parseFloat(el.value);
+      if (isFreq) {
+         let min = parseFloat(el.getAttribute('data-min'));
+         let max = parseFloat(el.getAttribute('data-max'));
+         let logMin = Math.log10(min);
+         let logMax = Math.log10(max);
+         realVal = Math.pow(10, logMin + (realVal / 1000) * (logMax - logMin));
+         if(realVal > 10000) realVal = Math.round(realVal / 100) * 100;
+         else if(realVal > 1000) realVal = Math.round(realVal / 10) * 10;
+         else realVal = Math.round(realVal);
+      }
+
+      let displayVal = realVal.toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
+      if (type === 'dl' || type === 'idl') {
+          let dist = (realVal * 34.3).toFixed(1);
+          displayVal = realVal.toFixed(1) + 'ms / ' + dist + 'cm';
+      }
+      
+      if (type === 'comp' && p === 'thr' && realVal === 7) displayVal = "OFF";
+      if (type === 'comp' && p === 'rat' && realVal === 21) displayVal = "LIM";
+
+      el.parentElement.querySelector('.val-display').innerText = displayVal;
+      sendUpdate(type, ch, p, realVal, b);
+      if (type === 'xo' || type === 'eq') drawGraph(ch);
+    }
+
+    function createSlider(label, type, ch, param, min, max, val, unit, band = '', step = '1') {
+      let id = `${type}_${param}_${ch}${band !== '' ? '_' + band : ''}`;
+      let isFreq = (param === 'f' || param === 'fl' || param === 'fh');
+      let displayVal = parseFloat(val).toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
+      if(type === 'dl' || type === 'idl') {
+          let dist = (parseFloat(val) * 34.3).toFixed(1);
+          displayVal = parseFloat(val).toFixed(1) + 'ms / ' + dist + 'cm';
+      }
+      
+      if (type === 'comp' && param === 'thr' && parseInt(val) === 7) displayVal = "OFF";
+      if (type === 'comp' && param === 'rat' && parseInt(val) === 21) displayVal = "LIM";
+      let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
+      if (isFreq) {
+         htmlMin = 0;
+         htmlMax = 1000; htmlStep = 1;
+         htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
+      }
+
+      return `
+        <div class="control-group">
+          <label>${label} <span class="val-display">${displayVal}</span></label>
+          <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" 
+            oninput="handleSliderInput(this)">
+        </div>`;
+    }
+
+    function createSelect(label, type, ch, param, options, val) {
+      let id = `${type}_${param}_${ch}`;
+      let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
+      return `
+        <div class="control-group">
+          <label>${label}</label>
+          <select id="${id}" onchange="sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawGraph(${ch});">${opts}</select>
+        </div>`;
+    }
+
+    function getRealFreq(el) {
+      if(!el) return 20;
+      let min = parseFloat(el.getAttribute('data-min'));
+      let max = parseFloat(el.getAttribute('data-max'));
+      let val = parseFloat(el.value);
+      let logMin = Math.log10(min);
+      let logMax = Math.log10(max);
+      return Math.pow(10, logMin + (val / 1000) * (logMax - logMin));
+    }
+
+    function drawGraph(ch) {
+      let cvs = document.getElementById(`cvs-${ch}`);
+      if(!cvs || cvs.offsetParent === null) return;
+      let ctx = cvs.getContext('2d', { alpha: false });
+      let w = cvs.width, h = cvs.height;
+      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+      for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
+
+      ctx.strokeStyle = '#00ffcc'; ctx.lineWidth = 2; ctx.beginPath();
+      let logMin = Math.log10(20), logMax = Math.log10(20000);
+      
+      let xo_t = parseInt(document.getElementById(`xo_t_${ch}`).value);
+      let xo_th = parseInt(document.getElementById(`xo_th_${ch}`).value);
+      let f_low = getRealFreq(document.getElementById(`xo_fl_${ch}`));
+      let f_high = getRealFreq(document.getElementById(`xo_fh_${ch}`));
+      let g_off = parseFloat(document.getElementById(`xo_g_${ch}`).value);
+      let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
+      let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
+      for(let x=0; x<w; x+=2) {
+        let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
+        let total_db = g_off;
+        
+        if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
+        if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
+        
+        for(let b=0; b<7; b++) {
+          let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
+          if(g == 0) continue;
+          let fc = getRealFreq(document.getElementById(`eq_f_${ch}_${b}`));
+          let q = parseFloat(document.getElementById(`eq_q_${ch}_${b}`).value);
+          let xc = (Math.log10(fc)-logMin)/(logMax-logMin) * w;
+          let dx = x - xc;
+          let bw = (9.0 / q) * (w / 123.0);
+          total_db += g / (1.0 + (dx*dx)/(Math.max(0.2, bw*bw)));
+        }
+        
+        let y = h/2 - (total_db * (h/48));
+        if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+
+    const wrapSection = (title, content, id, rstAction = '') => `
+      <div class="section-header">
+        <span>${title}</span>
+        <div class="edit-toggle-wrap">
+          ${rstAction !== '' ? `<button style="background:#522; color:#fff; border:1px solid #f55; border-radius:3px; padding:2px 6px; font-size:9px; cursor:pointer;" onclick="${rstAction}">RST</button>` : ''}
+          <label>EDIT</label>
+          <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
+        </div>
+      </div>
+      <div id="${id}" class="dsp-section locked">${content}</div>`;
+
+    function buildUI() {
+      ['A', 'B'].forEach((name, i) => {
+        let tab = document.getElementById('t-in' + name);
+        let content = createSlider('Gain', 'in', i, 'gn', -12, 12, i==0 ? dspState.vA : dspState.vB, 'dB') +
+                      createSlider('Gate Thresh', 'gate', i, 'thr', -60, 0, dspState.gth[i], 'dB') +
+                      createSlider('Attack', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms') +
+                      createSlider('Release', 'gate', i, 'rel', 10, 1000, dspState.gre[i], 'ms') +
+                      createSlider('Delay', 'idl', i, '', 0, 200, dspState.idl[i], 'ms', '', '0.1');
+
+        let inMuteCls = dspState.in_mute[i] ? 'btn-mute active' : 'btn-mute';
+        tab.innerHTML = `<div class="btn-row">
+                         <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE IN ${name}</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET IN ${name}</button>
+                         </div>` + wrapSection(`INPUT ${name} SETTINGS`, `<div class="grid">${content}</div>`, `sec-in-${name}`);
+      });
+
+      for(let i=0; i<4; i++) {
+        let tab = document.getElementById('t-out' + (i+1));
+        let routeContent = `<div class="grid">
+          ${createSelect('Route', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
+          ${createSelect('Phase', 'ph', i, '', ['NORMAL', 'INVERT'], dspState.ph[i])}
+          ${createSlider('Delay', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
+        </div>
+        <div style="margin-top:10px; color:#00ffcc; font-size:11px; font-weight:bold; margin-bottom:5px;">ALL-PASS FILTER (PHASE ALIGN)</div>
+        <div class="grid">
+          ${createSelect('Enable APF', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
+          ${createSlider('APF Freq', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
+          ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
+        </div>`;
+
+        let xoContent = `<div class="grid">
+          ${createSelect('HPF Slope', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
+          ${createSelect('LPF Slope', 'xo', i, 'th', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xth[i])}
+          ${createSlider('HPF Freq', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
+          ${createSlider('LPF Freq', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
+          ${createSlider('Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
+        </div>`;
+
+        let eqContent = `<div class="grid">`;
+        for(let b=0; b<7; b++) {
+          eqContent += `
+            <div style="grid-column: 1 / -1; display:flex; gap:5px; background:#111; padding:5px; margin-bottom:2px; border-radius:4px;">
+              <div style="flex:2">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
+              <div style="flex:1">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
+              <div style="flex:1">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
+            </div>`;
+        }
+        eqContent += `</div>`;
+
+        let compContent = `<div class="grid">
+            ${createSlider('Thresh', 'comp', i, 'thr', -30, 7, dspState.ct[i], 'dB')}
+            ${createSlider('Ratio', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
+            ${createSlider('Makeup', 'comp', i, 'mak', 0, 20, dspState.cm[i], 'dB')}
+            ${createSlider('Attack', 'comp', i, 'atk', 1, 100, dspState.ca[i], 'ms')}
+            ${createSlider('Release', 'comp', i, 'rel', 10, 1000, dspState.crel[i], 'ms', '', '10')}
+          </div>`;
+
+        let outMuteCls = dspState.out_mute[i] ? 'btn-mute active' : 'btn-mute';
+        tab.innerHTML = `<div class="btn-row">
+                           <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE OUT ${i+1}</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL OUT ${i+1}</button>
+                          </div>` +
+                        wrapSection("ROUTING & PHASE", routeContent, `sec-rt-${i}`) +
+                        wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
+                        `<canvas id="cvs-${i}" width="400" height="140"></canvas>` +
+                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`) +
+                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
+        
+        drawGraph(i);
+      }
+
+      let mHtml = '';
+      ['IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'].forEach((lbl, i) => {
+        mHtml += `<div class="control-group"><label>${lbl}</label><div class="meter-container"><div id="mtr-${i}" class="fill"></div></div></div>`;
+      });
+      document.getElementById('meter-grid').innerHTML = mHtml;
+    }
+
+    async function revertTab(type, ch) {
+      if(!confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? (ch === 0 ? 'A' : 'B') : ch + 1} to default flat values?`)) return;
+      
+      if (type === 'in') {
+          sendBLE(`/api/set?type=in&ch=${ch}&v=0`);
+          sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-60`);
+          sendBLE(`/api/set?type=gate&ch=${ch}&p=atk&v=10`);
+          sendBLE(`/api/set?type=gate&ch=${ch}&p=rel&v=200`);
+          sendBLE(`/api/set?type=idl&ch=${ch}&v=0`);
+      } else if (type === 'out') {
+          sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`);
+          sendBLE(`/api/set?type=ph&ch=${ch}&v=0`);
+          sendBLE(`/api/set?type=dl&ch=${ch}&v=0`);
+          sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`);
+          sendBLE(`/api/set?type=apf&ch=${ch}&p=f&v=1000`);
+          sendBLE(`/api/set?type=apf&ch=${ch}&p=q&v=0.7`);
+          
+          // Trigger the individual DSP block resets silently (skip confirm prompt)
+          revertBlock(ch, 'xo', true);
+          revertBlock(ch, 'eq', true);
+          revertBlock(ch, 'comp', true);
+      }
+
+      // Sync the UI directly from the ESP hardware to prevent unsaved changes from wiping
+      sendBLE('/api/dump');
+    }
+
+    async function revertBlock(ch, block, skipConfirm = false) {
+      if(!skipConfirm && !confirm(`Reset this DSP section to default flat values?`)) return;
+
+      if (block === 'xo') {
+        sendBLE(`/api/set?type=xo&ch=${ch}&p=t&v=0`);
+        sendBLE(`/api/set?type=xo&ch=${ch}&p=th&v=0`);
+        sendBLE(`/api/set?type=xo&ch=${ch}&p=fl&v=80`);
+        sendBLE(`/api/set?type=xo&ch=${ch}&p=fh&v=5000`);
+        sendBLE(`/api/set?type=xo&ch=${ch}&p=g&v=0`);
+      } else if (block === 'eq') {
+        const defFreqs = [60, 150, 400, 1000, 2400, 6000, 12000];
+        for(let b=0; b<7; b++) {
+          sendBLE(`/api/set?type=eq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`);
+          sendBLE(`/api/set?type=eq&ch=${ch}&p=g&b=${b}&v=0`);
+          sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`);
+        }
+      } else if (block === 'comp') {
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=-20`);
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`);
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`);
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=atk&v=10`);
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=rel&v=100`);
+      }
+
+      if (!skipConfirm) {
+        // Sync the UI directly from the ESP hardware to prevent unsaved changes from wiping
+        sendBLE('/api/dump');
+      }
+    }
+  </script>
+</body>
+</html>
