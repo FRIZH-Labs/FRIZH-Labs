@@ -30,75 +30,33 @@
     select:focus { border-color: #00ffcc; }
     .val-display { float: right; color: #00ffcc; font-weight: bold; font-family: monospace; font-size: 12px; }
     
+    /* Text Inputs for OTA */
+    .txt-input { width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; outline: none; font-family: inherit; box-sizing: border-box; }
+    .txt-input:focus { border-color: #00ffcc; }
+
     /* Vertical VU Meter Styles */
-    .pro-meters-grid { 
-      display: flex; 
-      justify-content: center; 
-      gap: 12px; 
-      padding: 10px 0; 
-      height: 320px; 
-      overflow-x: auto; 
-    }
-    .meter-unit {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-    }
-    .meter-wrapper { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: flex-start;
-    }
+    .pro-meters-grid { display: flex; justify-content: center; gap: 12px; padding: 10px 0; height: 320px; overflow-x: auto; }
+    .meter-unit { display: flex; align-items: flex-end; gap: 2px; }
+    .meter-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
     .meter-title { font-weight: 800; color: #fff; font-size: 11px; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.7; }
     
-    .pro-meter-container { 
-      width: 30px; 
-      height: 180px; 
-      background: #000; 
-      border-radius: 2px; 
-      position: relative; 
-      overflow: hidden; 
-      border: 1px solid #333; 
-    }
+    .pro-meter-container { width: 30px; height: 180px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
     .pro-meter-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
     .pro-meter-marks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(to top, transparent, transparent 3px, #0a0a0a 3px, #0a0a0a 4px); pointer-events: none; }
     
     /* DB Scale */
     .scale-wrapper { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; height: 100%; padding-right: 5px; }
-    .meter-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 2px;
-    }
-    .db-scale-container { 
-      position: relative; 
-      height: 180px; 
-      width: 24px; 
-    }
-    .db-scale-container span { 
-      position: absolute; 
-      right: 2px; 
-      font-size: 9px; 
-      font-weight: bold; 
-      transform: translateY(-50%); 
-      font-family: monospace; 
-      line-height: 1;
-    }
+    .meter-row { display: flex; align-items: flex-start; gap: 2px; }
+    .db-scale-container { position: relative; height: 180px; width: 24px; }
+    .db-scale-container span { position: absolute; right: 2px; font-size: 9px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
     .db-val-12  { top: 0%; color: #ff5555; }
     .db-val-0   { top: 23.1%; color: #ffcc00; }
     .db-val-m10 { top: 42.3%; color: #44ff44; }
     .db-val-m20 { top: 61.5%; color: #aaaaaa; }
     .db-val-m40 { top: 100%; color: #666666; }
 
-    .meter-wrapper { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-    }
-    
     .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
-    .scale-indicators-dummy { visibility: hidden; } /* To keep alignment with other wrappers */
+    .scale-indicators-dummy { visibility: hidden; } 
     
     .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
     .led.active { opacity: 1; color: #fff; }
@@ -114,6 +72,8 @@
     .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; transition: 0.2s; }
     .btn-mute:hover { background: #444; }
     .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px rgba(255,0,0,0.6); }
+    .btn-bypass { background: #00ffcc; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    .btn-bypass.active { background: #f55; color: #fff; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
     .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
     
     .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ffcc; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
@@ -121,12 +81,14 @@
     .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ffcc; }
     .dsp-section { background: #1a1a1a; padding: 12px; border: 1px solid #333; border-top: 1px solid #222; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
     .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); }
+    .dsp-section.bypassed { opacity: 0.5; border: 1px solid #f55; }
     
     /* BLE Overlays & Dialogs */
     #connect-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(18,18,18,0.95); z-index:9998; display:flex; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(5px); }
     .btn-connect { padding:15px 30px; font-size:16px; background:#00ffcc; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 15px rgba(0, 255, 204, 0.4); transition: 0.2s; letter-spacing: 1px; }
     .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 255, 204, 0.6); }
     .btn-connect:active { transform: translateY(1px); }
+    .btn-connect:disabled { background: #555; color: #aaa; box-shadow: none; cursor: not-allowed; transform: none; }
 
     #ble-dialog-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:none; justify-content:center; align-items:center; backdrop-filter: blur(3px); }
     .ble-dialog { background:#1a1a1a; padding:25px; border-radius:8px; border:1px solid #333; text-align:center; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -179,6 +141,7 @@
     <div class="tab" onclick="switchTab('t-out2')">OUT 2</div>
     <div class="tab" onclick="switchTab('t-out3')">OUT 3</div>
     <div class="tab" onclick="switchTab('t-out4')">OUT 4</div>
+    <div class="tab" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
   </div>
 
   <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
@@ -188,12 +151,13 @@
   <div id="t-out2" class="panel"></div>
   <div id="t-out3" class="panel"></div>
   <div id="t-out4" class="panel"></div>
+  <div id="t-sys" class="panel"></div>
 
   <script>
     let dspState = {};
     let initialState = null;
     let timers = {};
-    
+
     // Web Bluetooth Variables
     let bleDevice, bleServer, bleService, rxChar, txChar;
     let bleQueue = [];
@@ -222,8 +186,7 @@
 
     async function switchDevice() {
         disconnectBLE();
-        // Short delay to allow disconnect to settle before opening browser device picker again
-        setTimeout(() => { connectBLE(); }, 400); 
+        setTimeout(() => { connectBLE(); }, 400);
     }
 
     async function connectBLE() {
@@ -232,12 +195,11 @@
           filters: [{ namePrefix: 'FRIZH_DLMS24_' }], 
           optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
         });
-        
         bleDevice.addEventListener('gattserverdisconnected', () => { 
             document.getElementById('ble-btn').classList.remove('connected');
             document.getElementById('connect-overlay').style.display = 'flex'; 
         });
-
+        
         bleServer = await bleDevice.gatt.connect();
         bleService = await bleServer.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
         rxChar = await bleService.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
@@ -248,10 +210,9 @@
         
         document.getElementById('connect-overlay').style.display = 'none';
         document.getElementById('ble-btn').classList.add('connected');
-        closeBleDialog(); // Ensure dialog is closed if connected from switch mode
+        closeBleDialog(); 
 
         sendBLE('/api/dump');
-
       } catch(e) { 
         console.error("BLE Error:", e);
         if (e.name !== 'NotFoundError') {
@@ -269,7 +230,7 @@
         await rxChar.writeValueWithoutResponse(enc.encode(cmd));
       } catch(e) { console.log("BLE Write Error", e); }
       isWriting = false;
-      setTimeout(processBleQueue, 15); 
+      setTimeout(processBleQueue, 15);
     }
 
     function sendBLE(cmd) {
@@ -279,18 +240,13 @@
 
     function handleNotifications(event) {
       let val = new TextDecoder().decode(event.target.value);
-      
       if(val.startsWith("S:")) {
         let p = val.substring(2).split(',');
-
         if(document.getElementById('t-meters').classList.contains('active')) {
           for(let i=0; i<6; i++) {
             let floatPeak = parseFloat(p[i]) || 1e-9;
             let db = 20 * Math.log10(floatPeak) + 10;
-            
-            // Replicating Flutter DBScale logic: -40dB to +12dB (Range of 52dB)
             let pct = Math.max(0, Math.min(100, (db + 40) * (100 / 52)));
-            
             let mtr = document.getElementById(`mtr-${i}`);
             if(mtr) mtr.style.height = pct + '%';
             
@@ -304,7 +260,6 @@
             dspState.in_mute[i] = (p[6+i] === '1');
             let btn = document.getElementById(`btn-mute-in-${i}`);
             if(btn) btn.classList.toggle('active', dspState.in_mute[i]);
-            
             let muteLed = document.getElementById(`ind-mute-${i}`);
             if(muteLed) muteLed.classList.toggle('active', dspState.in_mute[i]);
           }
@@ -325,6 +280,13 @@
         if(jsonBuffer.endsWith("}")) {
           try {
               dspState = JSON.parse(jsonBuffer);
+              
+              // Ensure critical arrays exist for backward compatibility
+              if(!dspState.eqb) dspState.eqb = [0,0,0,0];
+              if(dspState.tm === undefined) dspState.tm = 0;
+              if(dspState.tf === undefined) dspState.tf = 1000;
+              if(dspState.tg === undefined) dspState.tg = -20;
+
               initialState = JSON.stringify(dspState);
               buildUI();
           } catch(e) { console.log("JSON Parse err", e); }
@@ -345,6 +307,93 @@
       document.getElementById(`btn-mute-${type}-${ch}`).classList.toggle('active', isMuted);
       sendBLE(`/api/mute?type=${type}&ch=${ch}`);
     }
+
+    function toggleEqBypass(ch) {
+      dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
+      sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
+      buildUI(); // Re-render to show bypass visually
+    }
+
+    // --- SYSTEM TAB ACTIONS ---
+    function doPreset(act) {
+        let slot = parseInt(document.getElementById('sys-preset-slot').value);
+        let isProtected = slot >= 6;
+
+        if (act === 'load' || act === 'save') {
+            if(act === 'save' && isProtected) return alert("Slots 6, 7, and 8 are factory protected.");
+            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot ${slot}?`)) {
+                sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+            }
+        } else if (act === 'rename') {
+            if(isProtected) return alert("Slots 6, 7, and 8 are factory protected.");
+            let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
+            if(name !== null) {
+                name = name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+                sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name}`);
+            }
+        }
+    }
+
+    function updatePresetButtons() {
+        let slot = parseInt(document.getElementById('sys-preset-slot').value);
+        let isProtected = slot >= 6;
+        let btnSave = document.getElementById('btn-preset-save');
+        let btnRen = document.getElementById('btn-preset-ren');
+        
+        btnSave.style.opacity = isProtected ? '0.3' : '1';
+        btnRen.style.opacity = isProtected ? '0.3' : '1';
+        btnSave.disabled = isProtected;
+        btnRen.disabled = isProtected;
+    }
+
+    async function fetchGithubReleases() {
+        let sel = document.getElementById('ota-version');
+        let btn = document.getElementById('btn-ota-fetch');
+        sel.innerHTML = '<option>Fetching from GitHub...</option>';
+        btn.disabled = true;
+
+        try {
+            let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', {
+                headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            let files = await res.json();
+            let opts = '';
+            files.forEach(f => {
+                if(f.name.toLowerCase().endsWith('.bin')) {
+                    let name = f.name.replace(/\.bin$/i, '');
+                    opts += `<option value="${name}">${name}</option>`;
+                }
+            });
+            if(opts === '') opts = '<option value="firmware_normal">firmware_normal (Fallback)</option>';
+            sel.innerHTML = opts;
+        } catch(e) {
+            sel.innerHTML = '<option value="firmware_normal">Fetch Failed - Using Fallback</option>';
+        }
+        btn.disabled = false;
+    }
+
+    function triggerOTA() {
+        let ssid = document.getElementById('ota-ssid').value;
+        let pass = document.getElementById('ota-pass').value;
+        let ver = document.getElementById('ota-version').value;
+        
+        if(!ssid || !ver || ver.includes('Fetching')) {
+            return alert("Please enter WiFi SSID and select a firmware version.");
+        }
+        
+        if(confirm("Start OTA Update?\nThe device will connect to WiFi, download the firmware, and automatically reboot. This may take up to 2 minutes.")) {
+            sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
+        }
+    }
+
+    function handleToneModeUpdate(val) {
+        let mode = parseInt(val);
+        // Dim the frequency slider if mode is not Sine Wave (2)
+        document.getElementById('tone-freq-container').style.opacity = (mode === 2) ? '1' : '0.4';
+        document.getElementById('tone-freq-container').style.pointerEvents = (mode === 2) ? 'auto' : 'none';
+        sendUpdate('tone', 0, 'm', mode);
+    }
+    // -------------------------
 
     function switchTab(id) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -409,11 +458,10 @@
       
       if (type === 'comp' && param === 'thr' && parseInt(val) === 7) displayVal = "OFF";
       if (type === 'comp' && param === 'rat' && parseInt(val) === 21) displayVal = "LIM";
-      
+
       let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
       if (isFreq) {
-         htmlMin = 0;
-         htmlMax = 1000; htmlStep = 1;
+         htmlMin = 0; htmlMax = 1000; htmlStep = 1;
          htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
       }
 
@@ -428,10 +476,15 @@
     function createSelect(label, type, ch, param, options, val) {
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
+      // Intercept Tone Generator Mode to dim frequency slider
+      let onChangeAction = (type === 'tone' && param === 'm') ? 
+        `handleToneModeUpdate(this.value);` : 
+        `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawGraph(${ch});`;
+
       return `
         <div class="control-group">
           <label>${label}</label>
-          <select id="${id}" onchange="sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawGraph(${ch});">${opts}</select>
+          <select id="${id}" onchange="${onChangeAction}">${opts}</select>
         </div>`;
     }
 
@@ -465,26 +518,31 @@
       let f_low = getRealFreq(document.getElementById(`xo_fl_${ch}`));
       let f_high = getRealFreq(document.getElementById(`xo_fh_${ch}`));
       let g_off = parseFloat(document.getElementById(`xo_g_${ch}`).value);
-      
+
       let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
       
+      // If EQ is bypassed, skip EQ addition
+      let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
+
       for(let x=0; x<w; x+=2) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
         let total_db = g_off;
         
         if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
         if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
-        
-        for(let b=0; b<7; b++) {
-          let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
-          if(g == 0) continue;
-          let fc = getRealFreq(document.getElementById(`eq_f_${ch}_${b}`));
-          let q = parseFloat(document.getElementById(`eq_q_${ch}_${b}`).value);
-          let xc = (Math.log10(fc)-logMin)/(logMax-logMin) * w;
-          let dx = x - xc;
-          let bw = (9.0 / q) * (w / 123.0);
-          total_db += g / (1.0 + (dx*dx)/(Math.max(0.2, bw*bw)));
+
+        if(!eqBypassed) {
+            for(let b=0; b<7; b++) {
+              let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
+              if(g == 0) continue;
+              let fc = getRealFreq(document.getElementById(`eq_f_${ch}_${b}`));
+              let q = parseFloat(document.getElementById(`eq_q_${ch}_${b}`).value);
+              let xc = (Math.log10(fc)-logMin)/(logMax-logMin) * w;
+              let dx = x - xc;
+              let bw = (9.0 / q) * (w / 123.0);
+              total_db += g / (1.0 + (dx*dx)/(Math.max(0.2, bw*bw)));
+            }
         }
         
         let y = h/2 - (total_db * (h/48));
@@ -493,7 +551,7 @@
       ctx.stroke();
     }
 
-    const wrapSection = (title, content, id, rstAction = '') => `
+    const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
       <div class="section-header">
         <span>${title}</span>
         <div class="edit-toggle-wrap">
@@ -502,14 +560,13 @@
           <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
         </div>
       </div>
-      <div id="${id}" class="dsp-section locked">${content}</div>`;
+      <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>`;
 
     function buildUI() {
       // Build Vertical VU Meters grid
       let mHtml = '<div class="pro-meters-grid">';
-      
       const labels = ['IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'];
-      
+
       labels.forEach((lbl, i) => {
         let isOut = i >= 2;
         let muteCls = (isOut ? dspState.out_mute[i-2] : dspState.in_mute[i]) ? 'led-mute active' : 'led-mute';
@@ -517,7 +574,6 @@
         mHtml += `
         <div class="meter-wrapper">
             <span class="meter-title">${lbl}</span>
-            
             <div class="meter-row">
                 <div class="db-scale-container">
                     <span class="db-val-12">+12</span>
@@ -526,13 +582,11 @@
                     <span class="db-val-m20">-20</span>
                     <span class="db-val-m40">-40</span>
                 </div>
-                
                 <div class="pro-meter-container">
                     <div id="mtr-${i}" class="pro-meter-fill"></div>
                     <div class="pro-meter-marks"></div>
                 </div>
             </div>
-
             <div class="meter-indicators">
                 ${isOut ? `<span id="ind-comp-${i}" class="led led-comp">COMP</span>` : '<span class="led-placeholder"></span>'}
                 <span id="ind-mute-${i}" class="led ${muteCls}">MUTE</span>
@@ -544,7 +598,7 @@
       mHtml += '</div>';
       document.getElementById('meter-grid').innerHTML = mHtml;
 
-      // ... (Rest of the buildUI function for Inputs/Outputs remains the same)
+      // Inputs
       ['A', 'B'].forEach((name, i) => {
         let tab = document.getElementById('t-in' + name);
         if(!tab) return;
@@ -561,6 +615,7 @@
                          </div>` + wrapSection(`INPUT ${name} SETTINGS`, `<div class="grid">${content}</div>`, `sec-in-${name}`);
       });
 
+      // Outputs
       for(let i=0; i<4; i++) {
         let tab = document.getElementById('t-out' + (i+1));
         if(!tab) continue;
@@ -584,7 +639,15 @@
           ${createSlider('Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
         </div>`;
 
-        let eqContent = `<div class="grid">`;
+        let eqBypassed = dspState.eqb[i] === 1;
+        let eqContent = `
+          <div style="margin-bottom:12px; text-align:right;">
+            <button class="btn-bypass ${eqBypassed ? 'active' : ''}" onclick="toggleEqBypass(${i})">
+              ${eqBypassed ? 'EQ BYPASSED' : 'EQ ACTIVE'}
+            </button>
+          </div>
+          <div class="grid">`;
+          
         for(let b=0; b<7; b++) {
           eqContent += `
             <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
@@ -594,7 +657,7 @@
             </div>`;
         }
         eqContent += `</div>`;
-        
+
         let compContent = `<div class="grid">
             ${createSlider('Thresh', 'comp', i, 'thr', -30, 7, dspState.ct[i], 'dB')}
             ${createSlider('Ratio', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
@@ -611,10 +674,69 @@
                         wrapSection("ROUTING & PHASE", routeContent, `sec-rt-${i}`) +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
                         `<canvas id="cvs-${i}" width="400" height="140"></canvas>` +
-                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`) +
+                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
                         wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
-        
         drawGraph(i);
+      }
+
+      // --- SYSTEM TAB ---
+      let sysTab = document.getElementById('t-sys');
+      if (sysTab) {
+          // Preset Manager
+          let presetOptions = '';
+          for(let s=1; s<=8; s++) {
+              let lbl = `SLOT ${s}`;
+              if(s==6) lbl += " (2 WAY FACTORY)";
+              if(s==7) lbl += " (3 WAY FACTORY)";
+              if(s==8) lbl += " (4 WAY FACTORY)";
+              presetOptions += `<option value="${s}">${lbl}</option>`;
+          }
+          let presetHtml = wrapSection("PRESET MANAGEMENT", `
+              <div class="control-group">
+                  <label>Select Preset Slot</label>
+                  <select id="sys-preset-slot" onchange="updatePresetButtons()">${presetOptions}</select>
+              </div>
+              <div class="btn-row" style="margin-top:10px; gap:8px;">
+                  <button class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#4CAF50; color:#fff;" onclick="doPreset('load')">LOAD</button>
+                  <button id="btn-preset-save" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#FF9800; color:#fff;" onclick="doPreset('save')">SAVE</button>
+                  <button id="btn-preset-ren" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#9E9E9E; color:#fff;" onclick="doPreset('rename')">RENAME</button>
+              </div>
+          `, 'sec-sys-preset');
+
+          // Tone Generator
+          let isSine = dspState.tm === 2;
+          let toneHtml = wrapSection("TONE GENERATOR", `
+              <div class="grid">
+                  ${createSelect('Mode', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}
+                  <div id="tone-freq-container" style="transition:0.2s; opacity: ${isSine ? '1' : '0.4'}; pointer-events: ${isSine ? 'auto' : 'none'};">
+                    ${createSlider('Freq', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz', '', '10')}
+                  </div>
+                  ${createSlider('Gain', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}
+              </div>
+          `, 'sec-sys-tone');
+
+          // OTA Update
+          let otaHtml = wrapSection("FIRMWARE UPDATE (OTA)", `
+              <div class="control-group" style="margin-bottom:10px;">
+                  <label>WiFi SSID</label>
+                  <input type="text" id="ota-ssid" class="txt-input" placeholder="Enter WiFi Name">
+              </div>
+              <div class="control-group" style="margin-bottom:10px;">
+                  <label>WiFi Password</label>
+                  <input type="password" id="ota-pass" class="txt-input" placeholder="Enter Password">
+              </div>
+              <div class="control-group" style="margin-bottom:10px;">
+                  <label>Firmware Flavor (GitHub)</label>
+                  <div style="display:flex; gap:10px;">
+                      <select id="ota-version" style="flex:1; padding:8px;"><option>Select firmware...</option></select>
+                      <button id="btn-ota-fetch" class="btn-bypass" onclick="fetchGithubReleases()">FETCH</button>
+                  </div>
+              </div>
+              <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ffcc; color:#000;" onclick="triggerOTA()">START UPDATE</button>
+          `, 'sec-sys-ota');
+
+          sysTab.innerHTML = presetHtml + toneHtml + otaHtml;
+          updatePresetButtons(); // Set initial button states based on dropdown
       }
     }
 
