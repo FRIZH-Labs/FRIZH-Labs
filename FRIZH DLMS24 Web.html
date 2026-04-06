@@ -25,7 +25,14 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
     .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
     label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-    input[type=range] { width: 100%; margin: 5px 0; cursor: pointer; accent-color: #00ffcc; }
+    
+    /* Sliders & Fine Tuning */
+    .slider-wrap { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+    input[type=range] { width: 100%; margin: 0; cursor: pointer; accent-color: #00ffcc; }
+    .btn-fine { background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; padding: 0 8px; font-weight: bold; font-size: 14px; outline: none; height: 24px; display: flex; align-items: center; justify-content: center; transition: 0.2s; user-select: none; }
+    .btn-fine:hover { background: #00ffcc; color: #000; border-color: #00ffcc; }
+    .btn-fine:active { transform: scale(0.95); }
+    
     select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
     select:focus { border-color: #00ffcc; }
     .val-display { float: right; color: #00ffcc; font-weight: bold; font-family: monospace; font-size: 12px; }
@@ -281,7 +288,6 @@
           try {
               dspState = JSON.parse(jsonBuffer);
               
-              // Ensure critical arrays exist for backward compatibility
               if(!dspState.eqb) dspState.eqb = [0,0,0,0];
               if(dspState.tm === undefined) dspState.tm = 0;
               if(dspState.tf === undefined) dspState.tf = 1000;
@@ -311,10 +317,9 @@
     function toggleEqBypass(ch) {
       dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
       sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
-      buildUI(); // Re-render to show bypass visually
+      buildUI(); 
     }
 
-    // --- SYSTEM TAB ACTIONS ---
     function doPreset(act) {
         let slot = parseInt(document.getElementById('sys-preset-slot').value);
         let isProtected = slot >= 6;
@@ -388,19 +393,17 @@
 
     function handleToneModeUpdate(val) {
         let mode = parseInt(val);
-        // Dim the frequency slider if mode is not Sine Wave (2)
         document.getElementById('tone-freq-container').style.opacity = (mode === 2) ? '1' : '0.4';
         document.getElementById('tone-freq-container').style.pointerEvents = (mode === 2) ? 'auto' : 'none';
         sendUpdate('tone', 0, 'm', mode);
     }
-    // -------------------------
 
     function switchTab(id) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(id).classList.add('active');
       event.target.classList.add('active');
-      if(id.startsWith('t-out')) drawGraph(parseInt(id.slice(-1)) - 1);
+      if(id.startsWith('t-out')) drawVisibleGraphs();
     }
 
     function sendUpdate(type, ch, param, val, band = '') {
@@ -409,6 +412,22 @@
         let url = `/api/set?type=${type}&ch=${ch}&p=${param}&v=${val}${band !== '' ? '&b='+band : ''}`;
         sendBLE(url);
       }, 50);
+    }
+
+    function fineTune(id, direction) {
+      let el = document.getElementById(id);
+      if(!el) return;
+      let step = parseFloat(el.getAttribute('step')) || 1;
+      let val = parseFloat(el.value);
+      val += (direction * step);
+      
+      let max = parseFloat(el.getAttribute('max'));
+      let min = parseFloat(el.getAttribute('min'));
+      if (val > max) val = max;
+      if (val < min) val = min;
+      
+      el.value = val;
+      handleSliderInput(el); 
     }
 
     function handleSliderInput(el) {
@@ -441,9 +460,9 @@
       if (type === 'comp' && p === 'thr' && realVal === 7) displayVal = "OFF";
       if (type === 'comp' && p === 'rat' && realVal === 21) displayVal = "LIM";
 
-      el.parentElement.querySelector('.val-display').innerText = displayVal;
+      el.closest('.control-group').querySelector('.val-display').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
-      if (type === 'xo' || type === 'eq') drawGraph(ch);
+      if (type === 'xo' || type === 'eq') drawVisibleGraphs();
     }
 
     function createSlider(label, type, ch, param, min, max, val, unit, band = '', step = '1') {
@@ -468,18 +487,21 @@
       return `
         <div class="control-group">
           <label>${label} <span class="val-display">${displayVal}</span></label>
-          <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" 
-            oninput="handleSliderInput(this)">
+          <div class="slider-wrap">
+            <button class="btn-fine" onclick="fineTune('${id}', -1)">-</button>
+            <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" 
+              oninput="handleSliderInput(this)" style="flex:1;">
+            <button class="btn-fine" onclick="fineTune('${id}', 1)">+</button>
+          </div>
         </div>`;
     }
 
     function createSelect(label, type, ch, param, options, val) {
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
-      // Intercept Tone Generator Mode to dim frequency slider
       let onChangeAction = (type === 'tone' && param === 'm') ? 
         `handleToneModeUpdate(this.value);` : 
-        `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawGraph(${ch});`;
+        `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();`;
 
       return `
         <div class="control-group">
@@ -496,6 +518,76 @@
       let logMin = Math.log10(min);
       let logMax = Math.log10(max);
       return Math.pow(10, logMin + (val / 1000) * (logMax - logMin));
+    }
+
+    function drawVisibleGraphs() {
+        for(let i=0; i<4; i++) {
+            drawGraph(i);
+            drawCrossoverGraph(i);
+        }
+    }
+
+    function drawCrossoverGraph(ch) {
+      let cvs = document.getElementById(`cvs-xo-cmp-${ch}`);
+      if(!cvs || cvs.offsetParent === null) return;
+      let ctx = cvs.getContext('2d', { alpha: false });
+      let w = cvs.width, h = cvs.height;
+      
+      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+      for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
+
+      let logMin = Math.log10(20), logMax = Math.log10(20000);
+      const outColors = ['#aaaaaa', '#00ffcc', '#ff3366', '#33ff66', '#ffcc00'];
+
+      // Update dropdown text colors to match the plot line
+      for(let d=0; d<4; d++) {
+          let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
+          if(sel) sel.style.color = outColors[parseInt(sel.value)] || '#fff';
+      }
+
+      for(let d=0; d<4; d++) {
+        let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
+        if(!sel) continue;
+        let val = parseInt(sel.value);
+        if(val === 0) continue; // Skip if 'OFF'
+
+        let targetCh = val - 1; // 0 to 3
+        
+        // Grab elements from the target output channel
+        let el_t = document.getElementById(`xo_t_${targetCh}`);
+        let el_th = document.getElementById(`xo_th_${targetCh}`);
+        let el_fl = document.getElementById(`xo_fl_${targetCh}`);
+        let el_fh = document.getElementById(`xo_fh_${targetCh}`);
+        let el_g = document.getElementById(`xo_g_${targetCh}`);
+        
+        if(!el_t || !el_th || !el_fl || !el_fh || !el_g) continue;
+
+        let xo_t = parseInt(el_t.value);
+        let xo_th = parseInt(el_th.value);
+        let f_low = getRealFreq(el_fl);
+        let f_high = getRealFreq(el_fh);
+        let g_off = parseFloat(el_g.value);
+
+        let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
+        let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
+        
+        ctx.strokeStyle = outColors[val];
+        ctx.lineWidth = 2; 
+        ctx.beginPath();
+        
+        for(let x=0; x<w; x+=2) {
+          let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
+          let total_db = g_off;
+          
+          if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
+          if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
+
+          let y = h/2 - (total_db * (h/48));
+          if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+      }
     }
 
     function drawGraph(ch) {
@@ -522,7 +614,6 @@
       let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
       
-      // If EQ is bypassed, skip EQ addition
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
 
       for(let x=0; x<w; x+=2) {
@@ -619,6 +710,7 @@
       for(let i=0; i<4; i++) {
         let tab = document.getElementById('t-out' + (i+1));
         if(!tab) continue;
+        
         let routeContent = `<div class="grid">
           ${createSelect('Route', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
           ${createSelect('Phase', 'ph', i, '', ['NORMAL', 'INVERT'], dspState.ph[i])}
@@ -630,6 +722,25 @@
           ${createSlider('APF Freq', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
           ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
         </div>`;
+
+        // Generate Crossover Comparison Visualizer
+        let compareSelects = '';
+        for(let d=0; d<4; d++) {
+          let defaultVal = (d === 0) ? (i + 1) : 0; 
+          compareSelects += `<select id="xo_cmp_${i}_${d}" onchange="drawVisibleGraphs()" style="font-size:11px; padding:4px; font-weight:bold;">
+            <option value="0" ${defaultVal===0?'selected':''}>OFF</option>
+            <option value="1" ${defaultVal===1?'selected':''}>OUT 1</option>
+            <option value="2" ${defaultVal===2?'selected':''}>OUT 2</option>
+            <option value="3" ${defaultVal===3?'selected':''}>OUT 3</option>
+            <option value="4" ${defaultVal===4?'selected':''}>OUT 4</option>
+          </select>`;
+        }
+        let xoAlignmentContent = `
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
+            ${compareSelects}
+          </div>
+          <canvas id="cvs-xo-cmp-${i}" width="400" height="140" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
+        `;
 
         let xoContent = `<div class="grid">
           ${createSelect('HPF Slope', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
@@ -672,17 +783,16 @@
                            <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL OUT ${i+1}</button>
                          </div>` +
                         wrapSection("ROUTING & PHASE", routeContent, `sec-rt-${i}`) +
+                        wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
                         `<canvas id="cvs-${i}" width="400" height="140"></canvas>` +
                         wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
                         wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
-        drawGraph(i);
       }
 
       // --- SYSTEM TAB ---
       let sysTab = document.getElementById('t-sys');
       if (sysTab) {
-          // Preset Manager
           let presetOptions = '';
           for(let s=1; s<=8; s++) {
               let lbl = `SLOT ${s}`;
@@ -703,7 +813,6 @@
               </div>
           `, 'sec-sys-preset');
 
-          // Tone Generator
           let isSine = dspState.tm === 2;
           let toneHtml = wrapSection("TONE GENERATOR", `
               <div class="grid">
@@ -715,7 +824,6 @@
               </div>
           `, 'sec-sys-tone');
 
-          // OTA Update
           let otaHtml = wrapSection("FIRMWARE UPDATE (OTA)", `
               <div class="control-group" style="margin-bottom:10px;">
                   <label>WiFi SSID</label>
@@ -736,8 +844,11 @@
           `, 'sec-sys-ota');
 
           sysTab.innerHTML = presetHtml + toneHtml + otaHtml;
-          updatePresetButtons(); // Set initial button states based on dropdown
+          updatePresetButtons(); 
       }
+      
+      // Draw all graphs now that the DOM has fully populated the elements
+      drawVisibleGraphs();
     }
 
     async function revertTab(type, ch) {
