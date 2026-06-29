@@ -63,7 +63,6 @@
     .db-val-m60 { top: 100%; color: #666666; }
 
     .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
-    .scale-indicators-dummy { visibility: hidden; } 
     
     .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
     .led.active { opacity: 1; color: #fff; }
@@ -71,6 +70,17 @@
     .led-clip.active { background: #ff0000; border-color: #ff6666; box-shadow: 0 0 10px #ff0000; color: #fff; }
     .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
     .led-placeholder { height: 16px; width: 32px; } 
+
+    /* Responsive Desktop Tweaks for VU Meters */
+    @media (min-width: 768px) {
+        .pro-meters-grid { height: 480px; gap: 20px; }
+        .pro-meter-container { width: 45px; height: 320px; }
+        .db-scale-container { height: 320px; width: 35px; }
+        .db-scale-container span { font-size: 13px; right: 5px; }
+        .meter-title { font-size: 14px; margin-bottom: 12px; }
+        .led { width: 45px; padding: 5px 0; font-size: 10px; }
+        .led-placeholder { height: 22px; width: 45px; }
+    }
 
     canvas { background: #000; width: 100%; height: 140px; border-radius: 5px; border: 1px solid #444; margin: 15px 0; display: block; box-shadow: inset 0 0 10px rgba(0,255,204,0.1); }
     
@@ -202,11 +212,12 @@
           filters: [{ namePrefix: 'FRIZH_DLMS24_' }], 
           optionalServices: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e']
         });
+        
         bleDevice.addEventListener('gattserverdisconnected', () => { 
             document.getElementById('ble-btn').classList.remove('connected');
             document.getElementById('connect-overlay').style.display = 'flex'; 
         });
-        
+
         bleServer = await bleDevice.gatt.connect();
         bleService = await bleServer.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
         rxChar = await bleService.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
@@ -288,11 +299,16 @@
         if(jsonBuffer.endsWith("}")) {
           try {
               dspState = JSON.parse(jsonBuffer);
-              
               if(!dspState.eqb) dspState.eqb = [0,0,0,0];
               if(dspState.tm === undefined) dspState.tm = 0;
               if(dspState.tf === undefined) dspState.tf = 1000;
               if(dspState.tg === undefined) dspState.tg = -20;
+              
+              // New states for V1.7
+              if(dspState.tr === undefined) dspState.tr = 0;
+              if(!dspState.bbe_e) dspState.bbe_e = [0,0];
+              if(!dspState.bbe_l) dspState.bbe_l = [50,50];
+              if(!dspState.bbe_p) dspState.bbe_p = [50,50];
 
               initialState = JSON.stringify(dspState);
               buildUI();
@@ -357,7 +373,6 @@
         let btn = document.getElementById('btn-ota-fetch');
         sel.innerHTML = '<option>Fetching from GitHub...</option>';
         btn.disabled = true;
-
         try {
             let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', {
                 headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -398,6 +413,15 @@
         document.getElementById('tone-freq-container').style.pointerEvents = (mode === 2) ? 'auto' : 'none';
         sendUpdate('tone', 0, 'm', mode);
     }
+    
+    function copyChannel(targetCh) {
+        let src = document.getElementById(`copy_src_${targetCh}`).value;
+        if(src === "" || parseInt(src) === targetCh) return;
+        if(confirm(`Copy all settings from OUT ${parseInt(src)+1} to OUT ${targetCh+1}?`)) {
+            sendBLE(`/api/copy?src=${src}&dst=${targetCh}`);
+        }
+        document.getElementById(`copy_src_${targetCh}`).value = "";
+    }
 
     function switchTab(id) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -426,7 +450,6 @@
       let min = parseFloat(el.getAttribute('min'));
       if (val > max) val = max;
       if (val < min) val = min;
-      
       el.value = val;
       handleSliderInput(el); 
     }
@@ -478,7 +501,7 @@
       
       if (type === 'comp' && param === 'thr' && parseInt(val) === 7) displayVal = "OFF";
       if (type === 'comp' && param === 'rat' && parseInt(val) === 21) displayVal = "LIM";
-
+      
       let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
       if (isFreq) {
          htmlMin = 0; htmlMax = 1000; htmlStep = 1;
@@ -500,10 +523,10 @@
     function createSelect(label, type, ch, param, options, val) {
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
-      let onChangeAction = (type === 'tone' && param === 'm') ? 
+      let onChangeAction = (type === 'tone' && param === 'm') ?
         `handleToneModeUpdate(this.value);` : 
         `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();`;
-
+        
       return `
         <div class="control-group">
           <label>${label}</label>
@@ -555,13 +578,11 @@
 
         let targetCh = val - 1; // 0 to 3
         
-        // Grab elements from the target output channel
         let el_t = document.getElementById(`xo_t_${targetCh}`);
         let el_th = document.getElementById(`xo_th_${targetCh}`);
         let el_fl = document.getElementById(`xo_fl_${targetCh}`);
         let el_fh = document.getElementById(`xo_fh_${targetCh}`);
         let el_g = document.getElementById(`xo_g_${targetCh}`);
-        
         if(!el_t || !el_th || !el_fl || !el_fh || !el_g) continue;
 
         let xo_t = parseInt(el_t.value);
@@ -569,21 +590,18 @@
         let f_low = getRealFreq(el_fl);
         let f_high = getRealFreq(el_fh);
         let g_off = parseFloat(el_g.value);
-
         let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
         let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
         
         ctx.strokeStyle = outColors[val];
         ctx.lineWidth = 2; 
         ctx.beginPath();
-        
         for(let x=0; x<w; x+=2) {
           let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
           let total_db = g_off;
           
           if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
           if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
-
           let y = h/2 - (total_db * (h/48));
           if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
         }
@@ -611,19 +629,17 @@
       let f_low = getRealFreq(document.getElementById(`xo_fl_${ch}`));
       let f_high = getRealFreq(document.getElementById(`xo_fh_${ch}`));
       let g_off = parseFloat(document.getElementById(`xo_g_${ch}`).value);
-
       let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
       
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
-
       for(let x=0; x<w; x+=2) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
         let total_db = g_off;
         
         if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
         if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
-
+        
         if(!eqBypassed) {
             for(let b=0; b<7; b++) {
               let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
@@ -658,7 +674,7 @@
       // Build Vertical VU Meters grid
       let mHtml = '<div class="pro-meters-grid">';
       const labels = ['IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'];
-
+      
       labels.forEach((lbl, i) => {
         let isOut = i >= 2;
         let muteCls = (isOut ? dspState.out_mute[i-2] : dspState.in_mute[i]) ? 'led-mute active' : 'led-mute';
@@ -695,7 +711,6 @@
         let tab = document.getElementById('t-in' + name);
         if(!tab) return;
         
-        // Safety fallback for delay state to prevent NaN errors
         let idlSafe = (dspState.idl && dspState.idl[i] !== undefined) ? dspState.idl[i] : 0;
         let gainVal = i === 0 ? dspState.vA : dspState.vB;
 
@@ -707,16 +722,22 @@
                           
         let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
 
+        let bbeContent = `<div class="grid">
+            ${createSelect('Enable', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
+            ${createSlider('Lo Contour', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
+            ${createSlider('Process', 'bbe', i, 'p', 0, 100, dspState.bbe_p[i], '%')}
+        </div>`;
+
         let inMuteCls = dspState.in_mute[i] ? 'btn-mute active' : 'btn-mute';
         
-        // Use flex column instead of grid for maximum slider space
         tab.innerHTML = `<div class="btn-row">
                            <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE IN ${name}</button>
                            <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET IN ${name}</button>
                          </div>` + 
                          wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
-                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`);
+                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
+                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
       });
 
       // Outputs
@@ -724,7 +745,24 @@
         let tab = document.getElementById('t-out' + (i+1));
         if(!tab) continue;
         
-        let routeContent = `<div class="grid">
+        // Copy Options Logic
+        let copyOptions = `<option value="">Select Channel...</option>`;
+        for(let c=0; c<4; c++) {
+            if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1}</option>`;
+        }
+        let copyContent = `
+            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ffcc;">
+                <label style="color:#00ffcc;">COPY SETTINGS FROM</label>
+                <div style="display:flex; gap:10px;">
+                    <select id="copy_src_${i}" style="flex:1;">${copyOptions}</select>
+                    <button class="btn-bypass" onclick="copyChannel(${i})" style="padding: 4px 12px;">COPY</button>
+                </div>
+            </div>
+        `;
+
+        let routeContent = `
+        ${copyContent}
+        <div class="grid" style="margin-top:15px;">
           ${createSelect('Route', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
           ${createSelect('Phase', 'ph', i, '', ['NORMAL', 'INVERT'], dspState.ph[i])}
           ${createSlider('Delay', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
@@ -748,6 +786,7 @@
             <option value="4" ${defaultVal===4?'selected':''}>OUT 4</option>
           </select>`;
         }
+        
         let xoAlignmentContent = `
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
             ${compareSelects}
@@ -791,11 +830,12 @@
           </div>`;
 
         let outMuteCls = dspState.out_mute[i] ? 'btn-mute active' : 'btn-mute';
+        
         tab.innerHTML = `<div class="btn-row">
                            <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE OUT ${i+1}</button>
                            <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL OUT ${i+1}</button>
                          </div>` +
-                        wrapSection("ROUTING & PHASE", routeContent, `sec-rt-${i}`) +
+                        wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
                         `<canvas id="cvs-${i}" width="400" height="140"></canvas>` +
@@ -830,6 +870,7 @@
           let toneHtml = wrapSection("TONE GENERATOR", `
               <div class="grid">
                   ${createSelect('Mode', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}
+                  ${createSelect('Route', 'tone', 0, 'r', ['ALL IN', 'IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'], dspState.tr)}
                   <div id="tone-freq-container" style="transition:0.2s; opacity: ${isSine ? '1' : '0.4'}; pointer-events: ${isSine ? 'auto' : 'none'};">
                     ${createSlider('Freq', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz', '', '10')}
                   </div>
@@ -860,7 +901,6 @@
           updatePresetButtons(); 
       }
       
-      // Draw all graphs now that the DOM has fully populated the elements
       drawVisibleGraphs();
     }
 
@@ -872,6 +912,9 @@
           sendBLE(`/api/set?type=gate&ch=${ch}&p=atk&v=10`);
           sendBLE(`/api/set?type=gate&ch=${ch}&p=rel&v=200`);
           sendBLE(`/api/set?type=idl&ch=${ch}&v=0`);
+          sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`);
+          sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`);
+          sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`);
       } else if (type === 'out') {
           sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`);
           sendBLE(`/api/set?type=ph&ch=${ch}&v=0`);
