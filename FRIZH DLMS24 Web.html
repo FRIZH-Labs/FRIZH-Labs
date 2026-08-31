@@ -4,25 +4,32 @@
   <title>FRIZH DLMS 24</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; }
+    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; }
     
+    /* Center the app on laptops and restrict maximum stretch */
+    .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; }
+
     /* App Header & BLE Icon */
     .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; margin-bottom: 15px; }
-    .app-title { color: #00ADB5; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+    .app-title { color: #00ADB5; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
     #ble-btn { cursor: pointer; color: #555; transition: all 0.3s ease; padding: 5px; }
     #ble-btn.connected { color: #00ADB5; filter: drop-shadow(0 0 8px rgba(0,173,181,0.6)); }
     #ble-btn:hover { color: #fff; }
 
     .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
+    .tab { flex: 1; padding: 12px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 80px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
     .tab.active { background: #00ADB5; color: #000; box-shadow: 0 0 10px rgba(0,173,181,0.3); }
     
-    .panel { display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; }
+    .panel { display: none; background: transparent; padding: 0; border-radius: 5px; }
     .panel.active { display: block; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+    /* Laptop Responsive Grids */
+    .desktop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; align-items: start; margin-top: 15px; }
+    .rta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; align-items: start; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
     .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
     label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -33,7 +40,7 @@
     .btn-fine:hover { background: #00ADB5; color: #000; border-color: #00ADB5; }
     .btn-fine:active { transform: scale(0.95); }
     
-    select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
+    select { width: 100%; padding: 6px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
     select:focus { border-color: #00ADB5; }
     .val-display { float: right; color: #00ADB5; font-weight: bold; font-family: monospace; font-size: 12px; }
     
@@ -42,20 +49,21 @@
     .txt-input:focus { border-color: #00ADB5; }
 
     /* Vertical VU Meter Styles */
-    .pro-meters-grid { display: flex; justify-content: center; gap: 12px; padding: 10px 0; height: 320px; overflow-x: auto; }
+    .meters-bg { background: #1a1a1a; padding: 20px; border-radius: 5px; border: 1px solid #333; }
+    .pro-meters-grid { display: flex; justify-content: center; gap: 15px; padding: 10px 0; height: 350px; overflow-x: auto; }
     .meter-unit { display: flex; align-items: flex-end; gap: 2px; }
     .meter-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-    .meter-title { font-weight: 800; color: #fff; font-size: 11px; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.7; }
+    .meter-title { font-weight: 800; color: #fff; font-size: 12px; letter-spacing: 1px; margin-bottom: 12px; opacity: 0.7; }
     
-    .pro-meter-container { width: 30px; height: 180px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
+    .pro-meter-container { width: 35px; height: 220px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
     .pro-meter-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
     .pro-meter-marks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(to top, transparent, transparent 3px, #0a0a0a 3px, #0a0a0a 4px); pointer-events: none; }
     
     /* DB Scale */
     .scale-wrapper { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; height: 100%; padding-right: 5px; }
     .meter-row { display: flex; align-items: flex-start; gap: 2px; }
-    .db-scale-container { position: relative; height: 180px; width: 24px; }
-    .db-scale-container span { position: absolute; right: 2px; font-size: 9px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
+    .db-scale-container { position: relative; height: 220px; width: 24px; }
+    .db-scale-container span { position: absolute; right: 2px; font-size: 10px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
     .db-val-0   { top: 0%; color: #ff5555; }
     .db-val-m10 { top: 16.6%; color: #ffcc00; }
     .db-val-m20 { top: 33.3%; color: #44ff44; }
@@ -64,39 +72,44 @@
 
     .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
     
-    .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
+    .led { width: 38px; text-align: center; padding: 4px 0; border-radius: 3px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
     .led.active { opacity: 1; color: #fff; }
     .led-mute.active { background: #e60000; border-color: #ff3333; box-shadow: 0 0 8px #e60000; }
     .led-clip.active { background: #ff0000; border-color: #ff6666; box-shadow: 0 0 10px #ff0000; color: #fff; }
     .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
-    .led-placeholder { height: 16px; width: 32px; } 
+    .led-placeholder { height: 19px; width: 38px; } 
 
     @media (min-width: 768px) {
-        .pro-meters-grid { height: 480px; gap: 20px; }
-        .pro-meter-container { width: 45px; height: 320px; }
+        .pro-meters-grid { height: 480px; gap: 30px; }
+        .pro-meter-container { width: 50px; height: 320px; }
         .db-scale-container { height: 320px; width: 35px; }
         .db-scale-container span { font-size: 13px; right: 5px; }
         .meter-title { font-size: 14px; margin-bottom: 12px; }
-        .led { width: 45px; padding: 5px 0; font-size: 10px; }
-        .led-placeholder { height: 22px; width: 45px; }
+        .led { width: 50px; padding: 6px 0; font-size: 11px; }
+        .led-placeholder { height: 26px; width: 50px; }
     }
 
-    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
+    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
     
-    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; transition: 0.2s; }
+    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; float: right; transition: 0.2s; font-weight: bold; }
     .btn-revert:hover { background: #555; }
-    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; transition: 0.2s; }
+    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; transition: 0.2s; }
     .btn-mute:hover { background: #444; }
     .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px rgba(255,0,0,0.6); }
     .btn-bypass { background: #00ADB5; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
     .btn-bypass.active { background: #f55; color: #fff; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; background: #1a1a1a; padding: 12px; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; }
     
-    .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
-    .edit-toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #aaa; }
-    .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ADB5; }
-    .dsp-section { background: #1a1a1a; padding: 12px; border: 1px solid #333; border-top: 1px solid #222; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
-    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; overflow: hidden; border: none; }
+    /* Modular Grid DSP Sections */
+    .dsp-module { display: flex; flex-direction: column; background: #1a1a1a; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .section-header { background: #2a2a2a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.9em; font-weight: bold; border-bottom: 1px solid #333; }
+    .edit-toggle-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.85em; color: #aaa; }
+    .edit-toggle-wrap input { width: 16px; height: 16px; cursor: pointer; accent-color: #00ADB5; margin: 0; }
+    .btn-rst { background: #522; color: #fff; border: 1px solid #f55; border-radius: 3px; padding: 3px 8px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-rst:hover { background: #f55; }
+    
+    .dsp-section { padding: 15px; transition: all 0.3s ease; overflow: hidden; }
+    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; border: none; }
     .dsp-section.bypassed { opacity: 0.5; border: 1px solid #f55; }
     
     /* BLE Overlays & Dialogs */
@@ -120,17 +133,17 @@
     .btn-cancel:hover { background:#444; }
 
     /* Channel Header */
-    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 15px; }
-    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
+    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: #fff; margin: 5px 0 0 0; }
+    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 18px; padding: 5px; transition: 0.2s; }
     .btn-icon:hover { color: #00ADB5; }
   </style>
 </head>
 <body>
-
+  
   <div id="connect-overlay">
-    <div style="font-size: 28px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
+    <div style="font-size: 32px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn-connect" onclick="connectBLE()">SCAN & CONNECT</button>
-    <p style="color:#888; margin-top:20px; text-align:center; font-size: 13px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
+    <p style="color:#888; margin-top:20px; text-align:center; font-size: 14px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
   </div>
 
   <div id="ble-dialog-overlay">
@@ -145,43 +158,53 @@
     </div>
   </div>
 
-  <div class="app-header">
-    <div class="app-title">FRIZH DLMS 24</div>
-    <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
-      <svg viewBox="0 0 24 24" width="26" height="26" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
-      </svg>
+  <div class="app-container">
+    <div class="app-header">
+      <div class="app-title">FRIZH DLMS 24</div>
+      <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
+        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+        </svg>
+      </div>
     </div>
-  </div>
-  
-  <div class="tabs" id="tabs">
-    <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
-    <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
-    <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
-    <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
-    <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
-    <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
-    <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
-    <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
-    <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
-  </div>
+    
+    <div class="tabs" id="tabs">
+      <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
+      <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
+      <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
+      <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
+      <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
+      <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
+      <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
+      <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
+      <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
+    </div>
 
-  <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
-  
-  <div id="t-rta" class="panel">
-     <div class="section-header" style="border-radius: 4px;">INPUT A SPECTRUM</div>
-     <canvas id="cvs-rta-A" width="400" height="140"></canvas>
-     <div class="section-header" style="margin-top:20px; border-radius: 4px;">INPUT B SPECTRUM</div>
-     <canvas id="cvs-rta-B" width="400" height="140"></canvas>
+    <div id="t-meters" class="panel active">
+        <div class="meters-bg" id="meter-grid"></div>
+    </div>
+    
+    <div id="t-rta" class="panel">
+       <div class="rta-grid">
+           <div class="dsp-module">
+               <div class="section-header" style="border-radius: 4px 4px 0 0;">INPUT A SPECTRUM</div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="400" height="140" style="margin:0;"></canvas></div>
+           </div>
+           <div class="dsp-module">
+               <div class="section-header" style="border-radius: 4px 4px 0 0; color: orange;">INPUT B SPECTRUM</div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="400" height="140" style="margin:0;"></canvas></div>
+           </div>
+       </div>
+    </div>
+    
+    <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
+    <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
+    <div id="t-out1" class="panel"></div>
+    <div id="t-out2" class="panel"></div>
+    <div id="t-out3" class="panel"></div>
+    <div id="t-out4" class="panel"></div>
+    <div id="t-sys" class="panel"></div>
   </div>
-  
-  <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
-  <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
-  <div id="t-out1" class="panel"></div>
-  <div id="t-out2" class="panel"></div>
-  <div id="t-out3" class="panel"></div>
-  <div id="t-out4" class="panel"></div>
-  <div id="t-sys" class="panel"></div>
 
   <script>
     let dspState = {};
@@ -355,7 +378,6 @@
               if(!dspState.bbe_l) dspState.bbe_l = [50,50];
               if(!dspState.bbe_p) dspState.bbe_p = [50,50];
               
-              // V2.1.5 Additions
               if(!dspState.ict) dspState.ict = [0,0];
               if(!dspState.icr) dspState.icr = [4,4];
               if(!dspState.icm) dspState.icm = [0,0];
@@ -888,15 +910,17 @@
     }
 
     const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
-      <div class="section-header">
-        <span>${title}</span>
-        <div class="edit-toggle-wrap">
-          ${rstAction !== '' ? `<button style="background:#522; color:#fff; border:1px solid #f55; border-radius:3px; padding:2px 8px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="${rstAction}">RST</button>` : ''}
-          <label style="margin:0; font-size:10px;">EDIT</label>
-          <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
-        </div>
-      </div>
-      <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>`;
+      <div class="dsp-module">
+          <div class="section-header">
+            <span>${title}</span>
+            <div class="edit-toggle-wrap">
+              ${rstAction !== '' ? `<button class="btn-rst" onclick="${rstAction}">RST</button>` : ''}
+              <label style="margin:0; font-size:10px;">EDIT</label>
+              <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
+            </div>
+          </div>
+          <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>
+      </div>`;
 
     function buildUI() {
       // Update Tab Names
@@ -988,13 +1012,15 @@
         tab.innerHTML = `<div class="channel-header">${dspState.in_n[i]} <button class="btn-icon" onclick="renameChannel('in', ${i})">✏️</button></div>` +
                          `<div class="btn-row">
                            <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE ${dspState.in_n[i]}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET ALL</button>
+                           <button class="btn-revert" onclick="revertTab('in', ${i})">RESET ALL</button>
                          </div>` + 
+                         `<div class="desktop-grid">` +
                          wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
                          wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
                          wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
+                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
+                         `</div>`;
       });
 
       // Outputs
@@ -1061,7 +1087,8 @@
           ${createSlider('HPF Freq', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
           ${createSlider('LPF Freq', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
           ${createSlider('Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
-        </div>`;
+        </div>
+        <canvas id="cvs-${i}" width="400" height="140" style="margin-top:15px; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>`;
 
         let eqBypassed = dspState.eqb[i] === 1;
         let eqContent = `
@@ -1106,14 +1133,15 @@
         tab.innerHTML = `<div class="channel-header">${dspState.out_n[i]} <button class="btn-icon" onclick="renameChannel('out', ${i})">✏️</button></div>` +
                          `<div class="btn-row">
                            <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE ${dspState.out_n[i]}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL</button>
+                           <button class="btn-revert" onclick="revertTab('out', ${i})">RESET ALL</button>
                          </div>` +
+                        `<div class="desktop-grid">` + 
                         wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
-                        `<canvas id="cvs-${i}" width="400" height="140"></canvas>` +
                         wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
-                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
+                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`) +
+                        `</div>`;
       }
 
       // --- SYSTEM TAB ---
@@ -1170,7 +1198,7 @@
               <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ADB5; color:#000;" onclick="triggerOTA()">START UPDATE</button>
           `, 'sec-sys-ota');
 
-          sysTab.innerHTML = presetHtml + toneHtml + otaHtml;
+          sysTab.innerHTML = `<div class="desktop-grid">` + presetHtml + toneHtml + otaHtml + `</div>`;
           updatePresetButtons(); 
       }
       
