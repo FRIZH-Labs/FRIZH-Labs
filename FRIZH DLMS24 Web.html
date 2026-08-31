@@ -26,7 +26,6 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Laptop Responsive Grids */
-    .rta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; align-items: start; }
     .desktop-grid { display: grid; gap: 15px; align-items: start; margin-top: 15px; }
     
     /* Advanced 3-Column Layout for Desktop */
@@ -45,10 +44,27 @@
         .span-2 { grid-column: 1 / -1; }
         .span-full { grid-column: 1 / -1; }
     }
+
+    /* RTA Specific Layout */
+    .rta-container { display: flex; flex-direction: row; gap: 10px; align-items: stretch; margin-top: 5px; }
+    .rta-scale { display: flex; flex-direction: column; position: relative; padding-top: 54px; width: 40px; align-items: center; }
+    @media (max-width: 767px) {
+        .rta-container { flex-direction: column; }
+        .rta-scale { display: none; }
+    }
     
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
     .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
     label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Compact EQ specific overrides to reduce height */
+    .compact-eq { display: flex; flex-direction: column; gap: 4px; }
+    .compact-eq-row { display: flex; gap: 12px; background: #111; padding: 6px 12px; border-radius: 4px; border: 1px solid #222; align-items: center; }
+    .compact-eq-row .control-group { padding: 0; background: transparent; box-shadow: none; margin: 0; border: none; }
+    .compact-eq-row label { margin-bottom: 2px; font-size: 10px; color: #999; }
+    .compact-eq-row .slider-wrap { margin: 0; }
+    .compact-eq-row .btn-fine { height: 22px; width: 22px; font-size: 14px; padding: 0; line-height: 1; border-radius: 2px; }
+    .compact-eq-row input[type=range] { height: 14px; }
     
     /* Sliders & Fine Tuning */
     .slider-wrap { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
@@ -201,15 +217,27 @@
         <div class="meters-bg" id="meter-grid"></div>
     </div>
     
+    <!-- UPDATED RTA TAB -->
     <div id="t-rta" class="panel">
-       <div class="rta-grid">
-           <div class="dsp-module">
+       <div class="rta-container">
+           <div class="dsp-module" style="flex:1; min-width:300px;">
                <div class="section-header" style="border-radius: 4px 4px 0 0;">INPUT A SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="1000" height="200" style="margin:0; width:100%;"></canvas></div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="1000" height="300" style="margin:0; width:100%; height:300px;"></canvas></div>
            </div>
-           <div class="dsp-module">
+           
+           <div class="rta-scale">
+               <div class="db-scale-container" style="height: 260px; width: 100%;">
+                   <span class="db-val-0" style="top:0%; right: 10px;">0</span>
+                   <span class="db-val-m10" style="top:16.66%; right: 10px;">-10</span>
+                   <span class="db-val-m20" style="top:33.33%; right: 10px;">-20</span>
+                   <span class="db-val-m40" style="top:66.66%; right: 10px;">-40</span>
+                   <span class="db-val-m60" style="top:100%; right: 10px;">-60</span>
+               </div>
+           </div>
+
+           <div class="dsp-module" style="flex:1; min-width:300px;">
                <div class="section-header" style="border-radius: 4px 4px 0 0; color: orange;">INPUT B SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="1000" height="200" style="margin:0; width:100%;"></canvas></div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="1000" height="300" style="margin:0; width:100%; height:300px;"></canvas></div>
            </div>
        </div>
     </div>
@@ -993,7 +1021,6 @@
 
         let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
         let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
-        
         let gainDelayContent = `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}${delayContent}</div>`;
         
         let compContent = `
@@ -1037,7 +1064,7 @@
                          wrapSection(`GAIN & DELAY`, gainDelayContent, `sec-in-gaindly-${name}`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
                          wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
-                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`, 'span-2') +
+                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`, 'span-full') +
                          `</div>`;
       });
 
@@ -1112,14 +1139,14 @@
               ${eqBypassed ? 'EQ BYPASSED' : 'EQ ACTIVE'}
             </button>
           </div>
-          <div class="grid">`;
+          <div class="compact-eq">`;
           
         for(let b=0; b<7; b++) {
           eqContent += `
-            <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
-              <div style="flex:2">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
-              <div style="flex:1">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
-              <div style="flex:1">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
+            <div class="compact-eq-row">
+              <div style="flex:3">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
+              <div style="flex:2">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
+              <div style="flex:2">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
             </div>`;
         }
         eqContent += `</div>`;
