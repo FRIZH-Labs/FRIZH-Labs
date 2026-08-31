@@ -8,15 +8,15 @@
     
     /* App Header & BLE Icon */
     .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; margin-bottom: 15px; }
-    .app-title { color: #00ffcc; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+    .app-title { color: #00ADB5; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
     #ble-btn { cursor: pointer; color: #555; transition: all 0.3s ease; padding: 5px; }
-    #ble-btn.connected { color: #00ffcc; filter: drop-shadow(0 0 8px rgba(0,255,204,0.6)); }
+    #ble-btn.connected { color: #00ADB5; filter: drop-shadow(0 0 8px rgba(0,173,181,0.6)); }
     #ble-btn:hover { color: #fff; }
 
     .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; }
-    .tab.active { background: #00ffcc; color: #000; box-shadow: 0 0 10px rgba(0,255,204,0.3); }
+    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
+    .tab.active { background: #00ADB5; color: #000; box-shadow: 0 0 10px rgba(0,173,181,0.3); }
     
     .panel { display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; }
     .panel.active { display: block; animation: fadeIn 0.3s ease-out; }
@@ -28,18 +28,18 @@
     
     /* Sliders & Fine Tuning */
     .slider-wrap { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-    input[type=range] { width: 100%; margin: 0; cursor: pointer; accent-color: #00ffcc; }
+    input[type=range] { width: 100%; margin: 0; cursor: pointer; accent-color: #00ADB5; }
     .btn-fine { background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; padding: 0 8px; font-weight: bold; font-size: 14px; outline: none; height: 24px; display: flex; align-items: center; justify-content: center; transition: 0.2s; user-select: none; }
-    .btn-fine:hover { background: #00ffcc; color: #000; border-color: #00ffcc; }
+    .btn-fine:hover { background: #00ADB5; color: #000; border-color: #00ADB5; }
     .btn-fine:active { transform: scale(0.95); }
     
     select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
-    select:focus { border-color: #00ffcc; }
-    .val-display { float: right; color: #00ffcc; font-weight: bold; font-family: monospace; font-size: 12px; }
+    select:focus { border-color: #00ADB5; }
+    .val-display { float: right; color: #00ADB5; font-weight: bold; font-family: monospace; font-size: 12px; }
     
     /* Text Inputs for OTA */
     .txt-input { width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; outline: none; font-family: inherit; box-sizing: border-box; }
-    .txt-input:focus { border-color: #00ffcc; }
+    .txt-input:focus { border-color: #00ADB5; }
 
     /* Vertical VU Meter Styles */
     .pro-meters-grid { display: flex; justify-content: center; gap: 12px; padding: 10px 0; height: 320px; overflow-x: auto; }
@@ -71,7 +71,6 @@
     .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
     .led-placeholder { height: 16px; width: 32px; } 
 
-    /* Responsive Desktop Tweaks for VU Meters */
     @media (min-width: 768px) {
         .pro-meters-grid { height: 480px; gap: 20px; }
         .pro-meter-container { width: 45px; height: 320px; }
@@ -82,49 +81,54 @@
         .led-placeholder { height: 22px; width: 45px; }
     }
 
-    canvas { background: #000; width: 100%; height: 140px; border-radius: 5px; border: 1px solid #444; margin: 15px 0; display: block; box-shadow: inset 0 0 10px rgba(0,255,204,0.1); }
+    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
     
     .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; transition: 0.2s; }
     .btn-revert:hover { background: #555; }
     .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; transition: 0.2s; }
     .btn-mute:hover { background: #444; }
     .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px rgba(255,0,0,0.6); }
-    .btn-bypass { background: #00ffcc; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    .btn-bypass { background: #00ADB5; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
     .btn-bypass.active { background: #f55; color: #fff; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; }
     
-    .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ffcc; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
+    .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
     .edit-toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #aaa; }
-    .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ffcc; }
+    .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ADB5; }
     .dsp-section { background: #1a1a1a; padding: 12px; border: 1px solid #333; border-top: 1px solid #222; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
-    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); }
+    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; overflow: hidden; border: none; }
     .dsp-section.bypassed { opacity: 0.5; border: 1px solid #f55; }
     
     /* BLE Overlays & Dialogs */
     #connect-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(18,18,18,0.95); z-index:9998; display:flex; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(5px); }
-    .btn-connect { padding:15px 30px; font-size:16px; background:#00ffcc; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 15px rgba(0, 255, 204, 0.4); transition: 0.2s; letter-spacing: 1px; }
-    .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 255, 204, 0.6); }
+    .btn-connect { padding:15px 30px; font-size:16px; background:#00ADB5; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 15px rgba(0, 173, 181, 0.4); transition: 0.2s; letter-spacing: 1px; }
+    .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 173, 181, 0.6); }
     .btn-connect:active { transform: translateY(1px); }
     .btn-connect:disabled { background: #555; color: #aaa; box-shadow: none; cursor: not-allowed; transform: none; }
 
     #ble-dialog-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:none; justify-content:center; align-items:center; backdrop-filter: blur(3px); }
     .ble-dialog { background:#1a1a1a; padding:25px; border-radius:8px; border:1px solid #333; text-align:center; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .ble-dialog h3 { color:#00ffcc; margin-top:0; letter-spacing: 1px; font-size: 16px; }
+    .ble-dialog h3 { color:#00ADB5; margin-top:0; letter-spacing: 1px; font-size: 16px; }
     .ble-dialog p { color: #aaa; font-size: 13px; margin-bottom: 20px; }
     .ble-btn-row { display:flex; flex-direction:column; gap:10px; }
     .ble-dialog button { padding:12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size: 13px; letter-spacing: 0.5px; transition: 0.2s; }
-    .btn-switch { background:#00ffcc; color:#000; }
-    .btn-switch:hover { background:#00e6b8; }
+    .btn-switch { background:#00ADB5; color:#000; }
+    .btn-switch:hover { background:#008B92; }
     .btn-dc { background:#ff3333; color:#fff; }
     .btn-dc:hover { background:#e60000; }
     .btn-cancel { background:#333; color:#fff; border: 1px solid #555 !important; }
     .btn-cancel:hover { background:#444; }
+
+    /* Channel Header */
+    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 15px; }
+    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
+    .btn-icon:hover { color: #00ADB5; }
   </style>
 </head>
 <body>
 
   <div id="connect-overlay">
-    <div style="font-size: 28px; font-weight: bold; color: #00ffcc; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
+    <div style="font-size: 28px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn-connect" onclick="connectBLE()">SCAN & CONNECT</button>
     <p style="color:#888; margin-top:20px; text-align:center; font-size: 13px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
   </div>
@@ -151,19 +155,28 @@
   </div>
   
   <div class="tabs" id="tabs">
-    <div class="tab active" onclick="switchTab('t-meters')">MONITOR</div>
-    <div class="tab" onclick="switchTab('t-inA')">IN A</div>
-    <div class="tab" onclick="switchTab('t-inB')">IN B</div>
-    <div class="tab" onclick="switchTab('t-out1')">OUT 1</div>
-    <div class="tab" onclick="switchTab('t-out2')">OUT 2</div>
-    <div class="tab" onclick="switchTab('t-out3')">OUT 3</div>
-    <div class="tab" onclick="switchTab('t-out4')">OUT 4</div>
-    <div class="tab" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
+    <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
+    <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
+    <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
+    <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
+    <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
+    <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
+    <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
+    <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
+    <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
   </div>
 
   <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
-  <div id="t-inA" class="panel"><button class="btn-revert" onclick="revertTab('in', 0)">Reset A</button><div class="grid" id="ui-inA"></div></div>
-  <div id="t-inB" class="panel"><button class="btn-revert" onclick="revertTab('in', 1)">Reset B</button><div class="grid" id="ui-inB"></div></div>
+  
+  <div id="t-rta" class="panel">
+     <div class="section-header" style="border-radius: 4px;">INPUT A SPECTRUM</div>
+     <canvas id="cvs-rta-A" width="400" height="140"></canvas>
+     <div class="section-header" style="margin-top:20px; border-radius: 4px;">INPUT B SPECTRUM</div>
+     <canvas id="cvs-rta-B" width="400" height="140"></canvas>
+  </div>
+  
+  <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
+  <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
   <div id="t-out1" class="panel"></div>
   <div id="t-out2" class="panel"></div>
   <div id="t-out3" class="panel"></div>
@@ -174,6 +187,13 @@
     let dspState = {};
     let initialState = null;
     let timers = {};
+    
+    // Live Audio State
+    let livePeaks = [0,0,0,0,0,0]; // A, B, 1, 2, 3, 4 (in Linear value)
+    let compAct = [0,0,0,0];
+    let inCompAct = [0,0];
+    let rtaA = new Array(31).fill(-60.0);
+    let rtaB = new Array(31).fill(-60.0);
 
     // Web Bluetooth Variables
     let bleDevice, bleServer, bleService, rxChar, txChar;
@@ -260,40 +280,67 @@
       let val = new TextDecoder().decode(event.target.value);
       if(val.startsWith("S:")) {
         let p = val.substring(2).split(',');
-        if(document.getElementById('t-meters').classList.contains('active')) {
-          for(let i=0; i<6; i++) {
-            let floatPeak = parseFloat(p[i]) || 1e-9;
-            let db = 20 * Math.log10(floatPeak); // Standard true 0dBFS scaling
-            let pct = Math.max(0, Math.min(100, (db + 60) * (100 / 60))); // Map -60dB to 0dB
+        if(p.length >= 18) {
+            for(let i=0; i<6; i++) {
+                livePeaks[i] = parseFloat(p[i]) || 1e-9;
+                if(document.getElementById('t-meters').classList.contains('active')) {
+                    let db = 20 * Math.log10(livePeaks[i]);
+                    db -= 3.0; // -3dB Calibration
+                    let pct = Math.max(0, Math.min(100, (db + 60) * (100 / 60))); 
+                    let mtr = document.getElementById(`mtr-${i}`);
+                    if(mtr) mtr.style.height = pct + '%';
+                    let clipLed = document.getElementById(`ind-clip-${i}`);
+                    if(clipLed) clipLed.classList.toggle('active', db >= -3.5); 
+                }
+            }
             
-            let mtr = document.getElementById(`mtr-${i}`);
-            if(mtr) mtr.style.height = pct + '%';
-            
-            let clipLed = document.getElementById(`ind-clip-${i}`);
-            if(clipLed) clipLed.classList.toggle('active', db >= -2); // Clip threshold at -2dB
-          }
+            if (dspState.in_mute !== undefined) {
+              for(let i=0; i<2; i++) {
+                dspState.in_mute[i] = (p[6+i] === '1');
+                inCompAct[i] = parseInt(p[16+i]);
+                
+                let btn = document.getElementById(`btn-mute-in-${i}`);
+                if(btn) btn.classList.toggle('active', dspState.in_mute[i]);
+                let muteLed = document.getElementById(`ind-mute-${i}`);
+                if(muteLed) muteLed.classList.toggle('active', dspState.in_mute[i]);
+                let compLed = document.getElementById(`ind-comp-${i}`);
+                if(compLed) compLed.classList.toggle('active', inCompAct[i] === 1);
+              }
+              for(let i=0; i<4; i++) {
+                dspState.out_mute[i] = (p[8+i] === '1');
+                compAct[i] = parseInt(p[12+i]);
+                
+                let btn = document.getElementById(`btn-mute-out-${i}`);
+                if(btn) btn.classList.toggle('active', dspState.out_mute[i]);
+                
+                let muteLed = document.getElementById(`ind-mute-${i+2}`);
+                if(muteLed) muteLed.classList.toggle('active', dspState.out_mute[i]);
+                
+                let compLed = document.getElementById(`ind-comp-${i+2}`);
+                if(compLed) compLed.classList.toggle('active', compAct[i] === 1);
+              }
+            }
+            drawCompVisualizers();
         }
-        
-        if (dspState.in_mute !== undefined) {
-          for(let i=0; i<2; i++) {
-            dspState.in_mute[i] = (p[6+i] === '1');
-            let btn = document.getElementById(`btn-mute-in-${i}`);
-            if(btn) btn.classList.toggle('active', dspState.in_mute[i]);
-            let muteLed = document.getElementById(`ind-mute-${i}`);
-            if(muteLed) muteLed.classList.toggle('active', dspState.in_mute[i]);
+      } else if (val.startsWith("R:")) {
+        let halves = val.substring(2).split('|');
+        if (halves.length === 2) {
+          let aVals = halves[0].split(',');
+          let bVals = halves[1].split(',');
+          for (let i = 0; i < 31; i++) {
+            if (aVals[i] !== "") {
+              let rawA = parseFloat(aVals[i]);
+              rtaA[i] = rawA > rtaA[i] ? rawA : Math.max(-60, rtaA[i] - 1.5);
+            }
+            if (bVals[i] !== "") {
+              let rawB = parseFloat(bVals[i]);
+              rtaB[i] = rawB > rtaB[i] ? rawB : Math.max(-60, rtaB[i] - 1.5);
+            }
           }
-          for(let i=0; i<4; i++) {
-            dspState.out_mute[i] = (p[8+i] === '1');
-            let btn = document.getElementById(`btn-mute-out-${i}`);
-            if(btn) btn.classList.toggle('active', dspState.out_mute[i]);
-            
-            let muteLed = document.getElementById(`ind-mute-${i+2}`);
-            if(muteLed) muteLed.classList.toggle('active', dspState.out_mute[i]);
-            
-            let compLed = document.getElementById(`ind-comp-${i+2}`);
-            if(compLed) compLed.classList.toggle('active', p[12+i] === '1');
-          }
+          drawRTA();
         }
+      } else if (val.startsWith("J:{")) {
+        jsonBuffer = val.substring(2);
       } else if (val.startsWith("J:")) {
         jsonBuffer += val.substring(2);
         if(jsonBuffer.endsWith("}")) {
@@ -303,12 +350,19 @@
               if(dspState.tm === undefined) dspState.tm = 0;
               if(dspState.tf === undefined) dspState.tf = 1000;
               if(dspState.tg === undefined) dspState.tg = -20;
-              
-              // New states for V1.7
               if(dspState.tr === undefined) dspState.tr = 0;
               if(!dspState.bbe_e) dspState.bbe_e = [0,0];
               if(!dspState.bbe_l) dspState.bbe_l = [50,50];
               if(!dspState.bbe_p) dspState.bbe_p = [50,50];
+              
+              // V2.1.5 Additions
+              if(!dspState.ict) dspState.ict = [0,0];
+              if(!dspState.icr) dspState.icr = [4,4];
+              if(!dspState.icm) dspState.icm = [0,0];
+              if(!dspState.ica) dspState.ica = [10,10];
+              if(!dspState.icrel) dspState.icrel = [100,100];
+              if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
+              if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
 
               initialState = JSON.stringify(dspState);
               buildUI();
@@ -335,6 +389,18 @@
       dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
       sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
       buildUI(); 
+    }
+
+    function renameChannel(type, ch) {
+        let current = type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch];
+        let n = prompt(`Enter new name for ${type.toUpperCase()} ${ch+1} (Max 8 chars):`, current);
+        if (n !== null) {
+            n = n.substring(0,8).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+            sendBLE(`/api/name?type=${type}&ch=${ch}&n=${encodeURIComponent(n)}`);
+            if (type === 'in') dspState.in_n[ch] = n;
+            else dspState.out_n[ch] = n;
+            buildUI();
+        }
     }
 
     function doPreset(act) {
@@ -427,8 +493,12 @@
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      event.target.classList.add('active');
+      let tabBtn = document.getElementById('tab-' + id.substring(2));
+      if(tabBtn) tabBtn.classList.add('active');
+      
       if(id.startsWith('t-out')) drawVisibleGraphs();
+      if(id === 't-rta') drawRTA();
+      drawCompVisualizers();
     }
 
     function sendUpdate(type, ch, param, val, band = '') {
@@ -437,6 +507,24 @@
         let url = `/api/set?type=${type}&ch=${ch}&p=${param}&v=${val}${band !== '' ? '&b='+band : ''}`;
         sendBLE(url);
       }, 50);
+    }
+
+    function promptFreq(id, min, max) {
+        let val = prompt(`Enter frequency (${min} - ${max} Hz):`);
+        if (val !== null && val.trim() !== '') {
+            val = parseFloat(val);
+            if (!isNaN(val)) {
+                val = Math.max(min, Math.min(max, val));
+                let el = document.getElementById(id);
+                if (el) {
+                    let logMin = Math.log10(min);
+                    let logMax = Math.log10(max);
+                    let sliderVal = ((Math.log10(val) - logMin) / (logMax - logMin)) * 1000;
+                    el.value = sliderVal;
+                    handleSliderInput(el);
+                }
+            }
+        }
     }
 
     function fineTune(id, direction) {
@@ -481,12 +569,19 @@
           displayVal = realVal.toFixed(1) + 'ms / ' + dist + 'cm';
       }
       
-      if (type === 'comp' && p === 'thr' && realVal === 7) displayVal = "OFF";
-      if (type === 'comp' && p === 'rat' && realVal === 21) displayVal = "LIM";
+      if (type === 'comp' || type === 'incomp') {
+          if (p === 'thr' && realVal >= 1) displayVal = "OFF";
+          if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
+      }
 
       el.closest('.control-group').querySelector('.val-display').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
       if (type === 'xo' || type === 'eq') drawVisibleGraphs();
+      if (type === 'comp' || type === 'incomp') {
+          if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; }
+          else { dspState.ct[ch]=p=='thr'?realVal:dspState.ct[ch]; dspState.cr[ch]=p=='rat'?realVal:dspState.cr[ch]; dspState.cm[ch]=p=='mak'?realVal:dspState.cm[ch]; }
+          drawCompVisualizers();
+      }
     }
 
     function createSlider(label, type, ch, param, min, max, val, unit, band = '', step = '1') {
@@ -499,18 +594,23 @@
           displayVal = parseFloat(val).toFixed(1) + 'ms / ' + dist + 'cm';
       }
       
-      if (type === 'comp' && param === 'thr' && parseInt(val) === 7) displayVal = "OFF";
-      if (type === 'comp' && param === 'rat' && parseInt(val) === 21) displayVal = "LIM";
+      if (type === 'comp' || type === 'incomp') {
+          if (param === 'thr' && parseInt(val) >= 1) displayVal = "OFF";
+          if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT";
+      }
       
       let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
+      let clickAction = '', cursorStyle = '';
       if (isFreq) {
          htmlMin = 0; htmlMax = 1000; htmlStep = 1;
          htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
+         clickAction = `onclick="promptFreq('${id}', ${min}, ${max})"`;
+         cursorStyle = 'cursor:pointer; text-decoration:underline;';
       }
 
       return `
         <div class="control-group">
-          <label>${label} <span class="val-display">${displayVal}</span></label>
+          <label>${label} <span class="val-display" style="${cursorStyle}" ${clickAction}>${displayVal}</span></label>
           <div class="slider-wrap">
             <button class="btn-fine" onclick="fineTune('${id}', -1)">-</button>
             <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" 
@@ -544,6 +644,135 @@
       return Math.pow(10, logMin + (val / 1000) * (logMax - logMin));
     }
 
+    function drawRTA() {
+        if(!document.getElementById('t-rta').classList.contains('active')) return;
+        drawRTACanvas('cvs-rta-A', rtaA, '#00ADB5');
+        drawRTACanvas('cvs-rta-B', rtaB, 'orange');
+    }
+
+    function drawRTACanvas(id, data, color) {
+        let cvs = document.getElementById(id);
+        if(!cvs) return;
+        let ctx = cvs.getContext('2d', {alpha: false});
+        let w = cvs.width, h = cvs.height;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 0.5;
+        let labels = ["20", "350", "1k", "2.6k", "7k", "20k"];
+        let indices = [0, 6, 12, 18, 24, 30];
+        
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = '10px sans-serif';
+        for(let i=0; i<labels.length; i++) {
+            let x = (indices[i]/30.0)*w;
+            ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+            let textX = x - (ctx.measureText(labels[i]).width / 2);
+            if(i===0) textX = 4;
+            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 4;
+            ctx.fillText(labels[i], textX, h-4);
+        }
+        
+        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
+        
+        let drawHeight = h - 20;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for(let b=0; b<31; b++) {
+            let x = (b/30.0)*w;
+            let db = Math.max(-60, Math.min(0, data[b]));
+            let y = drawHeight - ((db + 60)/60) * drawHeight;
+            if(b===0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    function drawCompVisualizers() {
+        for(let i=0; i<2; i++) {
+            if(!document.getElementById(`t-in${['A','B'][i]}`).classList.contains('active')) continue;
+            updateCompCanvas(i, true);
+        }
+        for(let i=0; i<4; i++) {
+            if(!document.getElementById(`t-out${i+1}`).classList.contains('active')) continue;
+            updateCompCanvas(i, false);
+        }
+    }
+
+    function updateCompCanvas(ch, isInput) {
+        let cvs = document.getElementById(`cvs-comp-${isInput?'in':'out'}-${ch}`);
+        let grBar = document.getElementById(`gr-bar-${isInput?'in':'out'}-${ch}`);
+        let grTxt = document.getElementById(`gr-txt-${isInput?'in':'out'}-${ch}`);
+        if(!cvs || !grBar) return;
+        
+        let thr = isInput ? dspState.ict[ch] : dspState.ct[ch];
+        let r = isInput ? dspState.icr[ch] : dspState.cr[ch];
+        let rat = r >= 21 ? 1000.0 : r;
+        let mak = isInput ? dspState.icm[ch] : dspState.cm[ch];
+        let isOff = thr >= 1;
+        
+        let peakLinear = isInput ? livePeaks[ch] : livePeaks[ch+2];
+        let peakDb = -60;
+        if (peakLinear > 0.0001) peakDb = 20 * Math.log10(peakLinear) - 3.0;
+        peakDb = Math.max(-60, Math.min(0, peakDb));
+
+        let activeFlag = isInput ? inCompAct[ch] : compAct[ch];
+        
+        let simGr = 0.0;
+        if(!isOff) {
+            let outNoMak = peakDb - mak;
+            if(outNoMak > thr) simGr = (outNoMak - thr) * (rat - 1);
+            if(activeFlag === 1 && simGr < 1.5) {
+                let heat = Math.max(0, Math.min(40, peakDb + 40)) / 40.0;
+                simGr = 1.5 + (heat * Math.min(8, rat));
+            }
+        }
+        simGr = Math.max(0, Math.min(20, simGr));
+        
+        grBar.style.height = (simGr / 20.0 * 100) + '%';
+        grTxt.innerText = simGr > 0.1 ? `-${simGr.toFixed(1)}` : `0.0`;
+        
+        let ctx = cvs.getContext('2d');
+        let w = cvs.width, h = cvs.height;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+        
+        let minDb = -60, maxDb = 10, range = maxDb - minDb;
+        let dbToX = db => ((db - minDb) / range) * w;
+        let dbToY = db => h - (((db - minDb) / range) * h);
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(dbToX(0), 0); ctx.lineTo(dbToX(0), h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, dbToY(0)); ctx.lineTo(w, dbToY(0)); ctx.stroke();
+        
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath();
+        ctx.moveTo(dbToX(minDb), dbToY(minDb)); ctx.lineTo(dbToX(maxDb), dbToY(maxDb)); ctx.stroke();
+        
+        if(isOff) return;
+        
+        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(dbToX(minDb), dbToY(minDb + mak));
+        ctx.lineTo(dbToX(thr), dbToY(thr + mak));
+        let outAtMax = thr + (maxDb - thr) / rat + mak;
+        ctx.lineTo(dbToX(maxDb), dbToY(outAtMax));
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff'; ctx.beginPath();
+        ctx.arc(dbToX(thr), dbToY(thr + mak), 4, 0, Math.PI*2); ctx.fill();
+        
+        let outDbNoMak = peakDb - mak;
+        let inDb = outDbNoMak;
+        if (outDbNoMak > thr) inDb = thr + (outDbNoMak - thr) * rat;
+        
+        if(peakDb > minDb + 1.0) {
+            ctx.fillStyle = '#f55'; ctx.beginPath();
+            ctx.arc(dbToX(inDb), dbToY(peakDb), 4, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
     function drawVisibleGraphs() {
         for(let i=0; i<4; i++) {
             drawGraph(i);
@@ -562,9 +791,8 @@
       for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
 
       let logMin = Math.log10(20), logMax = Math.log10(20000);
-      const outColors = ['#aaaaaa', '#00ffcc', '#ff3366', '#33ff66', '#ffcc00'];
+      const outColors = ['#aaaaaa', '#00ADB5', 'orange', 'purple', 'lightgreen'];
 
-      // Update dropdown text colors to match the plot line
       for(let d=0; d<4; d++) {
           let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
           if(sel) sel.style.color = outColors[parseInt(sel.value)] || '#fff';
@@ -574,9 +802,9 @@
         let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
         if(!sel) continue;
         let val = parseInt(sel.value);
-        if(val === 0) continue; // Skip if 'OFF'
+        if(val === 0) continue; 
 
-        let targetCh = val - 1; // 0 to 3
+        let targetCh = val - 1; 
         
         let el_t = document.getElementById(`xo_t_${targetCh}`);
         let el_th = document.getElementById(`xo_th_${targetCh}`);
@@ -619,8 +847,8 @@
       ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
       for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
 
-      ctx.strokeStyle = '#00ffcc';
-      ctx.lineWidth = 2; ctx.beginPath();
+      ctx.strokeStyle = '#00ADB5';
+      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
       
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       
@@ -671,9 +899,17 @@
       <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>`;
 
     function buildUI() {
+      // Update Tab Names
+      ['A','B'].forEach((n,i) => {
+          document.getElementById(`tab-in${n}`).innerText = dspState.in_n[i];
+      });
+      for(let i=1; i<=4; i++) {
+          document.getElementById(`tab-out${i}`).innerText = dspState.out_n[i-1];
+      }
+
       // Build Vertical VU Meters grid
       let mHtml = '<div class="pro-meters-grid">';
-      const labels = ['IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'];
+      const labels = [dspState.in_n[0], dspState.in_n[1], dspState.out_n[0], dspState.out_n[1], dspState.out_n[2], dspState.out_n[3]];
       
       labels.forEach((lbl, i) => {
         let isOut = i >= 2;
@@ -696,7 +932,7 @@
                 </div>
             </div>
             <div class="meter-indicators">
-                ${isOut ? `<span id="ind-comp-${i}" class="led led-comp">COMP</span>` : '<span class="led-placeholder"></span>'}
+                <span id="ind-comp-${i}" class="led led-comp">COMP</span>
                 <span id="ind-mute-${i}" class="led ${muteCls}">MUTE</span>
                 <span id="ind-clip-${i}" class="led led-clip">CLIP</span>
             </div>
@@ -716,6 +952,25 @@
 
         let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
         
+        let compContent = `
+          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-in-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
+                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
+                  <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
+                      <div id="gr-bar-in-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
+                  </div>
+                  <span id="gr-txt-in-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
+              </div>
+          </div>
+          <div class="grid">
+            ${createSlider('Thresh', 'incomp', i, 'thr', -40, 1, dspState.ict[i], 'dB')}
+            ${createSlider('Ratio', 'incomp', i, 'rat', 1, 21, dspState.icr[i], ':1')}
+            ${createSlider('Makeup', 'incomp', i, 'mak', 0, 20, dspState.icm[i], 'dB')}
+            ${createSlider('Attack', 'incomp', i, 'atk', 1, 100, dspState.ica[i], 'ms')}
+            ${createSlider('Release', 'incomp', i, 'rel', 10, 1000, dspState.icrel[i], 'ms', '', '10')}
+          </div>`;
+
         let gateContent = createSlider('Gate Thresh', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB') +
                           createSlider('Attack', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms') +
                           createSlider('Release', 'gate', i, 'rel', 10, 1000, dspState.gre[i], 'ms');
@@ -730,11 +985,13 @@
 
         let inMuteCls = dspState.in_mute[i] ? 'btn-mute active' : 'btn-mute';
         
-        tab.innerHTML = `<div class="btn-row">
-                           <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE IN ${name}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET IN ${name}</button>
+        tab.innerHTML = `<div class="channel-header">${dspState.in_n[i]} <button class="btn-icon" onclick="renameChannel('in', ${i})">✏️</button></div>` +
+                         `<div class="btn-row">
+                           <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE ${dspState.in_n[i]}</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET ALL</button>
                          </div>` + 
                          wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
+                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
                          wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
                          wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
@@ -748,11 +1005,11 @@
         // Copy Options Logic
         let copyOptions = `<option value="">Select Channel...</option>`;
         for(let c=0; c<4; c++) {
-            if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1}</option>`;
+            if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1} (${dspState.out_n[c]})</option>`;
         }
         let copyContent = `
-            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ffcc;">
-                <label style="color:#00ffcc;">COPY SETTINGS FROM</label>
+            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5;">
+                <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
                 <div style="display:flex; gap:10px;">
                     <select id="copy_src_${i}" style="flex:1;">${copyOptions}</select>
                     <button class="btn-bypass" onclick="copyChannel(${i})" style="padding: 4px 12px;">COPY</button>
@@ -760,14 +1017,18 @@
             </div>
         `;
 
+        let phaseCls = dspState.ph[i] === 1 ? 'background:orange; color:#000;' : 'background:#2A2A2A; color:#fff;';
         let routeContent = `
         ${copyContent}
         <div class="grid" style="margin-top:15px;">
           ${createSelect('Route', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
-          ${createSelect('Phase', 'ph', i, '', ['NORMAL', 'INVERT'], dspState.ph[i])}
+          <div class="control-group">
+            <label>Phase</label>
+            <button onclick="sendUpdate('ph', ${i}, 'v', ${dspState.ph[i]===1?0:1})" style="width:100%; padding:6px; border:none; border-radius:3px; cursor:pointer; font-weight:bold; ${phaseCls}">${dspState.ph[i]===1?'INV 180&deg;':'NORM 0&deg;'}</button>
+          </div>
           ${createSlider('Delay', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
         </div>
-        <div style="margin-top:15px; color:#00ffcc; font-size:11px; font-weight:bold; margin-bottom:10px; letter-spacing:0.5px;">ALL-PASS FILTER (PHASE ALIGN)</div>
+        <div style="margin-top:15px; color:#00ADB5; font-size:11px; font-weight:bold; margin-bottom:10px; letter-spacing:0.5px;">ALL-PASS FILTER (PHASE ALIGN)</div>
         <div class="grid">
           ${createSelect('Enable APF', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
           ${createSlider('APF Freq', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
@@ -821,8 +1082,19 @@
         }
         eqContent += `</div>`;
 
-        let compContent = `<div class="grid">
-            ${createSlider('Thresh', 'comp', i, 'thr', -30, 7, dspState.ct[i], 'dB')}
+        let compContent = `
+          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-out-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
+                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
+                  <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
+                      <div id="gr-bar-out-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
+                  </div>
+                  <span id="gr-txt-out-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
+              </div>
+          </div>
+          <div class="grid">
+            ${createSlider('Thresh', 'comp', i, 'thr', -40, 1, dspState.ct[i], 'dB')}
             ${createSlider('Ratio', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
             ${createSlider('Makeup', 'comp', i, 'mak', 0, 20, dspState.cm[i], 'dB')}
             ${createSlider('Attack', 'comp', i, 'atk', 1, 100, dspState.ca[i], 'ms')}
@@ -831,9 +1103,10 @@
 
         let outMuteCls = dspState.out_mute[i] ? 'btn-mute active' : 'btn-mute';
         
-        tab.innerHTML = `<div class="btn-row">
-                           <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE OUT ${i+1}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL OUT ${i+1}</button>
+        tab.innerHTML = `<div class="channel-header">${dspState.out_n[i]} <button class="btn-icon" onclick="renameChannel('out', ${i})">✏️</button></div>` +
+                         `<div class="btn-row">
+                           <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE ${dspState.out_n[i]}</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL</button>
                          </div>` +
                         wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
@@ -894,7 +1167,7 @@
                       <button id="btn-ota-fetch" class="btn-bypass" onclick="fetchGithubReleases()">FETCH</button>
                   </div>
               </div>
-              <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ffcc; color:#000;" onclick="triggerOTA()">START UPDATE</button>
+              <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ADB5; color:#000;" onclick="triggerOTA()">START UPDATE</button>
           `, 'sec-sys-ota');
 
           sysTab.innerHTML = presetHtml + toneHtml + otaHtml;
@@ -902,10 +1175,12 @@
       }
       
       drawVisibleGraphs();
+      drawRTA();
+      drawCompVisualizers();
     }
 
     async function revertTab(type, ch) {
-      if(!confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? (ch === 0 ? 'A' : 'B') : ch + 1} to default flat values?`)) return;
+      if(!confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch]} to default flat values?`)) return;
       if (type === 'in') {
           sendBLE(`/api/set?type=in&ch=${ch}&v=0`);
           sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-75`);
@@ -915,6 +1190,7 @@
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`);
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`);
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`);
+          revertBlock(ch, 'incomp', true);
       } else if (type === 'out') {
           sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`);
           sendBLE(`/api/set?type=ph&ch=${ch}&v=0`);
@@ -946,11 +1222,17 @@
           sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`);
         }
       } else if (block === 'comp') {
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=-20`);
+        sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=0`);
         sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`);
         sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`);
         sendBLE(`/api/set?type=comp&ch=${ch}&p=atk&v=10`);
         sendBLE(`/api/set?type=comp&ch=${ch}&p=rel&v=100`);
+      } else if (block === 'incomp') {
+        sendBLE(`/api/set?type=incomp&ch=${ch}&p=thr&v=0`);
+        sendBLE(`/api/set?type=incomp&ch=${ch}&p=rat&v=4`);
+        sendBLE(`/api/set?type=incomp&ch=${ch}&p=mak&v=0`);
+        sendBLE(`/api/set?type=incomp&ch=${ch}&p=atk&v=10`);
+        sendBLE(`/api/set?type=incomp&ch=${ch}&p=rel&v=100`);
       }
 
       if (!skipConfirm) sendBLE('/api/dump');
