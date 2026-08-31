@@ -26,8 +26,25 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Laptop Responsive Grids */
-    .desktop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; align-items: start; margin-top: 15px; }
     .rta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; align-items: start; }
+    .desktop-grid { display: grid; gap: 15px; align-items: start; margin-top: 15px; }
+    
+    /* Advanced 3-Column Layout for Desktop */
+    @media (min-width: 1100px) {
+        .desktop-grid { grid-template-columns: repeat(3, 1fr); }
+        .span-2 { grid-column: span 2; }
+        .span-full { grid-column: 1 / -1; }
+    }
+    @media (max-width: 1099px) and (min-width: 768px) {
+        .desktop-grid { grid-template-columns: repeat(2, 1fr); }
+        .span-2 { grid-column: 1 / -1; }
+        .span-full { grid-column: 1 / -1; }
+    }
+    @media (max-width: 767px) {
+        .desktop-grid { grid-template-columns: 1fr; }
+        .span-2 { grid-column: 1 / -1; }
+        .span-full { grid-column: 1 / -1; }
+    }
     
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
     .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
@@ -909,8 +926,8 @@
       ctx.stroke();
     }
 
-    const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
-      <div class="dsp-module">
+    const wrapSection = (title, content, id, rstAction = '', moduleClass = '', contentClass = '') => `
+      <div class="dsp-module ${moduleClass}">
           <div class="section-header">
             <span>${title}</span>
             <div class="edit-toggle-wrap">
@@ -919,7 +936,7 @@
               <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
             </div>
           </div>
-          <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>
+          <div id="${id}" class="dsp-section locked ${contentClass}">${content}</div>
       </div>`;
 
     function buildUI() {
@@ -975,10 +992,13 @@
         let gainVal = i === 0 ? dspState.vA : dspState.vB;
 
         let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
+        let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
+        
+        let gainDelayContent = `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}${delayContent}</div>`;
         
         let compContent = `
           <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-in-${i}" width="400" height="150" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
+              <canvas id="cvs-comp-in-${i}" width="1000" height="300" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); width:100%; height:150px;"></canvas>
               <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
                   <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
@@ -999,7 +1019,6 @@
                           createSlider('Attack', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms') +
                           createSlider('Release', 'gate', i, 'rel', 10, 1000, dspState.gre[i], 'ms');
                           
-        let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
 
         let bbeContent = `<div class="grid">
             ${createSelect('Enable', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
@@ -1015,11 +1034,10 @@
                            <button class="btn-revert" onclick="revertTab('in', ${i})">RESET ALL</button>
                          </div>` + 
                          `<div class="desktop-grid">` +
-                         wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
-                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
+                         wrapSection(`GAIN & DELAY`, gainDelayContent, `sec-in-gaindly-${name}`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
-                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
+                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
+                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`, 'span-2') +
                          `</div>`;
       });
 
@@ -1076,7 +1094,7 @@
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
             ${compareSelects}
           </div>
-          <canvas id="cvs-xo-cmp-${i}" width="800" height="200" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05); width:100%; border-radius:4px;"></canvas>
+          <canvas id="cvs-xo-cmp-${i}" width="1000" height="300" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05); width:100%; height:150px; border-radius:4px;"></canvas>
         `;
 
         let xoContent = `<div class="grid">
@@ -1108,7 +1126,7 @@
 
         let compContent = `
           <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-out-${i}" width="400" height="150" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
+              <canvas id="cvs-comp-out-${i}" width="1000" height="300" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1); width:100%; height:150px;"></canvas>
               <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
                   <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
@@ -1136,11 +1154,11 @@
                         wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
                         wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`) +
-                        `<div style="grid-column: 1 / -1; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                        `<div class="span-full" style="background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                             <div style="color:#00ADB5; font-size:12px; font-weight:bold; margin-bottom:10px; letter-spacing:1px; text-transform:uppercase;">RESPONSE PREVIEW</div>
-                            <canvas id="cvs-${i}" width="1000" height="220" style="width: 100%; border-radius: 5px; border: 1px solid #444; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); display: block; background: #000;"></canvas>
+                            <canvas id="cvs-${i}" width="2000" height="400" style="width: 100%; height:200px; border-radius: 5px; border: 1px solid #444; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); display: block; background: #000;"></canvas>
                         </div>` +
-                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
+                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, 'span-2', eqBypassed ? 'bypassed' : '') +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
                         `</div>`;
       }
