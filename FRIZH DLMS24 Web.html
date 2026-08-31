@@ -7,7 +7,7 @@
     body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; }
     
     /* Center the app on laptops and restrict maximum stretch */
-    .app-container { width: 100%; max-width: 1300px; display: flex; flex-direction: column; }
+    .app-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; }
 
     /* App Header & BLE Icon */
     .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; margin-bottom: 15px; }
@@ -26,7 +26,7 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Laptop Responsive Grids */
-    .desktop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 15px; align-items: start; margin-top: 15px; }
+    .desktop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; align-items: start; margin-top: 15px; }
     .rta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; align-items: start; }
     
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
@@ -188,11 +188,11 @@
        <div class="rta-grid">
            <div class="dsp-module">
                <div class="section-header" style="border-radius: 4px 4px 0 0;">INPUT A SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="400" height="140" style="margin:0;"></canvas></div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="1000" height="200" style="margin:0; width:100%;"></canvas></div>
            </div>
            <div class="dsp-module">
                <div class="section-header" style="border-radius: 4px 4px 0 0; color: orange;">INPUT B SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="400" height="140" style="margin:0;"></canvas></div>
+               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="1000" height="200" style="margin:0; width:100%;"></canvas></div>
            </div>
        </div>
     </div>
@@ -685,22 +685,22 @@
         let indices = [0, 6, 12, 18, 24, 30];
         
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '10px sans-serif';
+        ctx.font = '24px sans-serif';
         for(let i=0; i<labels.length; i++) {
             let x = (indices[i]/30.0)*w;
             ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
             let textX = x - (ctx.measureText(labels[i]).width / 2);
-            if(i===0) textX = 4;
-            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 4;
-            ctx.fillText(labels[i], textX, h-4);
+            if(i===0) textX = 10;
+            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 10;
+            ctx.fillText(labels[i], textX, h-10);
         }
         
         ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
         
-        let drawHeight = h - 20;
+        let drawHeight = h - 40;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4;
         ctx.lineJoin = 'round';
         ctx.beginPath();
         for(let b=0; b<31; b++) {
@@ -774,7 +774,7 @@
         
         if(isOff) return;
         
-        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(dbToX(minDb), dbToY(minDb + mak));
         ctx.lineTo(dbToX(thr), dbToY(thr + mak));
@@ -783,7 +783,7 @@
         ctx.stroke();
         
         ctx.fillStyle = '#fff'; ctx.beginPath();
-        ctx.arc(dbToX(thr), dbToY(thr + mak), 4, 0, Math.PI*2); ctx.fill();
+        ctx.arc(dbToX(thr), dbToY(thr + mak), 8, 0, Math.PI*2); ctx.fill();
         
         let outDbNoMak = peakDb - mak;
         let inDb = outDbNoMak;
@@ -791,7 +791,7 @@
         
         if(peakDb > minDb + 1.0) {
             ctx.fillStyle = '#f55'; ctx.beginPath();
-            ctx.arc(dbToX(inDb), dbToY(peakDb), 4, 0, Math.PI*2); ctx.fill();
+            ctx.arc(dbToX(inDb), dbToY(peakDb), 8, 0, Math.PI*2); ctx.fill();
         }
     }
 
@@ -844,7 +844,7 @@
         let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
         
         ctx.strokeStyle = outColors[val];
-        ctx.lineWidth = 2; 
+        ctx.lineWidth = 4; 
         ctx.beginPath();
         for(let x=0; x<w; x+=2) {
           let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
@@ -870,7 +870,7 @@
       for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
 
       ctx.strokeStyle = '#00ADB5';
-      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+      ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath();
       
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       
@@ -977,14 +977,14 @@
         let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
         
         let compContent = `
-          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-in-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
-                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
+          <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-in-${i}" width="400" height="150" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
+                  <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
                       <div id="gr-bar-in-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
                   </div>
-                  <span id="gr-txt-in-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
+                  <span id="gr-txt-in-${i}" style="font-size:10px; color:#fff; font-weight:bold;">0.0</span>
               </div>
           </div>
           <div class="grid">
@@ -1016,10 +1016,10 @@
                          </div>` + 
                          `<div class="desktop-grid">` +
                          wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
+                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
                          wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
                          wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
                          `</div>`;
       });
 
@@ -1028,7 +1028,6 @@
         let tab = document.getElementById('t-out' + (i+1));
         if(!tab) continue;
         
-        // Copy Options Logic
         let copyOptions = `<option value="">Select Channel...</option>`;
         for(let c=0; c<4; c++) {
             if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1} (${dspState.out_n[c]})</option>`;
@@ -1061,7 +1060,6 @@
           ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
         </div>`;
 
-        // Generate Crossover Comparison Visualizer
         let compareSelects = '';
         for(let d=0; d<4; d++) {
           let defaultVal = (d === 0) ? (i + 1) : 0; 
@@ -1078,7 +1076,7 @@
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
             ${compareSelects}
           </div>
-          <canvas id="cvs-xo-cmp-${i}" width="400" height="140" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
+          <canvas id="cvs-xo-cmp-${i}" width="800" height="200" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05); width:100%; border-radius:4px;"></canvas>
         `;
 
         let xoContent = `<div class="grid">
@@ -1087,8 +1085,7 @@
           ${createSlider('HPF Freq', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
           ${createSlider('LPF Freq', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
           ${createSlider('Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
-        </div>
-        <canvas id="cvs-${i}" width="400" height="140" style="margin-top:15px; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>`;
+        </div>`;
 
         let eqBypassed = dspState.eqb[i] === 1;
         let eqContent = `
@@ -1110,14 +1107,14 @@
         eqContent += `</div>`;
 
         let compContent = `
-          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-out-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
-                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
+          <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-out-${i}" width="400" height="150" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
+                  <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
                       <div id="gr-bar-out-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
                   </div>
-                  <span id="gr-txt-out-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
+                  <span id="gr-txt-out-${i}" style="font-size:10px; color:#fff; font-weight:bold;">0.0</span>
               </div>
           </div>
           <div class="grid">
@@ -1138,9 +1135,13 @@
                         `<div class="desktop-grid">` + 
                         wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
-                        wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
-                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
                         wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`) +
+                        `<div style="grid-column: 1 / -1; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                            <div style="color:#00ADB5; font-size:12px; font-weight:bold; margin-bottom:10px; letter-spacing:1px; text-transform:uppercase;">RESPONSE PREVIEW</div>
+                            <canvas id="cvs-${i}" width="1000" height="220" style="width: 100%; border-radius: 5px; border: 1px solid #444; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); display: block; background: #000;"></canvas>
+                        </div>` +
+                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
+                        wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
                         `</div>`;
       }
 
@@ -1160,7 +1161,7 @@
                   <label>Select Preset Slot</label>
                   <select id="sys-preset-slot" onchange="updatePresetButtons()">${presetOptions}</select>
               </div>
-              <div class="btn-row" style="margin-top:10px; gap:8px;">
+              <div class="btn-row" style="margin-top:10px; gap:8px; padding:0; border:none; background:transparent;">
                   <button class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#4CAF50; color:#fff;" onclick="doPreset('load')">LOAD</button>
                   <button id="btn-preset-save" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#FF9800; color:#fff;" onclick="doPreset('save')">SAVE</button>
                   <button id="btn-preset-ren" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#9E9E9E; color:#fff;" onclick="doPreset('rename')">RENAME</button>
