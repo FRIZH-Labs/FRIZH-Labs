@@ -339,41 +339,72 @@
         if(jsonBuffer.endsWith("}")) {
           try {
               dspState = JSON.parse(jsonBuffer);
-              if(!dspState.eqb) dspState.eqb = [0,0,0,0];
-              if(!dspState.ph) dspState.ph = [0,0,0,0];
-              if(!dspState.xt) dspState.xt = [0,0,0,0];
-              if(!dspState.xth) dspState.xth = [0,0,0,0];
-              if(!dspState.xfl) dspState.xfl = [80,80,80,80];
-              if(!dspState.xfh) dspState.xfh = [5000,5000,5000,5000];
-              if(!dspState.xo_gn) dspState.xo_gn = [0,0,0,0];
-
-              if(dspState.tm === undefined) dspState.tm = 0;
-              if(dspState.tf === undefined) dspState.tf = 1000;
-              if(dspState.tg === undefined) dspState.tg = -20;
-              if(dspState.tr === undefined) dspState.tr = 0;
+              
+              // FALLBACK SAFEGUARDS to prevent UI crashing if JSON is incomplete
+              if(dspState.vA === undefined) dspState.vA = 0;
+              if(dspState.vB === undefined) dspState.vB = 0;
+              if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
+              if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
+              
+              if(!dspState.idl) dspState.idl = [0,0];
+              if(!dspState.gth) dspState.gth = [-75,-75];
+              if(!dspState.gat) dspState.gat = [10,10];
+              if(!dspState.gre) dspState.gre = [200,200];
+              
               if(!dspState.bbe_e) dspState.bbe_e = [0,0];
               if(!dspState.bbe_l) dspState.bbe_l = [50,50];
               if(!dspState.bbe_p) dspState.bbe_p = [50,50];
-              if(!dspState.ict) dspState.ict = [0,0];
-              if(!dspState.icr) dspState.icr = [4,4];
-              if(!dspState.icm) dspState.icm = [0,0];
-              if(!dspState.ica) dspState.ica = [10,10];
-              if(!dspState.icrel) dspState.icrel = [100,100];
-              if(!dspState.apfe) dspState.apfe = [0,0,0,0];
-              if(!dspState.apff) dspState.apff = [1000,1000,1000,1000];
-              if(!dspState.apfq) dspState.apfq = [0.7,0.7,0.7,0.7];
-
-              if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
-              if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
+              
               if(!dspState.afs_e) dspState.afs_e = [0,0];
               if(!dspState.afs_s) dspState.afs_s = [3,3];
               if(!dspState.afs_f) dspState.afs_f = [[0,0,0,0], [0,0,0,0]];
+              
               if(!dspState.deq_e) dspState.deq_e = [0,0];
               if(!dspState.deq_f) dspState.deq_f = [[150,1000,5000], [150,1000,5000]];
               if(!dspState.deq_q) dspState.deq_q = [[1.4,1.4,1.4], [1.4,1.4,1.4]];
               if(!dspState.deq_t) dspState.deq_t = [[-20,-20,-20], [-20,-20,-20]];
               if(!dspState.deq_r) dspState.deq_r = [[0,0,0], [0,0,0]];
               if(!dspState.deq_d) dspState.deq_d = [[0,0,0], [0,0,0]]; 
+
+              if(!dspState.ict) dspState.ict = [0,0];
+              if(!dspState.icr) dspState.icr = [4,4];
+              if(!dspState.icm) dspState.icm = [0,0];
+              if(!dspState.ica) dspState.ica = [10,10];
+              if(!dspState.icrel) dspState.icrel = [100,100];
+              
+              if(!dspState.rt) dspState.rt = [1,2,1,2];
+              if(!dspState.ph) dspState.ph = [0,0,0,0];
+              if(!dspState.dl) dspState.dl = [0,0,0,0];
+              
+              if(!dspState.apfe) dspState.apfe = [0,0,0,0];
+              if(!dspState.apff) dspState.apff = [1000,1000,1000,1000];
+              if(!dspState.apfq) dspState.apfq = [0.7,0.7,0.7,0.7];
+
+              if(!dspState.xt) dspState.xt = [0,0,0,0];
+              if(!dspState.xth) dspState.xth = [0,0,0,0];
+              if(!dspState.xfl) dspState.xfl = [80,80,80,80];
+              if(!dspState.xfh) dspState.xfh = [5000,5000,5000,5000];
+              if(!dspState.xo_gn) dspState.xo_gn = [0,0,0,0];
+
+              if(!dspState.eqb) dspState.eqb = [0,0,0,0];
+              if(!dspState.eqf) dspState.eqf = [[60,150,400,1000,2400,6000,12000], [60,150,400,1000,2400,6000,12000], [60,150,400,1000,2400,6000,12000], [60,150,400,1000,2400,6000,12000]];
+              if(!dspState.eq_gn) dspState.eq_gn = [[0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0], [0,0,0,0,0,0,0]];
+              if(!dspState.eqq) dspState.eqq = [[1.4,1.4,1.4,1.4,1.4,1.4,1.4], [1.4,1.4,1.4,1.4,1.4,1.4,1.4], [1.4,1.4,1.4,1.4,1.4,1.4,1.4], [1.4,1.4,1.4,1.4,1.4,1.4,1.4]];
+
+              if(!dspState.ct) dspState.ct = [0,0,0,0];
+              if(!dspState.cr) dspState.cr = [4,4,4,4];
+              if(!dspState.cm) dspState.cm = [0,0,0,0];
+              if(!dspState.ca) dspState.ca = [10,10,10,10];
+              if(!dspState.crel) dspState.crel = [100,100,100,100];
+
+              if(dspState.tm === undefined) dspState.tm = 0;
+              if(dspState.tf === undefined) dspState.tf = 1000;
+              if(dspState.tg === undefined) dspState.tg = -20;
+              if(dspState.tr === undefined) dspState.tr = 0;
+              
+              if(!dspState.in_mute) dspState.in_mute = [false, false];
+              if(!dspState.out_mute) dspState.out_mute = [false, false, false, false];
+
               initialState = JSON.stringify(dspState);
               buildUI();
           } catch(e) { console.log("JSON Parse err", e); }
@@ -404,7 +435,6 @@
         body.classList.toggle('collapsed');
         btn.innerText = body.classList.contains('collapsed') ? '□' : '_';
         
-        // Trigger redraw so canvases inside just-opened widgets scale correctly
         if(!body.classList.contains('collapsed')) {
             setTimeout(() => {
                 drawVisibleGraphs();
@@ -416,12 +446,12 @@
         }
     }
 
-    const getWidgetHead = (title, rstParam, defaultCollapsed = true) => `
+    const getWidgetHead = (title, rstParam) => `
         <div class="widget-header">
             <span>${title}</span>
             <div class="widget-actions">
                 ${rstParam ? `<button class="btn btn-icon btn-danger" onclick="${rstParam}">RST</button>` : ''}
-                <button class="btn btn-icon" onclick="toggleWidget(this)">${defaultCollapsed ? '□' : '_'}</button>
+                <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
             </div>
         </div>
     `;
@@ -552,7 +582,6 @@
         sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
         dspState.afs_f[ch] = [0,0,0,0]; 
         buildUI(); 
-        setTimeout(() => { drawVisibleGraphs(); drawDeqGraph(ch); }, 50); // Redraw immediately empty
         setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP to confirm
     }
 
@@ -608,11 +637,92 @@
                 sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=0.7`);
                 sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=80`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=5000`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=0`);
-                const f = [60,150,400,1000,2400,6000,12000]; for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${f[b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=1.41`); }
+                const f = [60,150,400,1000,2400,6000,12000]; sendBLE(`/api/set?type=eqb&ch=${i}&p=v&v=0`); for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${f[b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=1.41`); }
                 sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=100`);
             }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
             setTimeout(() => sendBLE('/api/dump'), 1500);
+        }
+    }
+
+    /* --- BASIC TOGGLES --- */
+    function toggleMute(type, ch) {
+      let isMuted = (type === 'in') ? (dspState.in_mute[ch] = !dspState.in_mute[ch]) : (dspState.out_mute[ch] = !dspState.out_mute[ch]);
+      let btn = document.getElementById(`btn-mute-${type}-${ch}`);
+      if(btn) { btn.classList.toggle('active', isMuted); btn.innerText = isMuted ? 'MUTED' : 'MUTE'; }
+      let indIndex = type === 'in' ? ch : ch + 2;
+      let led = document.getElementById(`ind-mute-${indIndex}`);
+      if(led) { led.classList.toggle('active', isMuted); led.classList.toggle('clip', isMuted); }
+      sendBLE(`/api/mute?type=${type}&ch=${ch}`);
+    }
+
+    function togglePolarity(ch) {
+        dspState.ph[ch] = dspState.ph[ch] === 1 ? 0 : 1;
+        sendUpdate('ph', ch, 'v', dspState.ph[ch]);
+        let btn = document.getElementById(`btn-ph-${ch}`);
+        if(btn) {
+            if(dspState.ph[ch] === 1) { btn.style.background = 'var(--accent-orange)'; btn.style.color = '#000'; btn.innerText = 'POLARITY: INV 180°'; } 
+            else { btn.style.background = '#2a2c35'; btn.style.color = '#fff'; btn.innerText = 'POLARITY: NORM 0°'; }
+        }
+    }
+
+    function toggleBypass(type, ch) {
+        if(type === 'eq') {
+            dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
+            let wid = document.getElementById(`wid-eq-${ch}`), btn = document.getElementById(`btn-byp-eq-${ch}`);
+            if(wid) wid.classList.toggle('bypassed', dspState.eqb[ch] === 1);
+            if(btn) { btn.innerText = dspState.eqb[ch] === 1 ? 'BYPASSED' : 'ACTIVE'; btn.classList.toggle('btn-danger', dspState.eqb[ch] === 1); }
+            sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
+            drawVisibleGraphs();
+        } else if(type === 'deq') {
+            dspState.deq_e[ch] = dspState.deq_e[ch] === 1 ? 0 : 1;
+            let wid = document.getElementById(`wid-deq-${ch}`), btn = document.getElementById(`btn-byp-deq-${ch}`);
+            if(wid) wid.classList.toggle('bypassed', dspState.deq_e[ch] === 0);
+            if(btn) { btn.innerText = dspState.deq_e[ch] === 0 ? 'BYPASSED' : 'ACTIVE'; btn.classList.toggle('btn-danger', dspState.deq_e[ch] === 0); }
+            sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=${dspState.deq_e[ch]}`);
+            drawDeqGraph(ch);
+        }
+    }
+
+    function copyChannel(type, targetCh) {
+        let src = document.getElementById(`copy_src_${type}_${targetCh}`).value;
+        if(src === "" || parseInt(src) === targetCh) return;
+        if(confirm(`Copy settings from ${type.toUpperCase()}${parseInt(src)+1} to ${type.toUpperCase()}${targetCh+1}?`)) {
+            sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
+            setTimeout(() => sendBLE('/api/dump'), 500); 
+        }
+    }
+
+    /* --- SYSTEM OTA & PRESET LOGIC --- */
+    async function fetchGithubReleases() {
+        let sel = document.getElementById('ota-version');
+        sel.innerHTML = '<option>Fetching from GitHub...</option>';
+        try {
+            let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', { headers: { 'Accept': 'application/vnd.github.v3+json' }});
+            let files = await res.json();
+            let opts = '';
+            files.forEach(f => { if(f.name.toLowerCase().endsWith('.bin')) { let name = f.name.replace(/\.bin$/i, ''); opts += `<option value="${name}">${name}</option>`; } });
+            if(opts === '') opts = '<option value="firmware_normal">firmware_normal (Fallback)</option>';
+            sel.innerHTML = opts;
+        } catch(e) { sel.innerHTML = '<option value="firmware_normal">Fetch Failed - Using Fallback</option>'; }
+    }
+
+    function triggerOTA() {
+        let ssid = document.getElementById('ota-ssid').value, pass = document.getElementById('ota-pass').value, ver = document.getElementById('ota-version').value;
+        if(!ssid || !ver || ver.includes('Fetching')) return alert("Please enter WiFi SSID and select a firmware version.");
+        if(confirm("Start OTA Update? Device will reboot after.")) sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
+    }
+
+    function doPreset(act) {
+        let slot = parseInt(document.getElementById('sys-preset-slot').value);
+        let isProtected = slot >= 6;
+        if (act === 'load' || act === 'save') {
+            if(act === 'save' && isProtected) return alert("Slots 6-8 are factory protected.");
+            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+        } else if (act === 'rename') {
+            if(isProtected) return alert("Slots 6-8 are factory protected.");
+            let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
+            if(name !== null) sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '')}`);
         }
     }
 
@@ -752,20 +862,6 @@
 
         canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); canvas.addEventListener('mouseup', onUp); canvas.addEventListener('mouseleave', onUp);
         canvas.addEventListener('touchstart', onDown, {passive:false}); canvas.addEventListener('touchmove', onMove, {passive:false}); canvas.addEventListener('touchend', onUp);
-    }
-
-    function updateSliderUI(id, realVal) {
-        let el = document.getElementById(id);
-        if(!el) return;
-        let isF = id.includes('_f_');
-        if(isF) {
-            let min = parseFloat(el.getAttribute('data-min')), max = parseFloat(el.getAttribute('data-max'));
-            el.value = ((Math.log10(realVal) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
-            el.closest('.fader-box').querySelector('.fader-val').innerText = realVal.toFixed(0) + 'Hz';
-        } else {
-            el.value = realVal;
-            el.closest('.fader-box').querySelector('.fader-val').innerText = (realVal>0?'+':'') + realVal.toFixed(0) + 'dB';
-        }
     }
 
     function drawDeqGraph(ch) {
@@ -983,14 +1079,14 @@
             <div class="strip-col">
               <div class="widget">
                 ${getWidgetHead('CONFIG', `revertBlock(${i}, 'in_gain')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createFader('MASTER GAIN', 'in', i, 'gn', -12, 24, i===0?dspState.vA:dspState.vB, 'dB')}
                     ${createFader('DELAY', 'idl', i, '', 0, 200, dspState.idl[i]||0, 'ms', '', '0.1')}
                 </div>
               </div>
               <div class="widget">
                 ${getWidgetHead('NOISE GATE', `revertBlock(${i}, 'gate')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createFader('THRESH', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB')}
                     <div class="ctrl-row">
                         ${createFader('ATTACK', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms')}
@@ -1000,7 +1096,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('BBE SONIC MAXIMIZER', `revertBlock(${i}, 'bbe')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createSelect('ENABLE', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
                     <div class="ctrl-row">
                         ${createFader('LO CONT', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
@@ -1010,7 +1106,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('AFS (FEEDBACK SUPPRESSOR)', `revertBlock(${i}, 'afs')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createSelect('ENABLE', 'afs', i, 'e', ['BYPASS', 'ACTIVE'], dspState.afs_e[i])}
                     ${createFader('SENSITIVITY', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
                     ${afsBadges}
@@ -1026,17 +1122,17 @@
                     <div class="widget-actions">
                         <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'deq')">RST</button>
                         <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
-                        <button class="btn btn-icon" onclick="toggleWidget(this)">□</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
                     </div>
                 </div>
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     <div class="graph-container graph-medium"><canvas id="cvs-deq-${i}"></canvas></div>
                     <div class="ctrl-row">${deqHtml}</div>
                 </div>
               </div>
               <div class="widget">
                 ${getWidgetHead('INPUT COMPRESSOR', `revertBlock(${i}, 'incomp')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-in-${i}"></canvas></div>
                         <div class="gr-meter-box">
@@ -1095,7 +1191,7 @@
             <div class="strip-col">
               <div class="widget">
                 ${getWidgetHead('ROUTING & ALIGNMENT', `revertBlock(${i}, 'rt')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createSelect('SOURCE', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
                     <button id="btn-ph-${i}" class="btn" style="${phBtnStyle}" onclick="togglePolarity(${i})">${dspState.ph[i]===1?'POLARITY: INV 180°':'POLARITY: NORM 0°'}</button>
                     ${createFader('DELAY', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
@@ -1103,7 +1199,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('ALL-PASS FILTER', `revertBlock(${i}, 'apf')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createSelect('ENABLE', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
                     <div class="ctrl-row">
                         ${createFader('FREQ', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
@@ -1113,7 +1209,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('CROSSOVER', `revertBlock(${i}, 'xo')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     ${createFader('OUT GAIN', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
                     ${createSelect('HPF TYPE', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
                     ${createFader('HPF FREQ', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
@@ -1124,7 +1220,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('COMPRESSOR', `revertBlock(${i}, 'comp')`)}
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-out-${i}"></canvas></div>
                         <div class="gr-meter-box">
@@ -1152,10 +1248,10 @@
                     <div class="widget-actions">
                         <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'eq')">RST</button>
                         <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'EQ BYPASSED':'EQ ACTIVE'}</button>
-                        <button class="btn btn-icon" onclick="toggleWidget(this)">□</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
                     </div>
                 </div>
-                <div class="widget-body collapsed">
+                <div class="widget-body">
                     <div class="graph-container graph-large"><canvas id="cvs-${i}"></canvas></div>
                     <div class="ctrl-row" style="overflow-x:auto;">${eqHtml}</div>
                 </div>
