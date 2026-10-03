@@ -105,17 +105,19 @@
     .gr-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to bottom, #ff9800, #f44336); transition: height 0.05s; }
 
     /* VERTICAL VU METERS */
-    .monitor-grid { display: flex; justify-content: center; gap: 20px; padding: 20px; height: 100%; }
-    .vu-channel { display: flex; flex-direction: column; align-items: center; width: 50px; }
-    .vu-title { font-weight: 900; font-size: 12px; margin-bottom: 12px; color: #fff; text-align: center; }
-    .vu-meter-wrap { display: flex; gap: 5px; height: calc(100% - 130px); min-height: 180px; }
+    .monitor-grid { display: flex; justify-content: space-around; padding: 15px; height: 100%; flex:1; }
+    .vu-channel { display: flex; flex-direction: column; align-items: center; width: 45px; }
+    .vu-title { font-weight: 900; font-size: 12px; margin-bottom: 12px; color: #fff; text-align: center; white-space: nowrap;}
+    .vu-meter-wrap { display: flex; gap: 5px; height: calc(100% - 110px); min-height: 120px; }
     .vu-scale { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; font-family: monospace; color: #666; padding-bottom: 15px; padding-right: 2px; text-align: right; }
     .vu-track { width: 18px; background: #050505; border: 1px solid #222; border-radius: 3px; position: relative; overflow: hidden; }
     .vu-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
     .vu-leds { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; width: 100%; }
-    .led { padding: 3px 0; text-align: center; font-size: 8px; font-weight: 800; border-radius: 3px; background: #111; color: #444; border: 1px solid #222; }
+    .led { padding: 3px 0; text-align: center; font-size: 8px; font-weight: 800; border-radius: 3px; background: #111; color: #444; border: 1px solid #222; user-select: none; }
     .led.active.clip { background: #f44336; color: #fff; border-color: #ff7961; box-shadow: 0 0 10px #f44336; }
     .led.active.comp { background: #ff9800; color: #000; border-color: #ffb74d; box-shadow: 0 0 10px #ff9800; }
+    .led.clickable { cursor: pointer; transition: 0.15s; }
+    .led.clickable:hover { filter: brightness(1.2); }
 
     /* OVERLAYS */
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12,13,16,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(4px); }
@@ -126,12 +128,12 @@
       .channel-strip { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .strip-col { overflow: visible; }
       .panel { overflow-y: auto; }
+      .monitor-col-left { grid-template-columns: 1fr !important; }
     }
   </style>
 </head>
 <body>
 
-  <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
     <div style="font-size: 32px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn btn-primary" style="font-size: 14px; padding: 12px 30px;" onclick="connectBLE()">SCAN & CONNECT</button>
@@ -155,8 +157,7 @@
     <nav class="sidebar">
       <div class="brand">FRIZH<span>DLMS 24</span></div>
       <div class="nav-tabs" id="tabs">
-        <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
-        <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA SPECTRUM</div>
+        <div class="tab active" id="tab-monitor" onclick="switchTab('t-monitor')">MONITOR & RTA</div>
         <div style="margin: 8px 10px; font-size: 9px; color: #555; border-bottom: 1px solid #333; padding-bottom: 4px;">INPUTS</div>
         <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
         <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
@@ -165,7 +166,6 @@
         <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
         <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
         <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
-        
         <div class="tab tab-sys" id="tab-sys" onclick="switchTab('t-sys')">SYSTEM</div>
       </div>
       <div class="ble-status">
@@ -175,24 +175,7 @@
 
     <!-- MAIN VIEW -->
     <main class="main-view">
-      <div id="t-meters" class="panel active"><div id="meter-grid" class="monitor-grid"></div></div>
-      
-      <div id="t-rta" class="panel">
-        <div class="dashboard-header">
-            <div class="dashboard-title">RTA SPECTRUM</div>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:15px; height:calc(100% - 40px);">
-            <div class="widget" style="flex:1;">
-                <div class="widget-header">INPUT A</div>
-                <div class="widget-body"><div class="graph-container" style="height:100%;"><canvas id="cvs-rta-A"></canvas></div></div>
-            </div>
-            <div class="widget" style="flex:1;">
-                <div class="widget-header" style="color:var(--accent-orange);">INPUT B</div>
-                <div class="widget-body"><div class="graph-container" style="height:100%;"><canvas id="cvs-rta-B"></canvas></div></div>
-            </div>
-        </div>
-      </div>
-      
+      <div id="t-monitor" class="panel active"></div>
       <div id="t-inA" class="panel"></div>
       <div id="t-inB" class="panel"></div>
       <div id="t-out1" class="panel"></div>
@@ -225,6 +208,7 @@
     window.addEventListener('resize', () => {
         drawVisibleGraphs();
         drawRTA();
+        drawGlobalCrossover();
         drawCompVisualizers();
     });
 
@@ -302,7 +286,7 @@
         if(p.length >= 18) {
             for(let i=0; i<6; i++) {
                 livePeaks[i] = parseFloat(p[i]) || 1e-9;
-                if(document.getElementById('t-meters').classList.contains('active')) {
+                if(document.getElementById('t-monitor').classList.contains('active')) {
                     let db = (20 * Math.log10(livePeaks[i])) - 3.0; 
                     let pct = Math.max(0, Math.min(100, (db + 60) * (100 / 60))); 
                     let mtr = document.getElementById(`mtr-${i}`);
@@ -317,6 +301,8 @@
                 inCompAct[i] = parseInt(p[16+i]);
                 let btn = document.getElementById(`btn-mute-in-${i}`);
                 if(btn) { btn.classList.toggle('active', dspState.in_mute[i]); btn.innerText = dspState.in_mute[i] ? 'MUTED' : 'MUTE'; }
+                let led = document.getElementById(`ind-mute-${i}`);
+                if(led) { led.classList.toggle('active', dspState.in_mute[i]); led.classList.toggle('clip', dspState.in_mute[i]); }
                 let compLed = document.getElementById(`ind-comp-${i}`);
                 if(compLed) compLed.classList.toggle('active', inCompAct[i] === 1);
               }
@@ -325,6 +311,8 @@
                 compAct[i] = parseInt(p[12+i]);
                 let btn = document.getElementById(`btn-mute-out-${i}`);
                 if(btn) { btn.classList.toggle('active', dspState.out_mute[i]); btn.innerText = dspState.out_mute[i] ? 'MUTED' : 'MUTE'; }
+                let led = document.getElementById(`ind-mute-${i+2}`);
+                if(led) { led.classList.toggle('active', dspState.out_mute[i]); led.classList.toggle('clip', dspState.out_mute[i]); }
                 let compLed = document.getElementById(`ind-comp-${i+2}`);
                 if(compLed) compLed.classList.toggle('active', compAct[i] === 1);
               }
@@ -404,9 +392,9 @@
       setTimeout(() => {
           if(id.startsWith('t-out')) drawVisibleGraphs();
           if(id.startsWith('t-in')) { drawDeqGraph(id.endsWith('A')?0:1); }
-          if(id === 't-rta') drawRTA();
+          if(id === 't-monitor') { drawRTA(); drawGlobalCrossover(); }
           drawCompVisualizers();
-      }, 15);
+      }, 50);
     }
 
     function toggleWidget(btn) {
@@ -414,6 +402,16 @@
         body.classList.toggle('collapsed');
         btn.innerText = body.classList.contains('collapsed') ? '□' : '_';
     }
+
+    const getWidgetHead = (title, rstParam, defaultCollapsed = true) => `
+        <div class="widget-header">
+            <span>${title}</span>
+            <div class="widget-actions">
+                ${rstParam ? `<button class="btn btn-icon btn-danger" onclick="${rstParam}">RST</button>` : ''}
+                <button class="btn btn-icon" onclick="toggleWidget(this)">${defaultCollapsed ? '□' : '_'}</button>
+            </div>
+        </div>
+    `;
 
     function sendUpdate(type, ch, param, val, band = '') {
       clearTimeout(timers[type+ch+param+band]);
@@ -423,7 +421,7 @@
     }
 
     function promptFreq(id, min, max) {
-        let val = prompt(`Enter frequency (${min} - ${max} Hz):`);
+        let val = prompt(`Enter frequency (${min} -${max} Hz):`);
         if (val !== null && val.trim() !== '') {
             val = parseFloat(val);
             if (!isNaN(val)) {
@@ -484,7 +482,7 @@
       el.closest('.fader-box').querySelector('.fader-val').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
       
-      if (type === 'xo' || type === 'eq') drawVisibleGraphs();
+      if (type === 'xo' || type === 'eq') { drawVisibleGraphs(); drawGlobalCrossover(); }
       if (type === 'deq') drawDeqGraph(ch);
       if (type === 'comp' || type === 'incomp') {
           if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; dspState.ica[ch]=p=='atk'?realVal:dspState.ica[ch]; dspState.icrel[ch]=p=='rel'?realVal:dspState.icrel[ch]; }
@@ -495,7 +493,7 @@
 
     function handleSelect(el) {
         let type = el.getAttribute('data-type'), ch = parseInt(el.getAttribute('data-ch')), p = el.getAttribute('data-p'), val = parseInt(el.value);
-        if (type === 'xo') { if(p === 't') dspState.xt[ch] = val; if(p === 'th') dspState.xth[ch] = val; drawVisibleGraphs(); } 
+        if (type === 'xo') { if(p === 't') dspState.xt[ch] = val; if(p === 'th') dspState.xth[ch] = val; drawVisibleGraphs(); drawGlobalCrossover(); } 
         else if (type === 'rt') { dspState.rt[ch] = val; } 
         else if (type === 'bbe') { dspState['bbe_'+p][ch] = val; } 
         else if (type === 'afs') { dspState['afs_'+p][ch] = val; } 
@@ -516,7 +514,7 @@
       if (isFreq) {
          htmlMin = 0; htmlMax = 1000; htmlStep = 1;
          htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
-         clickAction = `onclick="promptFreq('${id}', ${min}, ${max})"`;
+         clickAction = `onclick="promptFreq('${id}', ${min},${max})"`;
       }
 
       return `
@@ -541,7 +539,8 @@
         sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
         dspState.afs_f[ch] = [0,0,0,0]; 
         buildUI(); 
-        setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP to show 0Hz
+        setTimeout(() => { drawVisibleGraphs(); drawDeqGraph(ch); }, 50); // Redraw
+        setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP
     }
 
     function revertBand(type, ch, b) {
@@ -556,6 +555,7 @@
             dspState.deq_f[ch][b] = defFreqs[b]; dspState.deq_d[ch][b] = 0; dspState.deq_q[ch][b] = 1.4; dspState.deq_r[ch][b] = 0; dspState.deq_t[ch][b] = -20;
         }
         buildUI();
+        setTimeout(() => { drawVisibleGraphs(); drawDeqGraph(ch); drawGlobalCrossover(); }, 50); 
     }
 
     async function revertBlock(ch, block, skipConfirm = false) {
@@ -583,10 +583,23 @@
 
     function doFactoryReset() {
         if(confirm(`FACTORY RESET ALL CHANNELS?\nThis will completely flatten the processor.`)) {
-            for(let i=0; i<2; i++) { revertBlock(i, 'in_gain', true); revertBlock(i, 'gate', true); revertBlock(i, 'bbe', true); revertBlock(i, 'afs', true); revertBlock(i, 'incomp', true); revertBlock(i, 'deq', true); }
-            for(let i=0; i<4; i++) { revertBlock(i, 'rt', true); revertBlock(i, 'apf', true); revertBlock(i, 'xo', true); revertBlock(i, 'eq', true); revertBlock(i, 'comp', true); }
+            for(let i=0; i<2; i++) {
+                sendBLE(`/api/set?type=in&ch=${i}&p=gn&v=0`); sendBLE(`/api/set?type=idl&ch=${i}&v=0`);
+                sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=200`);
+                sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=50`);
+                sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${i}&p=clr&v=1`);
+                sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=100`);
+                const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=-20`); }
+            }
+            for(let i=0; i<4; i++) {
+                sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
+                sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=0.7`);
+                sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=80`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=5000`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=0`);
+                const f = [60,150,400,1000,2400,6000,12000]; for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${f[b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=1.41`); }
+                sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=100`);
+            }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
-            setTimeout(() => sendBLE('/api/dump'), 1200);
+            setTimeout(() => sendBLE('/api/dump'), 1500);
         }
     }
 
@@ -595,6 +608,9 @@
       let isMuted = (type === 'in') ? (dspState.in_mute[ch] = !dspState.in_mute[ch]) : (dspState.out_mute[ch] = !dspState.out_mute[ch]);
       let btn = document.getElementById(`btn-mute-${type}-${ch}`);
       if(btn) { btn.classList.toggle('active', isMuted); btn.innerText = isMuted ? 'MUTED' : 'MUTE'; }
+      let indIndex = type === 'in' ? ch : ch + 2;
+      let led = document.getElementById(`ind-mute-${indIndex}`);
+      if(led) { led.classList.toggle('active', isMuted); led.classList.toggle('clip', isMuted); }
       sendBLE(`/api/mute?type=${type}&ch=${ch}`);
     }
 
@@ -627,7 +643,7 @@
     function copyChannel(type, targetCh) {
         let src = document.getElementById(`copy_src_${type}_${targetCh}`).value;
         if(src === "" || parseInt(src) === targetCh) return;
-        if(confirm(`Copy settings from ${type.toUpperCase()} ${parseInt(src)+1} to ${type.toUpperCase()} ${targetCh+1}?`)) {
+        if(confirm(`Copy settings from ${type.toUpperCase()}${parseInt(src)+1} to ${type.toUpperCase()}${targetCh+1}?`)) {
             sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
             setTimeout(() => sendBLE('/api/dump'), 500); 
         }
@@ -658,7 +674,7 @@
         let isProtected = slot >= 6;
         if (act === 'load' || act === 'save') {
             if(act === 'save' && isProtected) return alert("Slots 6-8 are factory protected.");
-            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot ${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
         } else if (act === 'rename') {
             if(isProtected) return alert("Slots 6-8 are factory protected.");
             let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
@@ -668,7 +684,7 @@
 
     /* --- DRAWING GRAPHS --- */
     function drawRTA() {
-        if(!document.getElementById('t-rta').classList.contains('active')) return;
+        if(!document.getElementById('t-monitor').classList.contains('active')) return;
         drawSpectrum('cvs-rta-A', rtaA, '#00ADB5'); drawSpectrum('cvs-rta-B', rtaB, '#ff9800');
     }
 
@@ -678,12 +694,43 @@
         [0, 6, 12, 18, 24, 30].forEach(i => { let x = (i/30)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
         ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
         
+        let drawHeight = h;
         ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
         for(let b=0; b<31; b++) {
             let x = (b/30.0)*w; let db = Math.max(-60, Math.min(0, data[b])); let y = h - ((db + 60)/60) * h;
             if(b===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.stroke();
+    }
+
+    function drawGlobalCrossover() {
+        if(!document.getElementById('t-monitor').classList.contains('active')) return;
+        let cvs = document.getElementById('cvs-global-xo'); let ctxData = getDpiCtx(cvs); if(!ctxData) return; let { ctx, w, h } = ctxData;
+
+        ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1; let logMin = Math.log10(20), logMax = Math.log10(20000);
+        [20,100,1000,10000,20000].forEach(f => { let x = (Math.log10(f)-logMin)/(logMax-logMin)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
+        let zeroY = h * (15/45); ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
+
+        let colors = ['#00ADB5', '#ff9800', '#9c27b0', '#8bc34a'];
+        for(let d=0; d<4; d++) {
+            let sel = document.getElementById(`glob-xo-${d}`); if(!sel) continue;
+            let val = parseInt(sel.value); if(val === 0) continue;
+            let ch = val - 1; let color = colors[ch]; sel.style.color = color;
+
+            let xo_t = dspState.xt && dspState.xt[ch] ? dspState.xt[ch] : 0, xo_th = dspState.xth && dspState.xth[ch] ? dspState.xth[ch] : 0;
+            let f_low = dspState.xfl && dspState.xfl[ch] ? dspState.xfl[ch] : 20, f_high = dspState.xfh && dspState.xfh[ch] ? dspState.xfh[ch] : 20000;
+            let g_off = dspState.xo_gn && dspState.xo_gn[ch] ? dspState.xo_gn[ch] : 0, orderL = [2,2,4,8,2,4,8][xo_t]||2, orderH = [2,2,4,8,2,4,8][xo_th]||2;
+
+            let path = new Path2D(), first = true;
+            for(let x=0; x<=w; x+=2) {
+                let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), xo_db = g_off;
+                if(xo_t > 0) xo_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
+                if(xo_th > 0) xo_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
+                let y = zeroY - (xo_db * (h/45));
+                if(first) { path.moveTo(x,y); first=false; } else { path.lineTo(x,y); }
+            }
+            ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(path);
+        }
     }
 
     function drawCompVisualizers() {
@@ -771,6 +818,20 @@
 
         canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); canvas.addEventListener('mouseup', onUp); canvas.addEventListener('mouseleave', onUp);
         canvas.addEventListener('touchstart', onDown, {passive:false}); canvas.addEventListener('touchmove', onMove, {passive:false}); canvas.addEventListener('touchend', onUp);
+    }
+
+    function updateSliderUI(id, realVal) {
+        let el = document.getElementById(id);
+        if(!el) return;
+        let isF = id.includes('_f_');
+        if(isF) {
+            let min = parseFloat(el.getAttribute('data-min')), max = parseFloat(el.getAttribute('data-max'));
+            el.value = ((Math.log10(realVal) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
+            el.closest('.fader-box').querySelector('.fader-val').innerText = realVal.toFixed(0) + 'Hz';
+        } else {
+            el.value = realVal;
+            el.closest('.fader-box').querySelector('.fader-val').innerText = (realVal>0?'+':'') + realVal.toFixed(0) + 'dB';
+        }
     }
 
     function drawDeqGraph(ch) {
@@ -878,21 +939,11 @@
     function drawVisibleGraphs() { for(let i=0; i<4; i++) { if(document.getElementById(`t-out${i+1}`).classList.contains('active')) { drawGraph(i); } } }
 
     /* --- UI BUILDER --- */
-    const getWidgetHead = (title, rstParam) => `
-        <div class="widget-header">
-            <span>${title}</span>
-            <div class="widget-actions">
-                ${rstParam ? `<button class="btn btn-icon btn-danger" onclick="${rstParam}">RST</button>` : ''}
-                <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
-            </div>
-        </div>
-    `;
-
     function buildUI() {
       ['A','B'].forEach((n,i) => document.getElementById(`tab-in${n}`).innerText = dspState.in_n[i]);
       for(let i=1; i<=4; i++) document.getElementById(`tab-out${i}`).innerText = dspState.out_n[i-1];
 
-      // Meters
+      // Monitor Dashboard
       let mHtml = '';
       [0,1,2,3,4,5].forEach((i) => {
         let isOut = i>=2, name = isOut ? dspState.out_n[i-2] : dspState.in_n[i], mute = isOut ? dspState.out_mute[i-2] : dspState.in_mute[i];
@@ -905,13 +956,48 @@
             </div>
             <div class="vu-leds">
               <div id="ind-comp-${i}" class="led ${isOut?'comp':'comp'}">COMP</div>
-              <div id="ind-mute-${i}" class="led ${mute?'active clip':''}">MUTE</div>
+              <div id="ind-mute-${i}" class="led clickable ${mute?'active clip':''}" onclick="toggleMute('${isOut?'out':'in'}',${isOut?i-2:i})">MUTE</div>
               <div id="ind-clip-${i}" class="led clip">CLIP</div>
             </div>
           </div>
         `;
       });
-      document.getElementById('meter-grid').innerHTML = mHtml;
+      
+      let globXoHtml = ``;
+      for(let d=0; d<4; d++) {
+          let selVal = (d === 0) ? 1 : (d === 1) ? 2 : (d === 2) ? 3 : 4;
+          globXoHtml += `<select id="glob-xo-${d}" class="pro-sel" onchange="drawGlobalCrossover()">
+              <option value="0">OFF</option><option value="1" ${selVal===1?'selected':''}>OUT 1</option><option value="2" ${selVal===2?'selected':''}>OUT 2</option><option value="3" ${selVal===3?'selected':''}>OUT 3</option><option value="4" ${selVal===4?'selected':''}>OUT 4</option>
+          </select>`;
+      }
+
+      document.getElementById('t-monitor').innerHTML = `
+        <div class="dashboard-header"><div class="dashboard-title">MONITOR & RTA</div></div>
+        <div class="channel-strip monitor-col-left" style="grid-template-columns: 1fr 350px;">
+            <div class="strip-col">
+                <div class="widget">
+                    <div class="widget-header"><span>SYSTEM METERS</span></div>
+                    <div class="widget-body"><div class="monitor-grid">${mHtml}</div></div>
+                </div>
+                <div class="widget" style="flex:1;">
+                    <div class="widget-header"><span>RTA SPECTRUM</span></div>
+                    <div class="widget-body" style="flex-direction:row;">
+                        <div class="graph-container" style="flex:1;"><canvas id="cvs-rta-A"></canvas></div>
+                        <div class="graph-container" style="flex:1;"><canvas id="cvs-rta-B"></canvas></div>
+                    </div>
+                </div>
+            </div>
+            <div class="strip-col">
+                <div class="widget" style="flex:1;">
+                    <div class="widget-header"><span>GLOBAL CROSSOVER PREVIEW</span></div>
+                    <div class="widget-body">
+                        <div style="display:flex; gap:5px;">${globXoHtml}</div>
+                        <div class="graph-container" style="flex:1;"><canvas id="cvs-global-xo"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      `;
 
       // Inputs
       ['A','B'].forEach((n, i) => {
@@ -940,15 +1026,20 @@
         }
         afsBadges += '</div>';
 
+        let copyOpts = `<option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option>`;
+        let copyHtml = `
+          <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
+            <span style="font-size:9px; color:#888;">COPY FROM:</span>
+            <select id="copy_src_in_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;">${copyOpts}</select>
+            <button class="btn btn-small" onclick="copyChannel('in', ${i})">GO</button>
+          </div>
+        `;
+
         document.getElementById(`t-in${n}`).innerHTML = `
           <div class="dashboard-header">
             <div class="dashboard-title">${dspState.in_n[i]}</div>
             <div class="dashboard-actions">
-              <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
-                <span style="font-size:9px; color:#888;">COPY FROM:</span>
-                <select id="copy_src_in_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;"><option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option></select>
-                <button class="btn btn-small" onclick="copyChannel('in', ${i})">GO</button>
-              </div>
+              ${copyHtml}
               <button class="btn btn-primary" onclick="revertTab('in', ${i})">RESET CH</button>
               <button class="btn btn-danger ${dspState.in_mute[i]?'active':''}" id="btn-mute-in-${i}" onclick="toggleMute('in',${i})">${dspState.in_mute[i]?'MUTED':'MUTE'}</button>
             </div>
@@ -957,14 +1048,14 @@
             <div class="strip-col">
               <div class="widget">
                 ${getWidgetHead('CONFIG', `revertBlock(${i}, 'in_gain')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createFader('MASTER GAIN', 'in', i, 'gn', -12, 24, i===0?dspState.vA:dspState.vB, 'dB')}
                     ${createFader('DELAY', 'idl', i, '', 0, 200, dspState.idl[i]||0, 'ms', '', '0.1')}
                 </div>
               </div>
               <div class="widget">
                 ${getWidgetHead('NOISE GATE', `revertBlock(${i}, 'gate')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createFader('THRESH', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB')}
                     <div class="ctrl-row">
                         ${createFader('ATTACK', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms')}
@@ -974,7 +1065,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('BBE SONIC MAXIMIZER', `revertBlock(${i}, 'bbe')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createSelect('ENABLE', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
                     <div class="ctrl-row">
                         ${createFader('LO CONT', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
@@ -984,7 +1075,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('AFS (FEEDBACK SUPPRESSOR)', `revertBlock(${i}, 'afs')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createSelect('ENABLE', 'afs', i, 'e', ['BYPASS', 'ACTIVE'], dspState.afs_e[i])}
                     ${createFader('SENSITIVITY', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
                     ${afsBadges}
@@ -1000,17 +1091,17 @@
                     <div class="widget-actions">
                         <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'deq')">RST</button>
                         <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
-                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">□</button>
                     </div>
                 </div>
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     <div class="graph-container graph-medium"><canvas id="cvs-deq-${i}"></canvas></div>
                     <div class="ctrl-row">${deqHtml}</div>
                 </div>
               </div>
               <div class="widget">
                 ${getWidgetHead('INPUT COMPRESSOR', `revertBlock(${i}, 'incomp')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-in-${i}"></canvas></div>
                         <div class="gr-meter-box">
@@ -1069,7 +1160,7 @@
             <div class="strip-col">
               <div class="widget">
                 ${getWidgetHead('ROUTING & ALIGNMENT', `revertBlock(${i}, 'rt')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createSelect('SOURCE', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
                     <button id="btn-ph-${i}" class="btn" style="${phBtnStyle}" onclick="togglePolarity(${i})">${dspState.ph[i]===1?'POLARITY: INV 180°':'POLARITY: NORM 0°'}</button>
                     ${createFader('DELAY', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
@@ -1077,7 +1168,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('ALL-PASS FILTER', `revertBlock(${i}, 'apf')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createSelect('ENABLE', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
                     <div class="ctrl-row">
                         ${createFader('FREQ', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
@@ -1087,7 +1178,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('CROSSOVER', `revertBlock(${i}, 'xo')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     ${createFader('OUT GAIN', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
                     ${createSelect('HPF TYPE', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
                     ${createFader('HPF FREQ', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
@@ -1098,7 +1189,7 @@
               </div>
               <div class="widget">
                 ${getWidgetHead('COMPRESSOR', `revertBlock(${i}, 'comp')`)}
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-out-${i}"></canvas></div>
                         <div class="gr-meter-box">
@@ -1126,10 +1217,10 @@
                     <div class="widget-actions">
                         <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'eq')">RST</button>
                         <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'EQ BYPASSED':'EQ ACTIVE'}</button>
-                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">□</button>
                     </div>
                 </div>
-                <div class="widget-body">
+                <div class="widget-body collapsed">
                     <div class="graph-container graph-large"><canvas id="cvs-${i}"></canvas></div>
                     <div class="ctrl-row" style="overflow-x:auto;">${eqHtml}</div>
                 </div>
@@ -1147,7 +1238,7 @@
         <div class="channel-strip">
             <div class="strip-col">
                 <div class="widget">
-                    ${getWidgetHead('PRESET MANAGEMENT')}
+                    ${getWidgetHead('PRESET MANAGEMENT', null, false)}
                     <div class="widget-body">
                         <select id="sys-preset-slot" class="pro-sel">
                             ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}">SLOT ${s}${s>=6?' (FACTORY)':''}</option>`).join('')}
@@ -1160,7 +1251,7 @@
                     </div>
                 </div>
                 <div class="widget">
-                    ${getWidgetHead('FIRMWARE UPDATE (OTA)')}
+                    ${getWidgetHead('FIRMWARE UPDATE (OTA)', null, false)}
                     <div class="widget-body">
                         <input type="text" id="ota-ssid" class="pro-in" placeholder="WiFi SSID" style="margin-bottom:6px;">
                         <input type="password" id="ota-pass" class="pro-in" placeholder="WiFi Password" style="margin-bottom:6px;">
@@ -1174,7 +1265,7 @@
             </div>
             <div class="strip-col">
                 <div class="widget">
-                    ${getWidgetHead('TONE GENERATOR')}
+                    ${getWidgetHead('TONE GENERATOR', null, false)}
                     <div class="widget-body">
                         <div class="ctrl-row">
                             <div class="ctrl-col">
@@ -1189,7 +1280,7 @@
                     </div>
                 </div>
                 <div class="widget">
-                    ${getWidgetHead('GLOBAL RESET')}
+                    ${getWidgetHead('GLOBAL RESET', null, false)}
                     <div class="widget-body">
                         <button class="btn btn-danger" style="padding:15px; font-size:12px;" onclick="doFactoryReset()">FACTORY RESET ALL CHANNELS</button>
                     </div>
@@ -1198,6 +1289,14 @@
         </div>
       `;
       document.getElementById('t-sys').innerHTML = sysHtml;
+      
+      // Delay redraws slightly so the browser can calculate the DOM sizes
+      setTimeout(() => {
+          drawVisibleGraphs();
+          drawRTA();
+          drawCompVisualizers();
+          drawGlobalCrossover();
+      }, 50);
     }
 
   </script>
