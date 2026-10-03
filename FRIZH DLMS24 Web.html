@@ -5,9 +5,7 @@
   <title>FRIZH DLMS 24 PRO</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <style>
-    /* 
-     * PRO CONSOLE UI THEME 
-     */
+    /* PRO CONSOLE UI THEME - COMPACT */
     :root {
       --bg-main: #0c0d10;
       --bg-panel: #16171b;
@@ -22,107 +20,106 @@
     }
 
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text-main); font-family: var(--font-family); font-size: 12px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    body { margin: 0; padding: 0; background: var(--bg-main); color: var(--text-main); font-family: var(--font-family); font-size: 11px; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
     /* LAYOUT */
     .app-wrapper { display: flex; flex: 1; height: 100vh; overflow: hidden; }
     
     /* SIDEBAR NAV */
-    .sidebar { width: 140px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 100; }
-    .brand { padding: 20px 15px; font-size: 16px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 2px; border-bottom: 1px solid var(--border-color); text-align: center; line-height: 1.2; }
-    .brand span { font-size: 10px; color: var(--text-muted); display: block; letter-spacing: 1px; }
+    .sidebar { width: 130px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 100; }
+    .brand { padding: 15px 10px; font-size: 14px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 2px; border-bottom: 1px solid var(--border-color); text-align: center; line-height: 1.2; }
+    .brand span { font-size: 9px; color: var(--text-muted); display: block; letter-spacing: 1px; }
     
-    .nav-tabs { display: flex; flex-direction: column; flex: 1; overflow-y: auto; padding-top: 10px; }
-    .tab { padding: 12px 20px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-left: 3px solid transparent; transition: 0.15s; font-size: 12px; letter-spacing: 1px; }
+    .nav-tabs { display: flex; flex-direction: column; flex: 1; overflow-y: auto; padding-top: 5px; }
+    .tab { padding: 10px 15px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-left: 3px solid transparent; transition: 0.15s; font-size: 11px; letter-spacing: 1px; }
     .tab:hover { background: rgba(255,255,255,0.03); color: #fff; }
     .tab.active { background: rgba(0, 173, 181, 0.1); border-left-color: var(--accent-cyan); color: var(--accent-cyan); }
     .tab-sys { margin-top: auto; border-top: 1px solid var(--border-color); color: var(--accent-orange); }
     
-    .ble-status { padding: 15px; text-align: center; border-top: 1px solid var(--border-color); font-size: 10px; background: #08080a; }
-    .ble-btn { background: #222; color: #fff; border: 1px solid #444; width: 100%; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .ble-status { padding: 10px; text-align: center; border-top: 1px solid var(--border-color); font-size: 9px; background: #08080a; }
+    .ble-btn { background: #222; color: #fff; border: 1px solid #444; width: 100%; padding: 6px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 10px; }
     .ble-btn.connected { background: rgba(0,173,181,0.2); border-color: var(--accent-cyan); color: var(--accent-cyan); }
     .ble-btn:hover { background: #333; }
 
     /* MAIN CONTENT AREA */
     .main-view { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg-main); overflow: hidden; }
-    .panel { display: none; height: 100%; width: 100%; overflow-y: auto; padding: 20px; }
+    .panel { display: none; height: 100%; width: 100%; overflow-y: auto; padding: 15px; }
     .panel.active { display: block; animation: fadeIn 0.2s ease; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* PRO CONSOLE GRID SYSTEM */
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-    .dashboard-title { font-size: 24px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; }
-    .dashboard-actions { display: flex; gap: 10px; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+    .dashboard-title { font-size: 20px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 10px; }
+    .dashboard-actions { display: flex; gap: 8px; }
     
-    .channel-strip { display: grid; grid-template-columns: 280px 1fr; gap: 20px; height: calc(100% - 60px); }
-    .strip-col { display: flex; flex-direction: column; gap: 15px; overflow-y: auto; padding-right: 5px; }
-    .strip-col::-webkit-scrollbar { width: 6px; }
-    .strip-col::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    .channel-strip { display: grid; grid-template-columns: 240px 1fr; gap: 15px; height: calc(100% - 40px); }
+    .strip-col { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 4px; }
+    .strip-col::-webkit-scrollbar { width: 4px; }
+    .strip-col::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
     /* WIDGET BLOCKS */
     .widget { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; }
-    .widget-header { padding: 8px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-size: 11px; font-weight: 800; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
-    .widget-body { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .widget-header { padding: 6px 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-size: 10px; font-weight: 800; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+    .widget-body { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .widget.bypassed { opacity: 0.5; border-color: var(--accent-red); }
 
     /* CONTROLS (Knobs & Sliders) */
-    .ctrl-row { display: flex; gap: 10px; }
-    .ctrl-col { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    .ctrl-row { display: flex; gap: 8px; }
+    .ctrl-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     
-    .fader-box { background: #111; border: 1px solid #333; padding: 10px; border-radius: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-    .fader-label { font-size: 10px; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
-    .fader-val { font-size: 13px; color: var(--accent-cyan); font-family: monospace; font-weight: bold; cursor: pointer; margin-bottom: 8px; background: rgba(0,173,181,0.1); padding: 2px 6px; border-radius: 3px; }
+    .fader-box { background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .fader-label { font-size: 9px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+    .fader-val { font-size: 11px; color: var(--accent-cyan); font-family: monospace; font-weight: bold; cursor: pointer; margin-bottom: 6px; background: rgba(0,173,181,0.1); padding: 2px 6px; border-radius: 3px; }
     
     input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
     input[type=range]:focus { outline: none; }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #ddd; margin-top: -6px; border: 2px solid #222; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #333; border-radius: 1.5px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #ddd; margin-top: -4.5px; border: 2px solid #222; }
     
-    .btn { background: #2a2c35; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; transition: 0.15s; }
+    .btn { background: #2a2c35; color: #fff; border: 1px solid #444; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.15s; }
     .btn:hover { background: #3a3c45; }
     .btn-primary { background: rgba(0, 173, 181, 0.15); border-color: var(--accent-cyan); color: var(--accent-cyan); }
     .btn-primary:hover { background: rgba(0, 173, 181, 0.3); }
     .btn-danger { background: rgba(244, 67, 54, 0.15); border-color: var(--accent-red); color: var(--accent-red); }
     .btn-danger:hover { background: rgba(244, 67, 54, 0.3); }
     .btn-danger.active { background: var(--accent-red); color: #fff; box-shadow: 0 0 10px rgba(244, 67, 54, 0.5); }
-    .btn-small { padding: 3px 8px; font-size: 9px; }
+    .btn-small { padding: 3px 6px; font-size: 9px; }
 
-    select.pro-sel { background: #111; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 11px; width: 100%; outline: none; cursor: pointer; }
-    input.pro-in { background: #111; color: #fff; border: 1px solid #333; padding: 8px; border-radius: 4px; font-size: 12px; width: 100%; outline: none; box-sizing: border-box; }
+    select.pro-sel { background: #111; color: #fff; border: 1px solid #333; padding: 4px; border-radius: 4px; font-size: 10px; width: 100%; outline: none; cursor: pointer; }
+    input.pro-in { background: #111; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 11px; width: 100%; outline: none; box-sizing: border-box; }
 
     /* GRAPHS */
     .graph-container { background: #000; border: 1px solid #333; border-radius: 4px; position: relative; width: 100%; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    .graph-large { height: 260px; }
-    .graph-medium { height: 180px; }
-    .graph-small { height: 120px; }
+    .graph-large { height: 210px; }
+    .graph-medium { height: 160px; }
+    .graph-small { height: 100px; }
 
     /* COMPRESSOR GR METER */
-    .comp-layout { display: flex; gap: 10px; height: 120px; }
-    .gr-meter-box { width: 24px; background: #000; border: 1px solid #333; border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding-top: 4px; }
-    .gr-track { flex: 1; width: 12px; background: #111; position: relative; margin: 4px 0; border-radius: 2px; overflow: hidden; }
+    .comp-layout { display: flex; gap: 8px; height: 100px; }
+    .gr-meter-box { width: 22px; background: #000; border: 1px solid #333; border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding-top: 4px; }
+    .gr-track { flex: 1; width: 10px; background: #111; position: relative; margin: 4px 0; border-radius: 2px; overflow: hidden; }
     .gr-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to bottom, #ff9800, #f44336); transition: height 0.05s; }
 
     /* VERTICAL VU METERS (MONITOR TAB) */
     .monitor-grid { display: flex; justify-content: center; gap: 20px; padding: 20px; height: 100%; }
-    .vu-channel { display: flex; flex-direction: column; align-items: center; width: 60px; }
-    .vu-title { font-weight: 900; font-size: 14px; margin-bottom: 15px; color: #fff; }
-    .vu-meter-wrap { display: flex; gap: 5px; height: calc(100% - 150px); min-height: 200px; }
-    .vu-scale { display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; font-family: monospace; color: #666; padding-bottom: 15px; padding-right: 4px; text-align: right; }
-    .vu-track { width: 20px; background: #050505; border: 1px solid #222; border-radius: 3px; position: relative; overflow: hidden; }
+    .vu-channel { display: flex; flex-direction: column; align-items: center; width: 50px; }
+    .vu-title { font-weight: 900; font-size: 12px; margin-bottom: 12px; color: #fff; text-align: center; }
+    .vu-meter-wrap { display: flex; gap: 5px; height: calc(100% - 130px); min-height: 180px; }
+    .vu-scale { display: flex; flex-direction: column; justify-content: space-between; font-size: 9px; font-family: monospace; color: #666; padding-bottom: 15px; padding-right: 2px; text-align: right; }
+    .vu-track { width: 18px; background: #050505; border: 1px solid #222; border-radius: 3px; position: relative; overflow: hidden; }
     .vu-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
-    .vu-leds { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; width: 100%; }
-    .led { padding: 4px 0; text-align: center; font-size: 9px; font-weight: 800; border-radius: 3px; background: #111; color: #444; border: 1px solid #222; }
+    .vu-leds { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; width: 100%; }
+    .led { padding: 3px 0; text-align: center; font-size: 8px; font-weight: 800; border-radius: 3px; background: #111; color: #444; border: 1px solid #222; }
     .led.active.clip { background: #f44336; color: #fff; border-color: #ff7961; box-shadow: 0 0 10px #f44336; }
     .led.active.comp { background: #ff9800; color: #000; border-color: #ffb74d; box-shadow: 0 0 10px #ff9800; }
 
     /* OVERLAYS */
     .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12,13,16,0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(4px); }
-    .dialog { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 30px; border-radius: 8px; text-align: center; min-width: 300px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .dialog { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; text-align: center; min-width: 280px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
     .hidden { display: none !important; }
 
-    /* RESPONSIVE Adjustments for smaller screens, though heavily desktop optimized */
-    @media (max-width: 1100px) {
+    @media (max-width: 1000px) {
       .channel-strip { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
       .strip-col { overflow: visible; }
       .panel { overflow-y: auto; }
@@ -133,16 +130,16 @@
 
   <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
-    <div style="font-size: 36px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 40px;">FRIZH DLMS 24</div>
-    <button class="btn btn-primary" style="font-size: 16px; padding: 15px 40px;" onclick="connectBLE()">SCAN & CONNECT</button>
-    <p style="color:var(--text-muted); margin-top:20px; font-size: 12px; text-align:center;">Requires Google Chrome/Edge with Web Bluetooth enabled.</p>
+    <div style="font-size: 32px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 30px;">FRIZH DLMS 24</div>
+    <button class="btn btn-primary" style="font-size: 14px; padding: 12px 30px;" onclick="connectBLE()">SCAN & CONNECT</button>
+    <p style="color:var(--text-muted); margin-top:15px; font-size: 11px; text-align:center;">Requires Google Chrome/Edge with Web Bluetooth enabled.</p>
   </div>
 
   <div id="ble-dialog-overlay" class="overlay hidden">
     <div class="dialog">
-      <h3 style="color:var(--accent-cyan); margin-top:0;">DEVICE STATUS</h3>
-      <p id="ble-connected-name" style="color:var(--text-main); margin-bottom: 25px;">Connected to: Unknown</p>
-      <div style="display:flex; flex-direction:column; gap:10px;">
+      <h3 style="color:var(--accent-cyan); margin-top:0; font-size: 14px;">DEVICE STATUS</h3>
+      <p id="ble-connected-name" style="color:var(--text-main); margin-bottom: 20px; font-size: 12px;">Connected to: Unknown</p>
+      <div style="display:flex; flex-direction:column; gap:8px;">
         <button class="btn btn-primary" onclick="switchDevice()">SWITCH DEVICE</button>
         <button class="btn btn-danger" onclick="disconnectBLE()">DISCONNECT</button>
         <button class="btn" onclick="closeBleDialog()">CANCEL</button>
@@ -157,10 +154,10 @@
       <div class="nav-tabs" id="tabs">
         <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
         <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA SPECTRUM</div>
-        <div style="margin: 10px 15px; font-size: 10px; color: #555; border-bottom: 1px solid #333; padding-bottom: 5px;">INPUTS</div>
+        <div style="margin: 8px 10px; font-size: 9px; color: #555; border-bottom: 1px solid #333; padding-bottom: 4px;">INPUTS</div>
         <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
         <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
-        <div style="margin: 10px 15px; font-size: 10px; color: #555; border-bottom: 1px solid #333; padding-bottom: 5px;">OUTPUTS</div>
+        <div style="margin: 8px 10px; font-size: 9px; color: #555; border-bottom: 1px solid #333; padding-bottom: 4px;">OUTPUTS</div>
         <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
         <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
         <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
@@ -183,7 +180,7 @@
         <div class="dashboard-header">
             <div class="dashboard-title">RTA SPECTRUM</div>
         </div>
-        <div style="display:flex; flex-direction:column; gap:20px; height:calc(100% - 60px);">
+        <div style="display:flex; flex-direction:column; gap:15px; height:calc(100% - 40px);">
             <div class="widget" style="flex:1;">
                 <div class="widget-header">INPUT A</div>
                 <div class="widget-body"><div class="graph-container" style="height:100%;"><canvas id="cvs-rta-A"></canvas></div></div>
@@ -210,7 +207,7 @@
     let dspState = {};
     let initialState = null;
     let timers = {};
-    let draggingBand = { ch: -1, band: -1, type: '' }; // type: 'eq' or 'deq'
+    let draggingBand = { ch: -1, band: -1, type: '' }; 
     
     // Live Audio State
     let livePeaks = [0,0,0,0,0,0];
@@ -333,7 +330,6 @@
               }
             }
             drawCompVisualizers();
-            // Trigger DEQ redraw if on input tab to show dynamic response
             if(document.getElementById('t-inA').classList.contains('active')) drawDeqGraph(0);
             if(document.getElementById('t-inB').classList.contains('active')) drawDeqGraph(1);
         }
@@ -439,13 +435,12 @@
       }
 
       let displayVal = realVal.toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      if (type === 'dl' || type === 'idl') displayVal = realVal.toFixed(1) + 'ms / ' + (realVal * 34.3).toFixed(1) + 'cm';
+      if (type === 'dl' || type === 'idl') displayVal = realVal.toFixed(1) + 'ms';
       if (type === 'comp' || type === 'incomp') {
           if (p === 'thr' && realVal >= 1) displayVal = "OFF";
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
 
-      // Update local state immediately for graphs
       if (type === 'eq') {
           if(p === 'f') dspState.eqf[ch][b] = realVal;
           if(p === 'g') dspState.eq_gn[ch][b] = realVal;
@@ -513,8 +508,8 @@
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
       let oc = (type === 'tone' && param === 'm') ? `handleToneModeUpdate(this.value);` : `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();`;
-      return `<div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:6px 10px; border:1px solid #333; border-radius:4px;">
-                <span style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${label}</span>
+      return `<div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:4px 8px; border:1px solid #333; border-radius:4px;">
+                <span style="font-size:9px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${label}</span>
                 <select class="pro-sel" style="width:auto; min-width:80px;" id="${id}" onchange="${oc}">${opts}</select>
               </div>`;
     }
@@ -547,8 +542,62 @@
         if(src === "" || parseInt(src) === targetCh) return;
         if(confirm(`Copy settings from ${type.toUpperCase()} ${parseInt(src)+1} to ${type.toUpperCase()} ${targetCh+1}?`)) {
             sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
-            setTimeout(() => sendBLE('/api/dump'), 500); // Reload state after copy
+            setTimeout(() => sendBLE('/api/dump'), 500); 
         }
+    }
+
+    /* --- SYSTEM TAB LOGIC --- */
+    async function fetchGithubReleases() {
+        let sel = document.getElementById('ota-version');
+        sel.innerHTML = '<option>Fetching from GitHub...</option>';
+        try {
+            let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', { headers: { 'Accept': 'application/vnd.github.v3+json' }});
+            let files = await res.json();
+            let opts = '';
+            files.forEach(f => { if(f.name.toLowerCase().endsWith('.bin')) { let name = f.name.replace(/\.bin$/i, ''); opts += `<option value="${name}">${name}</option>`; } });
+            if(opts === '') opts = '<option value="firmware_normal">firmware_normal (Fallback)</option>';
+            sel.innerHTML = opts;
+        } catch(e) { sel.innerHTML = '<option value="firmware_normal">Fetch Failed - Using Fallback</option>'; }
+    }
+
+    function triggerOTA() {
+        let ssid = document.getElementById('ota-ssid').value, pass = document.getElementById('ota-pass').value, ver = document.getElementById('ota-version').value;
+        if(!ssid || !ver || ver.includes('Fetching')) return alert("Please enter WiFi SSID and select a firmware version.");
+        if(confirm("Start OTA Update? Device will reboot after.")) sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
+    }
+
+    function doPreset(act) {
+        let slot = parseInt(document.getElementById('sys-preset-slot').value);
+        let isProtected = slot >= 6;
+        if (act === 'load' || act === 'save') {
+            if(act === 'save' && isProtected) return alert("Slots 6-8 are factory protected.");
+            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot ${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+        } else if (act === 'rename') {
+            if(isProtected) return alert("Slots 6-8 are factory protected.");
+            let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
+            if(name !== null) sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '')}`);
+        }
+    }
+
+    function doFactoryReset() {
+        if(confirm(`FACTORY RESET ALL CHANNELS?`)) {
+            sendBLE(`/api/preset?act=load&slot=8`);
+            for(let i=0; i<2; i++) {
+                sendBLE(`/api/set?type=in&ch=${i}&v=0`); sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=200`);
+                sendBLE(`/api/set?type=idl&ch=${i}&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=50`);
+                sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${i}&p=clr&v=1`);
+            }
+            for(let i=0; i<4; i++) {
+                sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
+                sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=0.7`);
+            }
+            setTimeout(() => sendBLE('/api/dump'), 1000);
+        }
+    }
+    
+    function handleToneModeUpdate(val) {
+        let mode = parseInt(val);
+        sendUpdate('tone', 0, 'm', mode);
     }
 
     /* --- DRAWING GRAPHS --- */
@@ -662,14 +711,13 @@
             if(type === 'deq' && dspState.deq_e[ch] === 0) return;
             
             let numBands = type === 'eq' ? 7 : 3;
-            let zeroY = type === 'eq' ? pos.h * (15/45) : pos.h / 2; // DEQ uses middle for 0dB (+15 to -24 approx)
-            let pixelPerDb = type === 'eq' ? (pos.h/45) : (pos.h/48);
+            let zeroY = type === 'eq' ? pos.h * (15/45) : pos.h / 2;
 
             for(let b=0; b<numBands; b++) {
                 let f = type === 'eq' ? dspState.eqf[ch][b] : dspState.deq_f[ch][b];
                 let g = type === 'eq' ? dspState.eq_gn[ch][b] : dspState.deq_d[ch][b];
                 let cx = ((Math.log10(f) - logMin) / (logMax - logMin)) * pos.w;
-                let cy = zeroY - (g * pixelPerDb);
+                let cy = zeroY - (g * (type==='eq' ? pos.h/45 : pos.h/48));
                 let dist = Math.hypot(cx - pos.x, cy - pos.y);
                 if(dist < 30 && dist < minDist) { minDist = dist; nearestB = b; }
             }
@@ -740,18 +788,16 @@
       ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       
-      // Grid
       [20,100,1000,10000,20000].forEach(f => {
           let x = (Math.log10(f)-logMin)/(logMax-logMin)*w;
           ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
       });
-      let zeroY = h/2; // 0dB center line
+      let zeroY = h/2;
       ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
 
       let isBypassed = dspState.deq_e[ch] === 0;
       let color = ch === 0 ? '#00ADB5' : '#ff9800';
 
-      // Draw RTA Background Dimly
       let rData = ch === 0 ? rtaA : rtaB;
       let rtaPath = new Path2D();
       for(let b=0; b<31; b++) {
@@ -762,7 +808,6 @@
       }
       ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill(rtaPath); ctx.globalAlpha = 1.0;
 
-      // Calc curves
       let liveP = livePeaks[ch]; 
       let liveDb = (liveP > 0.0001) ? 20 * Math.log10(liveP) - 3.0 : -60;
       
@@ -770,7 +815,7 @@
       for(let b=0; b<3; b++) {
           let t = dspState.deq_t[ch][b], r = dspState.deq_r[ch][b], d = dspState.deq_d[ch][b];
           boundGains[b] = d;
-          if(r === 0) dynGains[b] = d; // static
+          if(r === 0) dynGains[b] = d;
           else if(liveDb > t && r > 1.0 && d !== 0) {
               let chg = (liveDb - t) * (1.0 - 1.0/r);
               dynGains[b] = d < 0 ? Math.max(-chg, d) : Math.min(chg, d);
@@ -799,7 +844,6 @@
       ctx.strokeStyle = color; ctx.globalAlpha = 0.4; ctx.lineWidth = 1; ctx.stroke(bPath);
       ctx.globalAlpha = 1.0; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(dPath);
 
-      // Drag Nodes
       if(!isBypassed) {
           for(let b=0; b<3; b++) {
               let cx = ((Math.log10(dspState.deq_f[ch][b]) - logMin) / (logMax - logMin)) * w;
@@ -810,7 +854,11 @@
               ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
               ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)';
               ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
-              ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
+              
+              ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = isActive ? color : '#fff';
+              ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText((b+1).toString(), cx, cy);
           }
       }
       attachDragListeners(cvs, ch, 'deq');
@@ -838,14 +886,18 @@
       let orderL = [2,2,4,8,2,4,8][xo_t]||2, orderH = [2,2,4,8,2,4,8][xo_th]||2;
       let eqBypassed = dspState.eqb[ch] === 1;
 
-      let path = new Path2D(), fillPath = new Path2D();
+      let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D();
       let first = true;
       for(let x=0; x<=w; x+=2) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
-        let tot_db = g_off;
-        if(xo_t > 0) tot_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
-        if(xo_th > 0) tot_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
+        let xo_db = g_off;
         
+        // Calculate Crossover Rolloff
+        if(xo_t > 0) xo_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
+        if(xo_th > 0) xo_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
+        
+        let tot_db = xo_db;
+        // Add EQ Filters
         if(!eqBypassed) {
             for(let b=0; b<7; b++) {
               let g = dspState.eq_gn[ch][b]; if(g === 0) continue;
@@ -853,26 +905,46 @@
               tot_db += g * Math.exp(-Math.pow(Math.log10(f/fc) * q * 2.8, 2));
             }
         }
-        let y = zeroY - (tot_db * (h/45));
-        if(first) { path.moveTo(x,y); fillPath.moveTo(x,zeroY); fillPath.lineTo(x,y); first=false; } 
-        else { path.lineTo(x,y); fillPath.lineTo(x,y); }
+        let yXO = zeroY - (xo_db * (h/45));
+        let yTot = zeroY - (tot_db * (h/45));
+        
+        if(first) { 
+            xoPath.moveTo(x,yXO); combinedPath.moveTo(x,yTot); 
+            fillPath.moveTo(x,zeroY); fillPath.lineTo(x,yTot); 
+            first=false; 
+        } else { 
+            xoPath.lineTo(x,yXO); combinedPath.lineTo(x,yTot); fillPath.lineTo(x,yTot); 
+        }
         if(x >= w-2) fillPath.lineTo(x,zeroY);
       }
       
+      // Draw Fill
       ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill(fillPath); ctx.globalAlpha = 1.0;
-      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(path);
+      
+      // Draw Crossover Line (Dashed)
+      ctx.strokeStyle = color; ctx.globalAlpha = 0.4; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+      ctx.stroke(xoPath);
+      ctx.setLineDash([]); ctx.globalAlpha = 1.0;
+      
+      // Draw Combined Line (Solid)
+      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(combinedPath);
 
+      // Draw Anchor Dots
       if(!eqBypassed) {
           for(let b=0; b<7; b++) {
               let cx = ((Math.log10(dspState.eqf[ch][b]) - logMin) / (logMax - logMin)) * w;
-              let cy = zeroY - (dspState.eq_gn[ch][b] * h/45);
+              let cy = zeroY - (dspState.eq_gn[ch][b] * h/45); // Dots stay relative to 0dB for clear dragging
               let isActive = (draggingBand.ch === ch && draggingBand.band === b && draggingBand.type === 'eq');
               
               ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1;
               ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
               ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)';
               ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
-              ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI*2); ctx.fill();
+              
+              ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+              ctx.fillStyle = isActive ? color : '#fff';
+              ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+              ctx.fillText((b+1).toString(), cx, cy);
           }
       }
       attachDragListeners(cvs, ch, 'eq');
@@ -882,14 +954,15 @@
         for(let i=0; i<4; i++) {
             if(document.getElementById(`t-out${i+1}`).classList.contains('active')) {
                 drawGraph(i);
-                // Draw Crossover Alignment if element exists
-                // (Implementation omitted for brevity, but matches previous logic if needed)
             }
         }
     }
 
     /* --- UI BUILDER --- */
     function buildUI() {
+      ['A','B'].forEach((n,i) => document.getElementById(`tab-in${n}`).innerText = dspState.in_n[i]);
+      for(let i=1; i<=4; i++) document.getElementById(`tab-out${i}`).innerText = dspState.out_n[i-1];
+
       // Meters
       let mHtml = '';
       [0,1,2,3,4,5].forEach((i) => {
@@ -917,8 +990,8 @@
       ['A','B'].forEach((n, i) => {
         let deqHtml = '';
         for(let b=0; b<3; b++) {
-            deqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border:1px solid #222;">
-                <div style="color:var(--accent-cyan); font-weight:800; font-size:10px; margin-bottom:5px;">BAND ${b+1}</div>
+            deqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid #222;">
+                <div style="color:var(--accent-cyan); font-weight:800; font-size:9px; margin-bottom:5px;">BAND ${b+1}</div>
                 ${createFader('FREQ', 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}
                 ${createFader('DEPTH', 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}
                 ${createFader('Q', 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}
@@ -996,8 +1069,8 @@
       [0,1,2,3].forEach(i => {
         let eqHtml = '';
         for(let b=0; b<7; b++) {
-            eqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:4px; border:1px solid #222;">
-                <div style="color:var(--accent-cyan); font-weight:800; font-size:10px; margin-bottom:5px;">B${b+1}</div>
+            eqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid #222;">
+                <div style="color:var(--accent-cyan); font-weight:800; font-size:9px; margin-bottom:5px;">B${b+1}</div>
                 ${createFader('FREQ', 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}
                 ${createFader('GAIN', 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}
                 ${createFader('Q', 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}
@@ -1010,9 +1083,9 @@
           <div class="dashboard-header">
             <div class="dashboard-title">${dspState.out_n[i]}</div>
             <div class="dashboard-actions">
-              <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 8px; border-radius:4px; border:1px solid #333;">
-                <span style="font-size:10px; color:#888;">COPY FROM:</span>
-                <select id="copy_src_out_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:11px;">${copyOpts}</select>
+              <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
+                <span style="font-size:9px; color:#888;">COPY FROM:</span>
+                <select id="copy_src_out_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;">${copyOpts}</select>
                 <button class="btn btn-small" onclick="copyChannel('out', ${i})">GO</button>
               </div>
               <button class="btn btn-danger ${dspState.out_mute[i]?'active':''}" id="btn-mute-out-${i}" onclick="toggleMute('out',${i})">${dspState.out_mute[i]?'MUTED':'MUTE'}</button>
@@ -1034,7 +1107,7 @@
                     ${createFader('OUT GAIN', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
                     ${createSelect('HPF TYPE', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
                     ${createFader('HPF FREQ', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
-                    <div style="border-top:1px solid #333; margin:5px 0;"></div>
+                    <div style="border-top:1px solid #333; margin:2px 0;"></div>
                     ${createSelect('LPF TYPE', 'xo', i, 'th', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xth[i])}
                     ${createFader('LPF FREQ', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
                 </div>
@@ -1061,8 +1134,8 @@
             <div class="strip-col">
               <div class="widget" id="wid-eq-${i}" class="${dspState.eqb[i]===1?'bypassed':''}">
                 <div class="widget-header">
-                    <span>PARAMETRIC EQ</span>
-                    <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'BYPASSED':'ACTIVE'}</button>
+                    <span>EQ & CROSSOVER PREVIEW</span>
+                    <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'EQ BYPASSED':'EQ ACTIVE'}</button>
                 </div>
                 <div class="widget-body">
                     <div class="graph-container graph-large"><canvas id="cvs-${i}"></canvas></div>
@@ -1073,9 +1146,68 @@
           </div>
         `;
       });
+
+      // System Tab
+      let sysHtml = `
+        <div class="dashboard-header">
+            <div class="dashboard-title">SYSTEM SETTINGS</div>
+        </div>
+        <div class="channel-strip">
+            <div class="strip-col">
+                <div class="widget">
+                    <div class="widget-header">PRESET MANAGEMENT</div>
+                    <div class="widget-body">
+                        <select id="sys-preset-slot" class="pro-sel">
+                            ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}">SLOT ${s}${s>=6?' (FACTORY)':''}</option>`).join('')}
+                        </select>
+                        <div class="ctrl-row">
+                            <button class="btn btn-primary" style="flex:1;" onclick="doPreset('load')">LOAD</button>
+                            <button class="btn btn-danger" style="flex:1;" onclick="doPreset('save')">SAVE</button>
+                            <button class="btn" style="flex:1;" onclick="doPreset('rename')">RENAME</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget">
+                    <div class="widget-header">FIRMWARE UPDATE (OTA)</div>
+                    <div class="widget-body">
+                        <input type="text" id="ota-ssid" class="pro-in" placeholder="WiFi SSID" style="margin-bottom:6px;">
+                        <input type="password" id="ota-pass" class="pro-in" placeholder="WiFi Password" style="margin-bottom:6px;">
+                        <div class="ctrl-row">
+                            <select id="ota-version" class="pro-sel" style="flex:2;"><option>Select firmware...</option></select>
+                            <button class="btn btn-primary" onclick="fetchGithubReleases()" style="flex:1;">FETCH</button>
+                        </div>
+                        <button class="btn btn-danger" style="margin-top:6px;" onclick="triggerOTA()">START UPDATE</button>
+                    </div>
+                </div>
+            </div>
+            <div class="strip-col">
+                <div class="widget">
+                    <div class="widget-header">TONE GENERATOR</div>
+                    <div class="widget-body">
+                        <div class="ctrl-row">
+                            <div class="ctrl-col">
+                                ${createSelect('MODE', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}
+                                ${createSelect('ROUTE', 'tone', 0, 'r', ['ALL IN', 'IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'], dspState.tr)}
+                            </div>
+                            <div class="ctrl-col">
+                                ${createFader('FREQ', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz', '', '10')}
+                                ${createFader('GAIN', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget">
+                    <div class="widget-header">GLOBAL RESET</div>
+                    <div class="widget-body">
+                        <button class="btn btn-danger" style="padding:15px; font-size:12px;" onclick="doFactoryReset()">FACTORY RESET ALL CHANNELS</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      `;
+      document.getElementById('t-sys').innerHTML = sysHtml;
     }
 
-    // Call buildUI initially when connected
   </script>
 </body>
 </html>
