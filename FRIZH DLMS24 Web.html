@@ -888,7 +888,9 @@
       }
 
       let bPath = new Path2D(), dPath = new Path2D(), fPath = new Path2D(), first = true;
-      for(let x=0; x<=w; x+=2) {
+      let stepSize = Math.max(1, w / 250); // Lag Fix
+      
+      for(let x=0; x<=w; x+=stepSize) {
           let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), tBound = 0, tDyn = 0;
           if(!isBypassed) {
               for(let b=0; b<3; b++) {
@@ -899,7 +901,7 @@
           let yB = zeroY - (tBound * h/48), yD = zeroY - (tDyn * h/48);
           if(first) { bPath.moveTo(x,yB); dPath.moveTo(x,yD); fPath.moveTo(x,zeroY); fPath.lineTo(x,yD); first=false; }
           else { bPath.lineTo(x,yB); dPath.lineTo(x,yD); fPath.lineTo(x,yD); }
-          if(x >= w-2) fPath.lineTo(x,zeroY);
+          if(x >= w-stepSize) fPath.lineTo(x,zeroY);
       }
 
       ctx.fillStyle = color; ctx.globalAlpha = 0.3; ctx.fill(fPath); ctx.globalAlpha = 1.0;
@@ -932,7 +934,9 @@
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
 
       let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D(), first = true;
-      for(let x=0; x<=w; x+=2) {
+      let stepSize = Math.max(1, w / 250); // Lag fix
+      
+      for(let x=0; x<=w; x+=stepSize) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), xo_db = g_off;
         if(xo_t > 0) xo_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
         if(xo_th > 0) xo_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
@@ -946,7 +950,7 @@
         let yXO = zeroY - (xo_db * (h/45)), yTot = zeroY - (tot_db * (h/45));
         if(first) { xoPath.moveTo(x,yXO); combinedPath.moveTo(x,yTot); fillPath.moveTo(x,zeroY); fillPath.lineTo(x,yTot); first=false; } 
         else { xoPath.lineTo(x,yXO); combinedPath.lineTo(x,yTot); fillPath.lineTo(x,yTot); }
-        if(x >= w-2) fillPath.lineTo(x,zeroY);
+        if(x >= w-stepSize) fillPath.lineTo(x,zeroY);
       }
       
       ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill(fillPath); ctx.globalAlpha = 1.0;
