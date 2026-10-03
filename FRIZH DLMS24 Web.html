@@ -67,7 +67,7 @@
     .ctrl-row { display: flex; gap: 8px; }
     .ctrl-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     
-    .fader-box { background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .fader-box { background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1; }
     .fader-label { font-size: 9px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
     .fader-val { font-size: 11px; color: var(--accent-cyan); font-family: monospace; font-weight: bold; cursor: pointer; margin-bottom: 6px; background: rgba(0,173,181,0.1); padding: 2px 6px; border-radius: 3px; }
     
@@ -93,6 +93,7 @@
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     .graph-large { height: 210px; }
     .graph-medium { height: 160px; }
+    .graph-small { height: 100px; }
 
     /* COMPRESSOR GR METER */
     .comp-layout { display: flex; gap: 8px; height: 100px; }
@@ -127,7 +128,6 @@
 </head>
 <body>
 
-  <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
     <div style="font-size: 32px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn btn-primary" style="font-size: 14px; padding: 12px 30px;" onclick="connectBLE()">SCAN & CONNECT</button>
@@ -171,10 +171,8 @@
 
     <!-- MAIN VIEW -->
     <main class="main-view">
-      <!-- MONITOR TAB -->
       <div id="t-meters" class="panel active"><div id="meter-grid" class="monitor-grid"></div></div>
       
-      <!-- RTA TAB -->
       <div id="t-rta" class="panel">
         <div class="dashboard-header">
             <div class="dashboard-title">RTA SPECTRUM</div>
@@ -191,7 +189,6 @@
         </div>
       </div>
       
-      <!-- CHANNEL TABS WILL BE INJECTED HERE -->
       <div id="t-inA" class="panel"></div>
       <div id="t-inB" class="panel"></div>
       <div id="t-out1" class="panel"></div>
@@ -369,6 +366,10 @@
               if(!dspState.icm) dspState.icm = [0,0];
               if(!dspState.ica) dspState.ica = [10,10];
               if(!dspState.icrel) dspState.icrel = [100,100];
+              if(!dspState.apfe) dspState.apfe = [0,0,0,0];
+              if(!dspState.apff) dspState.apff = [1000,1000,1000,1000];
+              if(!dspState.apfq) dspState.apfq = [0.7,0.7,0.7,0.7];
+
               if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
               if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
               if(!dspState.afs_e) dspState.afs_e = [0,0];
@@ -396,7 +397,6 @@
       let tabBtn = document.getElementById('tab-' + id.substring(2));
       if(tabBtn) tabBtn.classList.add('active');
       
-      // Delay rendering slightly to ensure display:block layout is fully calculated
       setTimeout(() => {
           if(id.startsWith('t-out')) drawVisibleGraphs();
           if(id.startsWith('t-in')) { drawDeqGraph(id.endsWith('A')?0:1); }
@@ -450,7 +450,7 @@
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
 
-      // Update State immediately so dragging logic is synced
+      // Update Local State Immediately
       if (type === 'eq') {
           if(p === 'f') dspState.eqf[ch][b] = realVal;
           if(p === 'g') dspState.eq_gn[ch][b] = realVal;
@@ -468,6 +468,9 @@
           if(p === 'r') { dspState.deq_r[ch][b] = realVal; displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1"; }
           if(p === 't') dspState.deq_t[ch][b] = realVal;
       }
+      if (type === 'bbe') { dspState['bbe_'+p][ch] = realVal; }
+      if (type === 'afs') { dspState['afs_'+p][ch] = realVal; }
+      if (type === 'apf') { dspState['apf'+p][ch] = realVal; }
 
       el.closest('.fader-box').querySelector('.fader-val').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
@@ -475,13 +478,13 @@
       if (type === 'xo' || type === 'eq') drawVisibleGraphs();
       if (type === 'deq') drawDeqGraph(ch);
       if (type === 'comp' || type === 'incomp') {
-          if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; }
-          else { dspState.ct[ch]=p=='thr'?realVal:dspState.ct[ch]; dspState.cr[ch]=p=='rat'?realVal:dspState.cr[ch]; dspState.cm[ch]=p=='mak'?realVal:dspState.cm[ch]; }
+          if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; dspState.ica[ch]=p=='atk'?realVal:dspState.ica[ch]; dspState.icrel[ch]=p=='rel'?realVal:dspState.icrel[ch]; }
+          else { dspState.ct[ch]=p=='thr'?realVal:dspState.ct[ch]; dspState.cr[ch]=p=='rat'?realVal:dspState.cr[ch]; dspState.cm[ch]=p=='mak'?realVal:dspState.cm[ch]; dspState.ca[ch]=p=='atk'?realVal:dspState.ca[ch]; dspState.crel[ch]=p=='rel'?realVal:dspState.crel[ch]; }
           drawCompVisualizers();
       }
     }
 
-    // Handles Select Dropdowns and syncs local state for instant Graph Updates
+    // Handles Select Dropdowns
     function handleSelect(el) {
         let type = el.getAttribute('data-type');
         let ch = parseInt(el.getAttribute('data-ch'));
@@ -492,11 +495,13 @@
             if(p === 't') dspState.xt[ch] = val;
             if(p === 'th') dspState.xth[ch] = val;
             drawVisibleGraphs();
-        } else if (type === 'rt') {
-            dspState.rt[ch] = val;
+        } else if (type === 'rt') { dspState.rt[ch] = val;
+        } else if (type === 'bbe') { dspState['bbe_'+p][ch] = val; 
+        } else if (type === 'afs') { dspState['afs_'+p][ch] = val; 
+        } else if (type === 'apf') { dspState['apf'+p][ch] = val; 
         } else if (type === 'tone') {
-            if(p === 'm') { dspState.tm = val; handleToneModeUpdate(val); } 
-            else if (p === 'r') { dspState.tr = val; }
+            if(p === 'm') dspState.tm = val; 
+            if (p === 'r') dspState.tr = val;
         }
         sendUpdate(type, ch, p, val);
     }
@@ -539,6 +544,12 @@
                 <span style="font-size:9px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${label}</span>
                 <select class="pro-sel" style="width:auto; min-width:80px;" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" onchange="handleSelect(this)">${opts}</select>
               </div>`;
+    }
+
+    function clearAFS(ch) {
+        sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
+        dspState.afs_f[ch] = [0,0,0,0]; 
+        buildUI(); 
     }
 
     function toggleMute(type, ch) {
@@ -637,11 +648,6 @@
             }
             setTimeout(() => sendBLE('/api/dump'), 1000);
         }
-    }
-    
-    function handleToneModeUpdate(val) {
-        let mode = parseInt(val);
-        // We handle this directly in the handleSelect method already
     }
 
     /* --- DRAWING GRAPHS --- */
@@ -1049,6 +1055,16 @@
             </div>`;
         }
 
+        let afsBadges = '<div style="display:flex; gap:5px; margin-top:5px;">';
+        for(let n=0; n<4; n++) {
+            let f = dspState.afs_f[i][n];
+            afsBadges += `<div style="flex:1; background:#111; border:1px solid #333; text-align:center; padding:4px; border-radius:3px;">
+                <div style="font-size:8px; color:#666;">NOTCH ${n+1}</div>
+                <div style="font-size:10px; color:${f===0?'#555':`var(--accent-red)`}; font-weight:bold;">${f===0?'---':f+'Hz'}</div>
+            </div>`;
+        }
+        afsBadges += '</div>';
+
         let copyOpts = `<option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option>`;
         let copyHtml = `
           <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
@@ -1086,7 +1102,39 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">INPUT COMP</div>
+                <div class="widget-header">BBE SONIC MAXIMIZER</div>
+                <div class="widget-body">
+                    ${createSelect('ENABLE', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
+                    <div class="ctrl-row">
+                        ${createFader('LO CONT', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
+                        ${createFader('PROCESS', 'bbe', i, 'p', 0, 100, dspState.bbe_p[i], '%')}
+                    </div>
+                </div>
+              </div>
+              <div class="widget">
+                <div class="widget-header">AFS (FEEDBACK SUPPRESSOR)</div>
+                <div class="widget-body">
+                    ${createSelect('ENABLE', 'afs', i, 'e', ['BYPASS', 'ACTIVE'], dspState.afs_e[i])}
+                    ${createFader('SENSITIVITY', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
+                    ${afsBadges}
+                    <button class="btn btn-danger" style="margin-top:5px;" onclick="clearAFS(${i})">CLEAR FILTERS</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="strip-col">
+              <div class="widget" id="wid-deq-${i}" class="${dspState.deq_e[i]===0?'bypassed':''}">
+                <div class="widget-header">
+                    <span>DYNAMIC EQ</span>
+                    <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
+                </div>
+                <div class="widget-body">
+                    <div class="graph-container graph-medium"><canvas id="cvs-deq-${i}"></canvas></div>
+                    <div class="ctrl-row">${deqHtml}</div>
+                </div>
+              </div>
+              <div class="widget">
+                <div class="widget-header">INPUT COMPRESSOR</div>
                 <div class="widget-body">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-in-${i}"></canvas></div>
@@ -1104,19 +1152,6 @@
                         ${createFader('ATTACK', 'incomp', i, 'atk', 1, 100, dspState.ica[i], 'ms')}
                         ${createFader('RELEASE', 'incomp', i, 'rel', 10, 1000, dspState.icrel[i], 'ms', '', '10')}
                     </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="strip-col">
-              <div class="widget" id="wid-deq-${i}" class="${dspState.deq_e[i]===0?'bypassed':''}">
-                <div class="widget-header">
-                    <span>DYNAMIC EQ</span>
-                    <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
-                </div>
-                <div class="widget-body">
-                    <div class="graph-container graph-medium"><canvas id="cvs-deq-${i}"></canvas></div>
-                    <div class="ctrl-row">${deqHtml}</div>
                 </div>
               </div>
             </div>
@@ -1164,6 +1199,16 @@
                 </div>
               </div>
               <div class="widget">
+                <div class="widget-header">ALL-PASS FILTER</div>
+                <div class="widget-body">
+                    ${createSelect('ENABLE', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
+                    <div class="ctrl-row">
+                        ${createFader('FREQ', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
+                        ${createFader('Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
+                    </div>
+                </div>
+              </div>
+              <div class="widget">
                 <div class="widget-header">CROSSOVER</div>
                 <div class="widget-body">
                     ${createFader('OUT GAIN', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
@@ -1188,6 +1233,10 @@
                     <div class="ctrl-row">
                         ${createFader('RATIO', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
                         ${createFader('MAKEUP', 'comp', i, 'mak', 0, 20, dspState.cm[i], 'dB')}
+                    </div>
+                    <div class="ctrl-row">
+                        ${createFader('ATTACK', 'comp', i, 'atk', 1, 100, dspState.ca[i], 'ms')}
+                        ${createFader('RELEASE', 'comp', i, 'rel', 10, 1000, dspState.crel[i], 'ms', '', '10')}
                     </div>
                 </div>
               </div>
