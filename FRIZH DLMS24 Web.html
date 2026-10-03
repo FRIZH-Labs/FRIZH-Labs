@@ -495,7 +495,7 @@
       }
 
       let displayVal = realVal.toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      if (type === 'dl' || type === 'idl') displayVal = realVal.toFixed(1) + 'ms';
+      if (type === 'dl' || type === 'idl') displayVal = realVal.toFixed(1) + 'ms / ' + (realVal * 34.3).toFixed(1) + 'cm';
       if (type === 'comp' || type === 'incomp') {
           if (p === 'thr' && realVal >= 1) displayVal = "OFF";
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
@@ -549,7 +549,8 @@
       let id = `${type}_${param}_${ch}${band !== '' ? '_' + band : ''}`;
       let isFreq = (param === 'f' || param === 'fl' || param === 'fh');
       let displayVal = parseFloat(val).toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      if(type === 'dl' || type === 'idl') displayVal = parseFloat(val).toFixed(1) + 'ms';
+      
+      if(type === 'dl' || type === 'idl') displayVal = parseFloat(val).toFixed(1) + 'ms / ' + (parseFloat(val) * 34.3).toFixed(1) + 'cm';
       if (type === 'comp' || type === 'incomp') { if (param === 'thr' && parseInt(val) >= 1) displayVal = "OFF"; if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT"; }
       if (type === 'deq') { if (param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1"; if (param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB"; }
       
@@ -735,8 +736,25 @@
     function drawSpectrum(id, data, color) {
         let ctxData = getDpiCtx(document.getElementById(id)); if(!ctxData) return; let { ctx, w, h } = ctxData;
         ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-        [0, 6, 12, 18, 24, 30].forEach(i => { let x = (i/30)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
-        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
+        
+        let indices = [0, 6, 12, 18, 24, 30];
+        let labels = ["20", "350", "1k", "2.6k", "7k", "20k"];
+        
+        // Draw Grid Lines
+        indices.forEach(i => { let x = (i/30)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
+        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke(); 
+        ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
+        
+        // Add Frequency & dB Helper Labels
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px sans-serif';
+        indices.forEach((i, idx) => {
+            let x = (i/30)*w, lbl = labels[idx];
+            let tx = x - ctx.measureText(lbl).width/2;
+            if(idx === 0) tx = 2; if(idx === 5) tx = w - ctx.measureText(lbl).width - 2;
+            ctx.fillText(lbl, tx, h - 4);
+        });
+        ctx.fillText("-20", 2, h*0.33 - 2);
+        ctx.fillText("-40", 2, h*0.66 - 2);
         
         let drawHeight = h;
         ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
@@ -752,8 +770,20 @@
         let cvs = document.getElementById('cvs-global-xo'); let ctxData = getDpiCtx(cvs); if(!ctxData) return; let { ctx, w, h } = ctxData;
 
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1; let logMin = Math.log10(20), logMax = Math.log10(20000);
+        
+        // Draw Frequency Grid
         [20,100,1000,10000,20000].forEach(f => { let x = (Math.log10(f)-logMin)/(logMax-logMin)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
         let zeroY = h * (15/45); ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
+
+        // Add Frequency & 0dB Helper Labels
+        ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '9px sans-serif';
+        [20,100,1000,10000,20000].forEach(f => {
+            let x = (Math.log10(f)-logMin)/(logMax-logMin)*w, lbl = f >= 1000 ? (f/1000)+'k' : f;
+            let tx = x - ctx.measureText(lbl).width/2;
+            if(f === 20) tx = 2; if(f === 20000) tx = w - ctx.measureText(lbl).width - 2;
+            ctx.fillText(lbl, tx, h - 4);
+        });
+        ctx.fillText("0dB", 2, zeroY - 2);
 
         let colors = ['#00ADB5', '#ff9800', '#9c27b0', '#8bc34a'];
         for(let d=0; d<4; d++) {
@@ -1065,24 +1095,24 @@
             <div class="strip-col">
                 <div class="widget">
                     <div class="widget-header"><span>SYSTEM METERS</span></div>
-                    <div class="widget-body"><div class="monitor-grid">${mHtml}</div></div>
+                    <div class="widget-body"><div class="monitor-grid" style="min-height: 200px;">${mHtml}</div></div>
                 </div>
-                <div class="widget" style="flex:1;">
+                <div class="widget">
                     <div class="widget-header"><span>GLOBAL CROSSOVER PREVIEW</span></div>
                     <div class="widget-body">
                         <div style="display:flex; gap:5px;">${globXoHtml}</div>
-                        <div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-global-xo"></canvas></div>
+                        <div class="graph-container" style="height: 120px;"><canvas id="cvs-global-xo"></canvas></div>
                     </div>
                 </div>
             </div>
             <div class="strip-col">
-                <div class="widget" style="flex:1;">
+                <div class="widget">
                     <div class="widget-header"><span>RTA SPECTRUM IN A</span></div>
-                    <div class="widget-body"><div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-rta-A"></canvas></div></div>
+                    <div class="widget-body"><div class="graph-container" style="height: 120px;"><canvas id="cvs-rta-A"></canvas></div></div>
                 </div>
-                <div class="widget" style="flex:1;">
+                <div class="widget">
                     <div class="widget-header" style="color:var(--accent-orange);"><span>RTA SPECTRUM IN B</span></div>
-                    <div class="widget-body"><div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-rta-B"></canvas></div></div>
+                    <div class="widget-body"><div class="graph-container" style="height: 120px;"><canvas id="cvs-rta-B"></canvas></div></div>
                 </div>
             </div>
         </div>
@@ -1138,7 +1168,7 @@
               <div class="widget">
                 ${getWidgetHead('CONFIG', `revertBlock(${i}, 'in_gain')`)}
                 <div class="widget-body">
-                    ${createFader('MASTER GAIN', 'in', i, 'gn', -12, 24, i===0?dspState.vA:dspState.vB, 'dB')}
+                    ${createFader('MASTER GAIN', 'in', i, 'gn', -12, 12, i===0?dspState.vA:dspState.vB, 'dB')}
                     ${createFader('DELAY', 'idl', i, '', 0, 200, dspState.idl[i]||0, 'ms', '', '0.1')}
                 </div>
               </div>
