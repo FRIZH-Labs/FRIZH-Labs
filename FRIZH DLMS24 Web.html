@@ -105,7 +105,7 @@
     .gr-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to bottom, #ff9800, #f44336); transition: height 0.05s; }
 
     /* VERTICAL VU METERS */
-    .monitor-grid { display: flex; justify-content: space-around; padding: 15px; height: 100%; flex:1; }
+    .monitor-grid { display: flex; justify-content: space-around; padding: 15px; height: 100%; flex:1; min-height: 220px; }
     .vu-channel { display: flex; flex-direction: column; align-items: center; width: 45px; }
     .vu-title { font-weight: 900; font-size: 12px; margin-bottom: 12px; color: #fff; text-align: center; white-space: nowrap;}
     .vu-meter-wrap { display: flex; gap: 5px; height: calc(100% - 110px); min-height: 120px; }
@@ -134,6 +134,7 @@
 </head>
 <body>
 
+  <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
     <div style="font-size: 32px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn btn-primary" style="font-size: 14px; padding: 12px 30px;" onclick="connectBLE()">SCAN & CONNECT</button>
@@ -389,6 +390,7 @@
       let tabBtn = document.getElementById('tab-' + id.substring(2));
       if(tabBtn) tabBtn.classList.add('active');
       
+      // Delay rendering slightly to ensure display:block layout is fully calculated
       setTimeout(() => {
           if(id.startsWith('t-out')) drawVisibleGraphs();
           if(id.startsWith('t-in')) { drawDeqGraph(id.endsWith('A')?0:1); }
@@ -401,6 +403,17 @@
         let body = btn.closest('.widget').querySelector('.widget-body');
         body.classList.toggle('collapsed');
         btn.innerText = body.classList.contains('collapsed') ? '□' : '_';
+        
+        // Trigger redraw so canvases inside just-opened widgets scale correctly
+        if(!body.classList.contains('collapsed')) {
+            setTimeout(() => {
+                drawVisibleGraphs();
+                drawRTA();
+                drawGlobalCrossover();
+                drawCompVisualizers();
+                [0,1].forEach(ch => drawDeqGraph(ch));
+            }, 50);
+        }
     }
 
     const getWidgetHead = (title, rstParam, defaultCollapsed = true) => `
@@ -539,8 +552,8 @@
         sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
         dspState.afs_f[ch] = [0,0,0,0]; 
         buildUI(); 
-        setTimeout(() => { drawVisibleGraphs(); drawDeqGraph(ch); }, 50); // Redraw
-        setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP
+        setTimeout(() => { drawVisibleGraphs(); drawDeqGraph(ch); }, 50); // Redraw immediately empty
+        setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP to confirm
     }
 
     function revertBand(type, ch, b) {
@@ -570,7 +583,7 @@
       else if (block === 'eq') { const d = [60,150,400,1000,2400,6000,12000]; for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${ch}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=eq&ch=${ch}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`); } } 
       else if (block === 'comp') { sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${ch}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${ch}&p=rel&v=100`); } 
       else if (block === 'incomp') { sendBLE(`/api/set?type=incomp&ch=${ch}&p=thr&v=0`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=rat&v=4`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=mak&v=0`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=atk&v=10`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=rel&v=100`); } 
-      else if (block === 'deq') { const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`); } }
+      else if (block === 'deq') { const d = [150,1000,5000]; sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=0`); for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`); } }
       if (!skipConfirm) setTimeout(() => sendBLE('/api/dump'), 600);
     }
 
@@ -589,7 +602,7 @@
                 sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=50`);
                 sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${i}&p=clr&v=1`);
                 sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=100`);
-                const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=-20`); }
+                sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=0`); const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=-20`); }
             }
             for(let i=0; i<4; i++) {
                 sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
@@ -600,85 +613,6 @@
             }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
             setTimeout(() => sendBLE('/api/dump'), 1500);
-        }
-    }
-
-    /* --- BASIC TOGGLES --- */
-    function toggleMute(type, ch) {
-      let isMuted = (type === 'in') ? (dspState.in_mute[ch] = !dspState.in_mute[ch]) : (dspState.out_mute[ch] = !dspState.out_mute[ch]);
-      let btn = document.getElementById(`btn-mute-${type}-${ch}`);
-      if(btn) { btn.classList.toggle('active', isMuted); btn.innerText = isMuted ? 'MUTED' : 'MUTE'; }
-      let indIndex = type === 'in' ? ch : ch + 2;
-      let led = document.getElementById(`ind-mute-${indIndex}`);
-      if(led) { led.classList.toggle('active', isMuted); led.classList.toggle('clip', isMuted); }
-      sendBLE(`/api/mute?type=${type}&ch=${ch}`);
-    }
-
-    function togglePolarity(ch) {
-        dspState.ph[ch] = dspState.ph[ch] === 1 ? 0 : 1;
-        sendUpdate('ph', ch, 'v', dspState.ph[ch]);
-        let btn = document.getElementById(`btn-ph-${ch}`);
-        if(btn) {
-            if(dspState.ph[ch] === 1) { btn.style.background = 'var(--accent-orange)'; btn.style.color = '#000'; btn.innerText = 'POLARITY: INV 180°'; } 
-            else { btn.style.background = '#2a2c35'; btn.style.color = '#fff'; btn.innerText = 'POLARITY: NORM 0°'; }
-        }
-    }
-
-    function toggleBypass(type, ch) {
-        if(type === 'eq') {
-            dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
-            document.getElementById(`wid-eq-${ch}`).classList.toggle('bypassed', dspState.eqb[ch] === 1);
-            document.getElementById(`btn-byp-eq-${ch}`).innerText = dspState.eqb[ch] === 1 ? 'BYPASSED' : 'ACTIVE';
-            sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
-            drawVisibleGraphs();
-        } else if(type === 'deq') {
-            dspState.deq_e[ch] = dspState.deq_e[ch] === 1 ? 0 : 1;
-            document.getElementById(`wid-deq-${ch}`).classList.toggle('bypassed', dspState.deq_e[ch] === 0);
-            document.getElementById(`btn-byp-deq-${ch}`).innerText = dspState.deq_e[ch] === 0 ? 'BYPASSED' : 'ACTIVE';
-            sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=${dspState.deq_e[ch]}`);
-            drawDeqGraph(ch);
-        }
-    }
-
-    function copyChannel(type, targetCh) {
-        let src = document.getElementById(`copy_src_${type}_${targetCh}`).value;
-        if(src === "" || parseInt(src) === targetCh) return;
-        if(confirm(`Copy settings from ${type.toUpperCase()}${parseInt(src)+1} to ${type.toUpperCase()}${targetCh+1}?`)) {
-            sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
-            setTimeout(() => sendBLE('/api/dump'), 500); 
-        }
-    }
-
-    /* --- SYSTEM OTA & PRESET LOGIC --- */
-    async function fetchGithubReleases() {
-        let sel = document.getElementById('ota-version');
-        sel.innerHTML = '<option>Fetching from GitHub...</option>';
-        try {
-            let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', { headers: { 'Accept': 'application/vnd.github.v3+json' }});
-            let files = await res.json();
-            let opts = '';
-            files.forEach(f => { if(f.name.toLowerCase().endsWith('.bin')) { let name = f.name.replace(/\.bin$/i, ''); opts += `<option value="${name}">${name}</option>`; } });
-            if(opts === '') opts = '<option value="firmware_normal">firmware_normal (Fallback)</option>';
-            sel.innerHTML = opts;
-        } catch(e) { sel.innerHTML = '<option value="firmware_normal">Fetch Failed - Using Fallback</option>'; }
-    }
-
-    function triggerOTA() {
-        let ssid = document.getElementById('ota-ssid').value, pass = document.getElementById('ota-pass').value, ver = document.getElementById('ota-version').value;
-        if(!ssid || !ver || ver.includes('Fetching')) return alert("Please enter WiFi SSID and select a firmware version.");
-        if(confirm("Start OTA Update? Device will reboot after.")) sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
-    }
-
-    function doPreset(act) {
-        let slot = parseInt(document.getElementById('sys-preset-slot').value);
-        let isProtected = slot >= 6;
-        if (act === 'load' || act === 'save') {
-            if(act === 'save' && isProtected) return alert("Slots 6-8 are factory protected.");
-            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
-        } else if (act === 'rename') {
-            if(isProtected) return alert("Slots 6-8 are factory protected.");
-            let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
-            if(name !== null) sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '')}`);
         }
     }
 
@@ -973,27 +907,28 @@
 
       document.getElementById('t-monitor').innerHTML = `
         <div class="dashboard-header"><div class="dashboard-title">MONITOR & RTA</div></div>
-        <div class="channel-strip monitor-col-left" style="grid-template-columns: 1fr 350px;">
+        <div class="channel-strip monitor-col-left" style="grid-template-columns: 1fr 1fr;">
             <div class="strip-col">
                 <div class="widget">
                     <div class="widget-header"><span>SYSTEM METERS</span></div>
                     <div class="widget-body"><div class="monitor-grid">${mHtml}</div></div>
                 </div>
                 <div class="widget" style="flex:1;">
-                    <div class="widget-header"><span>RTA SPECTRUM</span></div>
-                    <div class="widget-body" style="flex-direction:row;">
-                        <div class="graph-container" style="flex:1;"><canvas id="cvs-rta-A"></canvas></div>
-                        <div class="graph-container" style="flex:1;"><canvas id="cvs-rta-B"></canvas></div>
+                    <div class="widget-header"><span>GLOBAL CROSSOVER PREVIEW</span></div>
+                    <div class="widget-body">
+                        <div style="display:flex; gap:5px;">${globXoHtml}</div>
+                        <div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-global-xo"></canvas></div>
                     </div>
                 </div>
             </div>
             <div class="strip-col">
                 <div class="widget" style="flex:1;">
-                    <div class="widget-header"><span>GLOBAL CROSSOVER PREVIEW</span></div>
-                    <div class="widget-body">
-                        <div style="display:flex; gap:5px;">${globXoHtml}</div>
-                        <div class="graph-container" style="flex:1;"><canvas id="cvs-global-xo"></canvas></div>
-                    </div>
+                    <div class="widget-header"><span>RTA SPECTRUM IN A</span></div>
+                    <div class="widget-body"><div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-rta-A"></canvas></div></div>
+                </div>
+                <div class="widget" style="flex:1;">
+                    <div class="widget-header" style="color:var(--accent-orange);"><span>RTA SPECTRUM IN B</span></div>
+                    <div class="widget-body"><div class="graph-container" style="flex:1; min-height:160px;"><canvas id="cvs-rta-B"></canvas></div></div>
                 </div>
             </div>
         </div>
