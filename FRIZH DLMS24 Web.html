@@ -814,9 +814,11 @@
         }
     }
 
-    // DRAG LOGIC
+    // DRAG LOGIC WITH SYNC & LAG FIX
     function attachDragListeners(canvas, ch, type) {
-        if(canvas.dataset.dragAttached) return; canvas.dataset.dragAttached = 'true'; let isDragging = false;
+        if(canvas.dataset.dragAttached) return; canvas.dataset.dragAttached = 'true'; 
+        let isDragging = false;
+        let isDrawing = false; // Lag Fix 
 
         function getMousePos(evt) {
             let rect = canvas.getBoundingClientRect(), cX = evt.touches ? evt.touches[0].clientX : evt.clientX, cY = evt.touches ? evt.touches[0].clientY : evt.clientY;
@@ -840,21 +842,41 @@
         function onMove(e) {
             if(!isDragging || draggingBand.ch !== ch || draggingBand.type !== type) return; if(e.cancelable) e.preventDefault();
             let pos = getMousePos(e), logMin = Math.log10(20), logMax = Math.log10(20000);
-            let newF = Math.max(20, Math.min(20000, Math.pow(10, logMin + (pos.x / pos.w) * (logMax - logMin))));
+            
+            // Sync Fix: Apply the same frequency rounding as the slider
+            let rawF = Math.pow(10, logMin + (pos.x / pos.w) * (logMax - logMin));
+            let newF = Math.max(20, Math.min(20000, rawF));
+            if(newF > 10000) newF = Math.round(newF / 100) * 100;
+            else if(newF > 1000) newF = Math.round(newF / 10) * 10;
+            else newF = Math.round(newF);
+
             let b = draggingBand.band;
+            let newG = 0;
 
             if(type === 'eq') {
-                let newG = Math.max(-12, Math.min(12, (pos.h*(15/45) - pos.y) / (pos.h/45)));
-                dspState.eqf[ch][b] = newF; dspState.eq_gn[ch][b] = newG;
-                sendUpdate('eq', ch, 'f', newF, b); sendUpdate('eq', ch, 'g', newG, b);
-                updateSliderUI(`eq_f_${ch}_${b}`, newF); updateSliderUI(`eq_g_${ch}_${b}`, newG);
-                drawGraph(ch);
+                // Sync Fix: Round gain to match integer sliders
+                newG = Math.round(Math.max(-12, Math.min(12, (pos.h*(15/45) - pos.y) / (pos.h/45))));
+                if(dspState.eqf[ch][b] !== newF || dspState.eq_gn[ch][b] !== newG) {
+                    dspState.eqf[ch][b] = newF; dspState.eq_gn[ch][b] = newG;
+                    sendUpdate('eq', ch, 'f', newF, b); sendUpdate('eq', ch, 'g', newG, b);
+                    updateSliderUI(`eq_f_${ch}_${b}`, newF); updateSliderUI(`eq_g_${ch}_${b}`, newG);
+                }
             } else {
-                let newG = Math.max(-24, Math.min(15, (pos.h/2 - pos.y) / (pos.h/48)));
-                dspState.deq_f[ch][b] = newF; dspState.deq_d[ch][b] = newG;
-                sendUpdate('deq', ch, 'f', newF, b); sendUpdate('deq', ch, 'd', newG, b);
-                updateSliderUI(`deq_f_${ch}_${b}`, newF); updateSliderUI(`deq_d_${ch}_${b}`, newG);
-                drawDeqGraph(ch);
+                newG = Math.round(Math.max(-24, Math.min(15, (pos.h/2 - pos.y) / (pos.h/48))));
+                if(dspState.deq_f[ch][b] !== newF || dspState.deq_d[ch][b] !== newG) {
+                    dspState.deq_f[ch][b] = newF; dspState.deq_d[ch][b] = newG;
+                    sendUpdate('deq', ch, 'f', newF, b); sendUpdate('deq', ch, 'd', newG, b);
+                    updateSliderUI(`deq_f_${ch}_${b}`, newF); updateSliderUI(`deq_d_${ch}_${b}`, newG);
+                }
+            }
+
+            // Lag Fix: Debounce rendering
+            if(!isDrawing) {
+                isDrawing = true;
+                requestAnimationFrame(() => {
+                    if(type === 'eq') drawGraph(ch); else drawDeqGraph(ch);
+                    isDrawing = false;
+                });
             }
         }
 
@@ -888,7 +910,7 @@
       }
 
       let bPath = new Path2D(), dPath = new Path2D(), fPath = new Path2D(), first = true;
-      let stepSize = Math.max(1, w / 250); // Lag Fix
+      let stepSize = Math.max(1, w / 250); // LAG FIX: Dynamic step size
       
       for(let x=0; x<=w; x+=stepSize) {
           let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), tBound = 0, tDyn = 0;
@@ -934,7 +956,7 @@
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
 
       let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D(), first = true;
-      let stepSize = Math.max(1, w / 250); // Lag fix
+      let stepSize = Math.max(1, w / 250); // LAG FIX: Dynamic step size
       
       for(let x=0; x<=w; x+=stepSize) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), xo_db = g_off;
