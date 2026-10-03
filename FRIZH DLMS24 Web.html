@@ -93,7 +93,6 @@
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
     .graph-large { height: 210px; }
     .graph-medium { height: 160px; }
-    .graph-small { height: 100px; }
 
     /* COMPRESSOR GR METER */
     .comp-layout { display: flex; gap: 8px; height: 100px; }
@@ -101,7 +100,7 @@
     .gr-track { flex: 1; width: 10px; background: #111; position: relative; margin: 4px 0; border-radius: 2px; overflow: hidden; }
     .gr-fill { position: absolute; top: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to bottom, #ff9800, #f44336); transition: height 0.05s; }
 
-    /* VERTICAL VU METERS (MONITOR TAB) */
+    /* VERTICAL VU METERS */
     .monitor-grid { display: flex; justify-content: center; gap: 20px; padding: 20px; height: 100%; }
     .vu-channel { display: flex; flex-direction: column; align-items: center; width: 50px; }
     .vu-title { font-weight: 900; font-size: 12px; margin-bottom: 12px; color: #fff; text-align: center; }
@@ -351,6 +350,13 @@
           try {
               dspState = JSON.parse(jsonBuffer);
               if(!dspState.eqb) dspState.eqb = [0,0,0,0];
+              if(!dspState.ph) dspState.ph = [0,0,0,0];
+              if(!dspState.xt) dspState.xt = [0,0,0,0];
+              if(!dspState.xth) dspState.xth = [0,0,0,0];
+              if(!dspState.xfl) dspState.xfl = [80,80,80,80];
+              if(!dspState.xfh) dspState.xfh = [5000,5000,5000,5000];
+              if(!dspState.xo_gn) dspState.xo_gn = [0,0,0,0];
+
               if(dspState.tm === undefined) dspState.tm = 0;
               if(dspState.tf === undefined) dspState.tf = 1000;
               if(dspState.tg === undefined) dspState.tg = -20;
@@ -390,10 +396,13 @@
       let tabBtn = document.getElementById('tab-' + id.substring(2));
       if(tabBtn) tabBtn.classList.add('active');
       
-      if(id.startsWith('t-out')) drawVisibleGraphs();
-      if(id.startsWith('t-in')) { drawDeqGraph(id.endsWith('A')?0:1); }
-      if(id === 't-rta') drawRTA();
-      drawCompVisualizers();
+      // Delay rendering slightly to ensure display:block layout is fully calculated
+      setTimeout(() => {
+          if(id.startsWith('t-out')) drawVisibleGraphs();
+          if(id.startsWith('t-in')) { drawDeqGraph(id.endsWith('A')?0:1); }
+          if(id === 't-rta') drawRTA();
+          drawCompVisualizers();
+      }, 15);
     }
 
     function sendUpdate(type, ch, param, val, band = '') {
@@ -441,10 +450,16 @@
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
 
+      // Update State immediately so dragging logic is synced
       if (type === 'eq') {
           if(p === 'f') dspState.eqf[ch][b] = realVal;
           if(p === 'g') dspState.eq_gn[ch][b] = realVal;
           if(p === 'q') dspState.eqq[ch][b] = realVal;
+      }
+      if (type === 'xo') {
+          if(p === 'fl') dspState.xfl[ch] = realVal;
+          if(p === 'fh') dspState.xfh[ch] = realVal;
+          if(p === 'g') dspState.xo_gn[ch] = realVal;
       }
       if (type === 'deq') {
           if(p === 'f') dspState.deq_f[ch][b] = realVal;
@@ -452,13 +467,6 @@
           if(p === 'q') dspState.deq_q[ch][b] = realVal;
           if(p === 'r') { dspState.deq_r[ch][b] = realVal; displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1"; }
           if(p === 't') dspState.deq_t[ch][b] = realVal;
-      }
-      if (type === 'xo') {
-          if(p === 't') dspState.xt[ch] = realVal;
-          if(p === 'th') dspState.xth[ch] = realVal;
-          if(p === 'fl') dspState.xfl[ch] = realVal;
-          if(p === 'fh') dspState.xfh[ch] = realVal;
-          if(p === 'g') dspState.xo_gn[ch] = realVal;
       }
 
       el.closest('.fader-box').querySelector('.fader-val').innerText = displayVal;
@@ -471,6 +479,26 @@
           else { dspState.ct[ch]=p=='thr'?realVal:dspState.ct[ch]; dspState.cr[ch]=p=='rat'?realVal:dspState.cr[ch]; dspState.cm[ch]=p=='mak'?realVal:dspState.cm[ch]; }
           drawCompVisualizers();
       }
+    }
+
+    // Handles Select Dropdowns and syncs local state for instant Graph Updates
+    function handleSelect(el) {
+        let type = el.getAttribute('data-type');
+        let ch = parseInt(el.getAttribute('data-ch'));
+        let p = el.getAttribute('data-p');
+        let val = parseInt(el.value);
+
+        if (type === 'xo') {
+            if(p === 't') dspState.xt[ch] = val;
+            if(p === 'th') dspState.xth[ch] = val;
+            drawVisibleGraphs();
+        } else if (type === 'rt') {
+            dspState.rt[ch] = val;
+        } else if (type === 'tone') {
+            if(p === 'm') { dspState.tm = val; handleToneModeUpdate(val); } 
+            else if (p === 'r') { dspState.tr = val; }
+        }
+        sendUpdate(type, ch, p, val);
     }
 
     function createFader(label, type, ch, param, min, max, val, unit, band = '', step = '1') {
@@ -507,10 +535,9 @@
     function createSelect(label, type, ch, param, options, val) {
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
-      let oc = (type === 'tone' && param === 'm') ? `handleToneModeUpdate(this.value);` : `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();`;
       return `<div style="display:flex; justify-content:space-between; align-items:center; background:#111; padding:4px 8px; border:1px solid #333; border-radius:4px;">
                 <span style="font-size:9px; color:var(--text-muted); font-weight:700; text-transform:uppercase;">${label}</span>
-                <select class="pro-sel" style="width:auto; min-width:80px;" id="${id}" onchange="${oc}">${opts}</select>
+                <select class="pro-sel" style="width:auto; min-width:80px;" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" onchange="handleSelect(this)">${opts}</select>
               </div>`;
     }
 
@@ -519,6 +546,23 @@
       let btn = document.getElementById(`btn-mute-${type}-${ch}`);
       if(btn) { btn.classList.toggle('active', isMuted); btn.innerText = isMuted ? 'MUTED' : 'MUTE'; }
       sendBLE(`/api/mute?type=${type}&ch=${ch}`);
+    }
+
+    function togglePolarity(ch) {
+        dspState.ph[ch] = dspState.ph[ch] === 1 ? 0 : 1;
+        sendUpdate('ph', ch, 'v', dspState.ph[ch]);
+        let btn = document.getElementById(`btn-ph-${ch}`);
+        if(btn) {
+            if(dspState.ph[ch] === 1) {
+                btn.style.background = 'var(--accent-orange)';
+                btn.style.color = '#000';
+                btn.innerText = 'POLARITY: INV 180°';
+            } else {
+                btn.style.background = '#2a2c35';
+                btn.style.color = '#fff';
+                btn.innerText = 'POLARITY: NORM 0°';
+            }
+        }
     }
 
     function toggleBypass(type, ch) {
@@ -597,7 +641,7 @@
     
     function handleToneModeUpdate(val) {
         let mode = parseInt(val);
-        sendUpdate('tone', 0, 'm', mode);
+        // We handle this directly in the handleSelect method already
     }
 
     /* --- DRAWING GRAPHS --- */
@@ -882,9 +926,14 @@
       ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
 
       let color = ['#00ADB5', '#ff9800', '#9c27b0', '#8bc34a'][ch] || '#00ADB5';
-      let xo_t = dspState.xt[ch]||0, xo_th = dspState.xth[ch]||0, f_low = dspState.xfl[ch]||20, f_high = dspState.xfh[ch]||20000, g_off = dspState.xo_gn[ch]||0;
+      let xo_t = dspState.xt && dspState.xt[ch] ? dspState.xt[ch] : 0;
+      let xo_th = dspState.xth && dspState.xth[ch] ? dspState.xth[ch] : 0;
+      let f_low = dspState.xfl && dspState.xfl[ch] ? dspState.xfl[ch] : 20;
+      let f_high = dspState.xfh && dspState.xfh[ch] ? dspState.xfh[ch] : 20000;
+      let g_off = dspState.xo_gn && dspState.xo_gn[ch] ? dspState.xo_gn[ch] : 0;
+
       let orderL = [2,2,4,8,2,4,8][xo_t]||2, orderH = [2,2,4,8,2,4,8][xo_th]||2;
-      let eqBypassed = dspState.eqb[ch] === 1;
+      let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
 
       let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D();
       let first = true;
@@ -898,7 +947,7 @@
         
         let tot_db = xo_db;
         // Add EQ Filters
-        if(!eqBypassed) {
+        if(!eqBypassed && dspState.eq_gn) {
             for(let b=0; b<7; b++) {
               let g = dspState.eq_gn[ch][b]; if(g === 0) continue;
               let fc = dspState.eqf[ch][b], q = dspState.eqq[ch][b];
@@ -930,7 +979,7 @@
       ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(combinedPath);
 
       // Draw Anchor Dots
-      if(!eqBypassed) {
+      if(!eqBypassed && dspState.eq_gn) {
           for(let b=0; b<7; b++) {
               let cx = ((Math.log10(dspState.eqf[ch][b]) - logMin) / (logMax - logMin)) * w;
               let cy = zeroY - (dspState.eq_gn[ch][b] * h/45); // Dots stay relative to 0dB for clear dragging
@@ -1000,10 +1049,20 @@
             </div>`;
         }
 
+        let copyOpts = `<option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option>`;
+        let copyHtml = `
+          <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
+            <span style="font-size:9px; color:#888;">COPY FROM:</span>
+            <select id="copy_src_in_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;">${copyOpts}</select>
+            <button class="btn btn-small" onclick="copyChannel('in', ${i})">GO</button>
+          </div>
+        `;
+
         document.getElementById(`t-in${n}`).innerHTML = `
           <div class="dashboard-header">
             <div class="dashboard-title">${dspState.in_n[i]}</div>
             <div class="dashboard-actions">
+              ${copyHtml}
               <button class="btn btn-danger ${dspState.in_mute[i]?'active':''}" id="btn-mute-in-${i}" onclick="toggleMute('in',${i})">${dspState.in_mute[i]?'MUTED':'MUTE'}</button>
             </div>
           </div>
@@ -1079,6 +1138,9 @@
 
         let copyOpts = `<option value="">SELECT...</option>` + [0,1,2,3].filter(c=>c!==i).map(c=>`<option value="${c}">OUT ${c+1}</option>`).join('');
 
+        let phBtnStyle = dspState.ph[i] === 1 ? 'background:var(--accent-orange); color:#000;' : '';
+        let phBtnText = dspState.ph[i] === 1 ? 'POLARITY: INV 180°' : 'POLARITY: NORM 0°';
+
         document.getElementById(`t-out${i+1}`).innerHTML = `
           <div class="dashboard-header">
             <div class="dashboard-title">${dspState.out_n[i]}</div>
@@ -1097,7 +1159,7 @@
                 <div class="widget-header">ROUTING & ALIGNMENT</div>
                 <div class="widget-body">
                     ${createSelect('SOURCE', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
-                    <button class="btn" style="${dspState.ph[i]===1?'background:var(--accent-orange); color:#000;':''}" onclick="sendUpdate('ph',${i},'v',${dspState.ph[i]===1?0:1})">POLARITY: ${dspState.ph[i]===1?'INV 180°':'NORM 0°'}</button>
+                    <button id="btn-ph-${i}" class="btn" style="${phBtnStyle}" onclick="togglePolarity(${i})">${phBtnText}</button>
                     ${createFader('DELAY', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
                 </div>
               </div>
