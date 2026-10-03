@@ -1,237 +1,195 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>FRIZH DLMS 24</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>FRIZH DLMS 24 - Pro Console</title>
   <style>
-    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; }
-    
-    /* App Header & BLE Icon */
-    .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; margin-bottom: 15px; }
-    .app-title { color: #00ADB5; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-    #ble-btn { cursor: pointer; color: #555; transition: all 0.3s ease; padding: 5px; }
-    #ble-btn.connected { color: #00ADB5; filter: drop-shadow(0 0 8px rgba(0,173,181,0.6)); }
-    #ble-btn:hover { color: #fff; }
-
-    .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
-    .tab.active { background: #00ADB5; color: #000; box-shadow: 0 0 10px rgba(0,173,181,0.3); }
-    
-    .panel { display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; }
-    .panel.active { display: block; animation: fadeIn 0.3s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
-    .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
-    label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-    
-    /* Sliders & Fine Tuning */
-    .slider-wrap { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-    input[type=range] { width: 100%; margin: 0; cursor: pointer; accent-color: #00ADB5; }
-    .btn-fine { background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; padding: 0 8px; font-weight: bold; font-size: 14px; outline: none; height: 24px; display: flex; align-items: center; justify-content: center; transition: 0.2s; user-select: none; }
-    .btn-fine:hover { background: #00ADB5; color: #000; border-color: #00ADB5; }
-    .btn-fine:active { transform: scale(0.95); }
-    
-    select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
-    select:focus { border-color: #00ADB5; }
-    .val-display { float: right; color: #00ADB5; font-weight: bold; font-family: monospace; font-size: 12px; }
-    
-    /* Text Inputs for OTA */
-    .txt-input { width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; outline: none; font-family: inherit; box-sizing: border-box; }
-    .txt-input:focus { border-color: #00ADB5; }
-
-    /* Vertical VU Meter Styles */
-    .pro-meters-grid { display: flex; justify-content: center; gap: 12px; padding: 10px 0; height: 320px; overflow-x: auto; }
-    .meter-unit { display: flex; align-items: flex-end; gap: 2px; }
-    .meter-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-    .meter-title { font-weight: 800; color: #fff; font-size: 11px; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.7; }
-    
-    .pro-meter-container { width: 30px; height: 180px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
-    .pro-meter-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
-    .pro-meter-marks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(to top, transparent, transparent 3px, #0a0a0a 3px, #0a0a0a 4px); pointer-events: none; }
-    
-    /* DB Scale */
-    .scale-wrapper { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; height: 100%; padding-right: 5px; }
-    .meter-row { display: flex; align-items: flex-start; gap: 2px; }
-    .db-scale-container { position: relative; height: 180px; width: 24px; }
-    .db-scale-container span { position: absolute; right: 2px; font-size: 9px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
-    .db-val-0   { top: 0%; color: #ff5555; }
-    .db-val-m10 { top: 16.6%; color: #ffcc00; }
-    .db-val-m20 { top: 33.3%; color: #44ff44; }
-    .db-val-m40 { top: 66.6%; color: #aaaaaa; }
-    .db-val-m60 { top: 100%; color: #666666; }
-
-    .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
-    
-    .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
-    .led.active { opacity: 1; color: #fff; }
-    .led-mute.active { background: #e60000; border-color: #ff3333; box-shadow: 0 0 8px #e60000; }
-    .led-clip.active { background: #ff0000; border-color: #ff6666; box-shadow: 0 0 10px #ff0000; color: #fff; }
-    .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
-    .led-placeholder { height: 16px; width: 32px; } 
-
-    @media (min-width: 768px) {
-        .pro-meters-grid { height: 480px; gap: 20px; }
-        .pro-meter-container { width: 45px; height: 320px; }
-        .db-scale-container { height: 320px; width: 35px; }
-        .db-scale-container span { font-size: 13px; right: 5px; }
-        .meter-title { font-size: 14px; margin-bottom: 12px; }
-        .led { width: 45px; padding: 5px 0; font-size: 10px; }
-        .led-placeholder { height: 22px; width: 45px; }
+    /* PROFESSIONAL DESKTOP THEME */
+    :root {
+      --bg-dark: #0f1115;
+      --bg-panel: #181a20;
+      --bg-card: #22252e;
+      --accent: #00ADB5;
+      --accent-hover: #00e5ff;
+      --text-main: #e2e8f0;
+      --text-dim: #94a3b8;
+      --border-color: #334155;
+      --red-alert: #f43f5e;
+      --orange-warn: #f59e0b;
     }
 
-    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
+    body { margin: 0; padding: 0; background: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; display: flex; height: 100vh; overflow: hidden; }
     
-    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; transition: 0.2s; }
-    .btn-revert:hover { background: #555; }
-    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; transition: 0.2s; }
-    .btn-mute:hover { background: #444; }
-    .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px rgba(255,0,0,0.6); }
-    .btn-bypass { background: #00ADB5; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
-    .btn-bypass.active { background: #f55; color: #fff; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; }
+    /* SIDEBAR NAVIGATION */
+    .sidebar { width: 260px; background: var(--bg-panel); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
+    .brand { padding: 25px 20px; font-size: 24px; font-weight: 800; letter-spacing: 3px; color: var(--accent); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; }
     
-    .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
-    .edit-toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #aaa; }
-    .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ADB5; }
-    .dsp-section { background: #1a1a1a; padding: 12px; border: 1px solid #333; border-top: 1px solid #222; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
-    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; overflow: hidden; border: none; }
-    .dsp-section.bypassed { opacity: 0.5; border: 1px solid #f55; }
+    .nav-tabs { flex: 1; overflow-y: auto; padding: 15px 0; }
+    .nav-item { padding: 12px 25px; cursor: pointer; color: var(--text-dim); font-size: 13px; font-weight: 600; letter-spacing: 1px; transition: 0.2s; border-left: 3px solid transparent; }
+    .nav-item:hover { background: rgba(255,255,255,0.02); color: var(--text-main); }
+    .nav-item.active { background: rgba(0, 173, 181, 0.1); color: var(--accent); border-left-color: var(--accent); }
     
-    /* BLE Overlays & Dialogs */
-    #connect-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(18,18,18,0.95); z-index:9998; display:flex; justify-content:center; align-items:center; flex-direction:column; backdrop-filter: blur(5px); }
-    .btn-connect { padding:15px 30px; font-size:16px; background:#00ADB5; color:#000; border:none; border-radius:5px; cursor:pointer; font-weight:bold; box-shadow: 0 4px 15px rgba(0, 173, 181, 0.4); transition: 0.2s; letter-spacing: 1px; }
-    .btn-connect:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 173, 181, 0.6); }
-    .btn-connect:active { transform: translateY(1px); }
-    .btn-connect:disabled { background: #555; color: #aaa; box-shadow: none; cursor: not-allowed; transform: none; }
+    .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-color); }
+    .btn-connect { width: 100%; padding: 12px; border: 1px solid var(--border-color); background: transparent; color: var(--text-dim); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-connect.connected { background: rgba(0, 173, 181, 0.1); color: var(--accent); border-color: var(--accent); }
+    .btn-connect:hover { border-color: var(--accent); color: var(--accent); }
 
-    #ble-dialog-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; display:none; justify-content:center; align-items:center; backdrop-filter: blur(3px); }
-    .ble-dialog { background:#1a1a1a; padding:25px; border-radius:8px; border:1px solid #333; text-align:center; min-width: 280px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .ble-dialog h3 { color:#00ADB5; margin-top:0; letter-spacing: 1px; font-size: 16px; }
-    .ble-dialog p { color: #aaa; font-size: 13px; margin-bottom: 20px; }
-    .ble-btn-row { display:flex; flex-direction:column; gap:10px; }
-    .ble-dialog button { padding:12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; font-size: 13px; letter-spacing: 0.5px; transition: 0.2s; }
-    .btn-switch { background:#00ADB5; color:#000; }
-    .btn-switch:hover { background:#008B92; }
-    .btn-dc { background:#ff3333; color:#fff; }
-    .btn-dc:hover { background:#e60000; }
-    .btn-cancel { background:#333; color:#fff; border: 1px solid #555 !important; }
-    .btn-cancel:hover { background:#444; }
-
-    /* Channel Header */
-    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 15px; }
-    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
-    .btn-icon:hover { color: #00ADB5; }
+    /* MAIN CONTENT AREA */
+    .main-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .header-bar { height: 60px; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; flex-shrink: 0; }
+    .page-title { font-size: 18px; font-weight: 700; color: var(--text-main); }
     
-    /* AFS Detection Badges */
-    .afs-badges { display: flex; gap: 8px; justify-content: space-around; margin: 10px 0; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #222; }
-    .afs-badge { display: flex; flex-direction: column; align-items: center; }
-    .afs-badge-lbl { font-size: 9px; color: #666; font-weight: bold; }
-    .afs-badge-val { font-size: 14px; font-weight: bold; font-family: monospace; color: #f55; margin-top: 4px; }
-    .afs-badge-val.empty { color: #555; }
+    .content-area { flex: 1; overflow-y: auto; padding: 30px; }
+    .panel { display: none; animation: fadeIn 0.2s ease-out; }
+    .panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* DSP CARDS & GRIDS */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .dsp-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+    .card-header { background: rgba(0,0,0,0.2); padding: 12px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+    .card-body { padding: 20px; }
+    .bypassed .card-body { opacity: 0.4; pointer-events: none; }
+    
+    /* SLIDERS & CONTROLS */
+    .control-group { margin-bottom: 15px; }
+    .control-group:last-child { margin-bottom: 0; }
+    label { font-size: 11px; color: var(--text-dim); display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
+    .val-display { color: var(--accent); font-family: monospace; font-size: 12px; }
+    
+    .slider-wrap { display: flex; align-items: center; gap: 10px; }
+    input[type=range] { flex: 1; margin: 0; cursor: pointer; accent-color: var(--accent); height: 4px; background: #000; border-radius: 2px; -webkit-appearance: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: #fff; border-radius: 50%; border: 2px solid var(--accent); }
+    .btn-fine { background: var(--bg-panel); color: var(--text-dim); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; width: 28px; height: 28px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-fine:hover { color: var(--accent); border-color: var(--accent); }
+
+    select, .txt-input { width: 100%; padding: 10px; background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; outline: none; box-sizing: border-box; }
+    select:focus, .txt-input:focus { border-color: var(--accent); }
+
+    /* BUTTONS */
+    .btn-action { background: var(--bg-panel); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
+    .btn-action:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action.active { background: rgba(0, 173, 181, 0.1); border-color: var(--accent); color: var(--accent); }
+    .btn-mute { background: rgba(244, 63, 94, 0.1); border: 1px solid var(--red-alert); color: var(--red-alert); }
+    .btn-mute.active { background: var(--red-alert); color: #fff; box-shadow: 0 0 10px rgba(244,63,94,0.4); }
+
+    /* BAND TABS */
+    .band-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+    .band-tab { padding: 8px 16px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 4px; font-size: 11px; font-weight: bold; color: var(--text-dim); cursor: pointer; transition: 0.2s; }
+    .band-tab.active { background: rgba(0, 173, 181, 0.15); border-color: var(--accent); color: var(--accent); }
+
+    /* CANVAS GRAPHS */
+    .canvas-container { position: relative; width: 100%; height: 220px; background: #000; border-radius: 6px; border: 1px solid var(--border-color); overflow: hidden; cursor: crosshair; }
+    canvas { width: 100%; height: 100%; display: block; }
+    
+    /* VU METERS */
+    .pro-meters-grid { display: flex; justify-content: center; gap: 30px; height: 100%; min-height: 400px; padding: 20px; }
+    .meter-wrapper { display: flex; flex-direction: column; align-items: center; width: 60px; }
+    .meter-title { font-size: 12px; font-weight: 800; color: var(--text-dim); margin-bottom: 15px; text-align: center; }
+    .meter-row { display: flex; align-items: flex-end; gap: 4px; height: 100%; flex: 1; }
+    .db-scale-container { position: relative; height: 100%; width: 24px; }
+    .db-scale-container span { position: absolute; right: 4px; font-size: 10px; font-weight: bold; font-family: monospace; transform: translateY(-50%); }
+    .db-val-0 { top: 0%; color: var(--red-alert); } .db-val-m10 { top: 16.6%; color: var(--orange-warn); } .db-val-m20 { top: 33.3%; color: #4ade80; } .db-val-m40 { top: 66.6%; color: var(--text-dim); } .db-val-m60 { top: 100%; color: #475569; }
+    .pro-meter-container { width: 30px; height: 100%; background: #000; border: 1px solid #111; position: relative; }
+    .pro-meter-fill { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #166534 0%, #22c55e 60%, #facc15 80%, #ef4444 100%); transition: height 0.08s ease-out; }
+    .led { margin-top: 8px; width: 100%; text-align: center; padding: 4px 0; border-radius: 3px; font-size: 9px; font-weight: 800; color: #444; background: #111; border: 1px solid #222; transition: 0.1s; }
+    .led-comp.active { background: var(--orange-warn); color: #000; box-shadow: 0 0 10px var(--orange-warn); }
+    .led-mute.active { background: var(--red-alert); color: #fff; box-shadow: 0 0 10px var(--red-alert); }
+    .led-clip.active { background: var(--red-alert); color: #fff; box-shadow: 0 0 10px var(--red-alert); }
+
+    /* BLE DIALOG */
+    #ble-dialog-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: none; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+    .ble-dialog { background: var(--bg-card); padding: 30px; border-radius: 8px; border: 1px solid var(--border-color); width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .ble-dialog h3 { margin: 0 0 10px 0; color: var(--accent); }
+    .ble-dialog p { color: var(--text-dim); font-size: 13px; margin-bottom: 25px; }
   </style>
 </head>
 <body>
 
-  <div id="connect-overlay">
-    <div style="font-size: 28px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
-    <button class="btn-connect" onclick="connectBLE()">SCAN & CONNECT</button>
-    <p style="color:#888; margin-top:20px; text-align:center; font-size: 13px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
-  </div>
-
+  <!-- BLE CONNECT DIALOG -->
   <div id="ble-dialog-overlay">
     <div class="ble-dialog">
-      <h3>DEVICE STATUS</h3>
-      <p id="ble-connected-name">Connected to: Unknown</p>
-      <div class="ble-btn-row">
-        <button class="btn-switch" onclick="switchDevice()">SWITCH DEVICE</button>
-        <button class="btn-dc" onclick="disconnectBLE()">DISCONNECT</button>
-        <button class="btn-cancel" onclick="closeBleDialog()">CANCEL</button>
+      <h3>DEVICE CONNECTION</h3>
+      <p id="ble-connected-name">Status: Disconnected</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn-action" style="background: var(--accent); color: #000;" onclick="connectBLE()">SCAN / CONNECT</button>
+        <button class="btn-action" onclick="disconnectBLE()">DISCONNECT</button>
+        <button class="btn-action" style="background: transparent;" onclick="closeBleDialog()">CLOSE</button>
       </div>
     </div>
   </div>
 
-  <div class="app-header">
-    <div class="app-title">FRIZH DLMS 24</div>
-    <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
-      <svg viewBox="0 0 24 24" width="26" height="26" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
-      </svg>
+  <!-- SIDEBAR NAVIGATION -->
+  <div class="sidebar">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+      FRIZH
+    </div>
+    <div class="nav-tabs" id="tabs">
+      <div class="nav-item active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
+      <div class="nav-item" id="tab-rta" onclick="switchTab('t-rta')">RTA SPECTRUM</div>
+      <div style="margin: 15px 25px 5px; font-size: 10px; color: var(--text-dim); font-weight: bold;">INPUTS</div>
+      <div class="nav-item" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
+      <div class="nav-item" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
+      <div style="margin: 15px 25px 5px; font-size: 10px; color: var(--text-dim); font-weight: bold;">OUTPUTS</div>
+      <div class="nav-item" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
+      <div class="nav-item" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
+      <div class="nav-item" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
+      <div class="nav-item" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
+      <div style="margin: 15px 25px 5px; font-size: 10px; color: var(--text-dim); font-weight: bold;">CONFIG</div>
+      <div class="nav-item" id="tab-sys" onclick="switchTab('t-sys')">SYSTEM SETUP</div>
+    </div>
+    <div class="sidebar-footer">
+      <button id="ble-btn" class="btn-connect" onclick="document.getElementById('ble-dialog-overlay').style.display='flex'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline></svg>
+        <span id="ble-btn-text">CONNECT</span>
+      </button>
     </div>
   </div>
-  
-  <div class="tabs" id="tabs">
-    <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
-    <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
-    <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
-    <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
-    <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
-    <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
-    <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
-    <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
-    <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
-  </div>
 
-  <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
-  
-  <div id="t-rta" class="panel">
-     <div class="section-header" style="border-radius: 4px;">INPUT A SPECTRUM</div>
-     <canvas id="cvs-rta-A" width="400" height="140"></canvas>
-     <div class="section-header" style="margin-top:20px; border-radius: 4px;">INPUT B SPECTRUM</div>
-     <canvas id="cvs-rta-B" width="400" height="140"></canvas>
+  <!-- MAIN CONTENT -->
+  <div class="main-container">
+    <div class="header-bar">
+      <div class="page-title" id="page-title">SYSTEM MONITOR</div>
+      <div id="top-actions"></div>
+    </div>
+
+    <div class="content-area">
+      <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
+      <div id="t-rta" class="panel">
+        <div class="dsp-card"><div class="card-header">INPUT A RTA</div><div class="card-body"><div class="canvas-container"><canvas id="cvs-rta-A"></canvas></div></div></div>
+        <div class="dsp-card"><div class="card-header">INPUT B RTA</div><div class="card-body"><div class="canvas-container"><canvas id="cvs-rta-B"></canvas></div></div></div>
+      </div>
+      <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
+      <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
+      <div id="t-out1" class="panel"><div id="ui-out0"></div></div>
+      <div id="t-out2" class="panel"><div id="ui-out1"></div></div>
+      <div id="t-out3" class="panel"><div id="ui-out2"></div></div>
+      <div id="t-out4" class="panel"><div id="ui-out3"></div></div>
+      <div id="t-sys" class="panel"><div id="ui-sys"></div></div>
+    </div>
   </div>
-  
-  <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
-  <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
-  <div id="t-out1" class="panel"></div>
-  <div id="t-out2" class="panel"></div>
-  <div id="t-out3" class="panel"></div>
-  <div id="t-out4" class="panel"></div>
-  <div id="t-sys" class="panel"></div>
 
   <script>
+    // --- GLOBAL DSP STATE ---
     let dspState = {};
-    let initialState = null;
     let timers = {};
+    let livePeaks = [0,0,0,0,0,0]; 
+    let compAct = [0,0,0,0], inCompAct = [0,0];
+    let rtaA = new Array(31).fill(-60.0), rtaB = new Array(31).fill(-60.0);
     
-    // Live Audio State
-    let livePeaks = [0,0,0,0,0,0]; // A, B, 1, 2, 3, 4 (in Linear value)
-    let compAct = [0,0,0,0];
-    let inCompAct = [0,0];
-    let rtaA = new Array(31).fill(-60.0);
-    let rtaB = new Array(31).fill(-60.0);
+    // UI Local State
+    let activeDeqBand = [0, 0];
+    let activeEqBand = [0, 0, 0, 0];
 
-    // Web Bluetooth Variables
-    let bleDevice, bleServer, bleService, rxChar, txChar;
-    let bleQueue = [];
-    let isWriting = false;
-    let jsonBuffer = "";
+    // Dragging Logic State
+    let dragObj = { active: false, cvs: null, ch: null, isDeq: false, band: null };
 
-    function handleBleIconClick() {
-      if (bleDevice && bleDevice.gatt.connected) {
-         document.getElementById('ble-connected-name').innerText = "Connected to:\n" + (bleDevice.name || "FRIZH_DLMS24_...");
-         document.getElementById('ble-dialog-overlay').style.display = 'flex';
-      } else {
-         connectBLE();
-      }
-    }
+    // BLE Variables
+    let bleDevice, bleServer, bleService, rxChar, txChar, bleQueue = [], isWriting = false, jsonBuffer = "";
 
-    function closeBleDialog() {
-        document.getElementById('ble-dialog-overlay').style.display = 'none';
-    }
-
-    function disconnectBLE() {
-        if (bleDevice && bleDevice.gatt.connected) {
-            bleDevice.gatt.disconnect();
-        }
-        closeBleDialog();
-    }
-
-    async function switchDevice() {
-        disconnectBLE();
-        setTimeout(() => { connectBLE(); }, 400);
-    }
+    function closeBleDialog() { document.getElementById('ble-dialog-overlay').style.display = 'none'; }
+    function disconnectBLE() { if (bleDevice && bleDevice.gatt.connected) bleDevice.gatt.disconnect(); closeBleDialog(); }
 
     async function connectBLE() {
       try {
@@ -241,8 +199,10 @@
         });
         
         bleDevice.addEventListener('gattserverdisconnected', () => { 
-            document.getElementById('ble-btn').classList.remove('connected');
-            document.getElementById('connect-overlay').style.display = 'flex'; 
+            let b = document.getElementById('ble-btn');
+            b.classList.remove('connected');
+            document.getElementById('ble-btn-text').innerText = "CONNECT";
+            document.getElementById('ble-connected-name').innerText = "Status: Disconnected";
         });
 
         bleServer = await bleDevice.gatt.connect();
@@ -253,36 +213,27 @@
         await txChar.startNotifications();
         txChar.addEventListener('characteristicvaluechanged', handleNotifications);
         
-        document.getElementById('connect-overlay').style.display = 'none';
-        document.getElementById('ble-btn').classList.add('connected');
+        let b = document.getElementById('ble-btn');
+        b.classList.add('connected');
+        document.getElementById('ble-btn-text').innerText = "CONNECTED";
+        document.getElementById('ble-connected-name').innerText = "Connected to:\n" + bleDevice.name;
         closeBleDialog(); 
 
         sendBLE('/api/dump');
-      } catch(e) { 
-        console.error("BLE Error:", e);
-        if (e.name !== 'NotFoundError') {
-            alert("Bluetooth Connection Failed. Please ensure your device supports Web Bluetooth.");
-        }
-      }
+      } catch(e) { console.error("BLE Error:", e); }
     }
 
     async function processBleQueue() {
       if(isWriting || bleQueue.length === 0 || !rxChar) return;
       isWriting = true;
       let cmd = bleQueue.shift();
-      try {
-        let enc = new TextEncoder();
-        await rxChar.writeValueWithoutResponse(enc.encode(cmd));
-      } catch(e) { console.log("BLE Write Error", e); }
+      try { await rxChar.writeValueWithoutResponse(new TextEncoder().encode(cmd)); } catch(e) {}
       isWriting = false;
       setTimeout(processBleQueue, 15);
     }
+    function sendBLE(cmd) { bleQueue.push(cmd); processBleQueue(); }
 
-    function sendBLE(cmd) {
-      bleQueue.push(cmd);
-      processBleQueue();
-    }
-
+    // --- JSON AND STATUS HANDLING ---
     function handleNotifications(event) {
       let val = new TextDecoder().decode(event.target.value);
       if(val.startsWith("S:")) {
@@ -291,8 +242,7 @@
             for(let i=0; i<6; i++) {
                 livePeaks[i] = parseFloat(p[i]) || 1e-9;
                 if(document.getElementById('t-meters').classList.contains('active')) {
-                    let db = 20 * Math.log10(livePeaks[i]);
-                    db -= 3.0; // -3dB Calibration
+                    let db = 20 * Math.log10(livePeaks[i]) - 3.0;
                     let pct = Math.max(0, Math.min(100, (db + 60) * (100 / 60))); 
                     let mtr = document.getElementById(`mtr-${i}`);
                     if(mtr) mtr.style.height = pct + '%';
@@ -300,31 +250,18 @@
                     if(clipLed) clipLed.classList.toggle('active', db >= -3.5); 
                 }
             }
-            
             if (dspState.in_mute !== undefined) {
               for(let i=0; i<2; i++) {
                 dspState.in_mute[i] = (p[6+i] === '1');
                 inCompAct[i] = parseInt(p[16+i]);
-                
-                let btn = document.getElementById(`btn-mute-in-${i}`);
-                if(btn) btn.classList.toggle('active', dspState.in_mute[i]);
                 let muteLed = document.getElementById(`ind-mute-${i}`);
                 if(muteLed) muteLed.classList.toggle('active', dspState.in_mute[i]);
-                let compLed = document.getElementById(`ind-comp-${i}`);
-                if(compLed) compLed.classList.toggle('active', inCompAct[i] === 1);
               }
               for(let i=0; i<4; i++) {
                 dspState.out_mute[i] = (p[8+i] === '1');
                 compAct[i] = parseInt(p[12+i]);
-                
-                let btn = document.getElementById(`btn-mute-out-${i}`);
-                if(btn) btn.classList.toggle('active', dspState.out_mute[i]);
-                
                 let muteLed = document.getElementById(`ind-mute-${i+2}`);
                 if(muteLed) muteLed.classList.toggle('active', dspState.out_mute[i]);
-                
-                let compLed = document.getElementById(`ind-comp-${i+2}`);
-                if(compLed) compLed.classList.toggle('active', compAct[i] === 1);
               }
             }
             drawCompVisualizers();
@@ -332,22 +269,14 @@
       } else if (val.startsWith("R:")) {
         let halves = val.substring(2).split('|');
         if (halves.length === 2) {
-          let aVals = halves[0].split(',');
-          let bVals = halves[1].split(',');
+          let aVals = halves[0].split(','); let bVals = halves[1].split(',');
           for (let i = 0; i < 31; i++) {
-            if (aVals[i] !== "") {
-              let rawA = parseFloat(aVals[i]);
-              rtaA[i] = rawA > rtaA[i] ? rawA : Math.max(-60, rtaA[i] - 1.5);
-            }
-            if (bVals[i] !== "") {
-              let rawB = parseFloat(bVals[i]);
-              rtaB[i] = rawB > rtaB[i] ? rawB : Math.max(-60, rtaB[i] - 1.5);
-            }
+            if (aVals[i] !== "") { let r = parseFloat(aVals[i]); rtaA[i] = r > rtaA[i] ? r : Math.max(-60, rtaA[i] - 1.5); }
+            if (bVals[i] !== "") { let r = parseFloat(bVals[i]); rtaB[i] = r > rtaB[i] ? r : Math.max(-60, rtaB[i] - 1.5); }
           }
           drawRTA();
         }
-      } else if (val.startsWith("J:{")) {
-        jsonBuffer = val.substring(2);
+      } else if (val.startsWith("J:{")) { jsonBuffer = val.substring(2);
       } else if (val.startsWith("J:")) {
         jsonBuffer += val.substring(2);
         if(jsonBuffer.endsWith("}")) {
@@ -358,30 +287,12 @@
               if(dspState.tf === undefined) dspState.tf = 1000;
               if(dspState.tg === undefined) dspState.tg = -20;
               if(dspState.tr === undefined) dspState.tr = 0;
-              if(!dspState.bbe_e) dspState.bbe_e = [0,0];
-              if(!dspState.bbe_l) dspState.bbe_l = [50,50];
-              if(!dspState.bbe_p) dspState.bbe_p = [50,50];
-              
-              if(!dspState.ict) dspState.ict = [0,0];
-              if(!dspState.icr) dspState.icr = [4,4];
-              if(!dspState.icm) dspState.icm = [0,0];
-              if(!dspState.ica) dspState.ica = [10,10];
-              if(!dspState.icrel) dspState.icrel = [100,100];
-              if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
-              if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
-              
-              if(!dspState.afs_e) dspState.afs_e = [0,0];
-              if(!dspState.afs_s) dspState.afs_s = [3,3];
-              if(!dspState.afs_f) dspState.afs_f = [[0,0,0,0], [0,0,0,0]];
-              
-              if(!dspState.deq_e) dspState.deq_e = [0,0];
-              if(!dspState.deq_f) dspState.deq_f = [[150,1000,5000], [150,1000,5000]];
-              if(!dspState.deq_q) dspState.deq_q = [[1.4,1.4,1.4], [1.4,1.4,1.4]];
-              if(!dspState.deq_t) dspState.deq_t = [[-20,-20,-20], [-20,-20,-20]];
-              if(!dspState.deq_r) dspState.deq_r = [[4,4,4], [4,4,4]];
-              if(!dspState.deq_d) dspState.deq_d = [[-12,-12,-12], [-12,-12,-12]];
-
-              initialState = JSON.stringify(dspState);
+              if(!dspState.bbe_e) dspState.bbe_e = [0,0]; if(!dspState.bbe_l) dspState.bbe_l = [50,50]; if(!dspState.bbe_p) dspState.bbe_p = [50,50];
+              if(!dspState.ict) dspState.ict = [0,0]; if(!dspState.icr) dspState.icr = [4,4]; if(!dspState.icm) dspState.icm = [0,0]; if(!dspState.ica) dspState.ica = [10,10]; if(!dspState.icrel) dspState.icrel = [100,100];
+              if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"]; if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
+              if(!dspState.afs_e) dspState.afs_e = [0,0]; if(!dspState.afs_s) dspState.afs_s = [3,3]; if(!dspState.afs_f) dspState.afs_f = [[0,0,0,0], [0,0,0,0]];
+              if(!dspState.deq_e) dspState.deq_e = [0,0]; if(!dspState.deq_f) dspState.deq_f = [[150,1000,5000], [150,1000,5000]]; if(!dspState.deq_q) dspState.deq_q = [[1.4,1.4,1.4], [1.4,1.4,1.4]];
+              if(!dspState.deq_t) dspState.deq_t = [[-20,-20,-20], [-20,-20,-20]]; if(!dspState.deq_r) dspState.deq_r = [[0,0,0], [0,0,0]]; if(!dspState.deq_d) dspState.deq_d = [[0,0,0], [0,0,0]];
               buildUI();
           } catch(e) { console.log("JSON Parse err", e); }
           jsonBuffer = "";
@@ -389,288 +300,102 @@
       }
     }
 
+    // --- HELPER FUNCTIONS ---
+    function sendUpdate(type, ch, param, val, band = '') {
+      clearTimeout(timers[type+ch+param+band]);
+      timers[type+ch+param+band] = setTimeout(() => {
+        sendBLE(`/api/set?type=${type}&ch=${ch}&p=${param}&v=${val}${band !== '' ? '&b='+band : ''}`);
+      }, 50);
+    }
+
     function toggleMute(type, ch) {
-      let isMuted = false;
-      if (type === 'in') {
-          dspState.in_mute[ch] = !dspState.in_mute[ch];
-          isMuted = dspState.in_mute[ch];
-      } else {
-          dspState.out_mute[ch] = !dspState.out_mute[ch];
-          isMuted = dspState.out_mute[ch];
-      }
-      document.getElementById(`btn-mute-${type}-${ch}`).classList.toggle('active', isMuted);
+      if (type === 'in') { dspState.in_mute[ch] = !dspState.in_mute[ch]; } 
+      else { dspState.out_mute[ch] = !dspState.out_mute[ch]; }
       sendBLE(`/api/mute?type=${type}&ch=${ch}`);
+      buildUI();
     }
-
-    function toggleEqBypass(ch) {
-      dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
-      sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
-      buildUI(); 
-    }
-    
-    function toggleDeqBypass(ch) {
-      dspState.deq_e[ch] = dspState.deq_e[ch] === 1 ? 0 : 1;
-      sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=${dspState.deq_e[ch]}`);
+    function toggleEqBypass(ch, isDeq) {
+      if(isDeq) { dspState.deq_e[ch] = dspState.deq_e[ch]===1?0:1; sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=${dspState.deq_e[ch]}`); }
+      else { dspState.eqb[ch] = dspState.eqb[ch]===1?0:1; sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`); }
       buildUI(); 
     }
 
-    function renameChannel(type, ch) {
-        let current = type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch];
-        let n = prompt(`Enter new name for ${type.toUpperCase()} ${ch+1} (Max 8 chars):`, current);
-        if (n !== null) {
-            n = n.substring(0,8).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
-            sendBLE(`/api/name?type=${type}&ch=${ch}&n=${encodeURIComponent(n)}`);
-            if (type === 'in') dspState.in_n[ch] = n;
-            else dspState.out_n[ch] = n;
-            buildUI();
-        }
-    }
-
-    function doPreset(act) {
-        let slot = parseInt(document.getElementById('sys-preset-slot').value);
-        let isProtected = slot >= 6;
-
-        if (act === 'load' || act === 'save') {
-            if(act === 'save' && isProtected) return alert("Slots 6, 7, and 8 are factory protected.");
-            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot ${slot}?`)) {
-                sendBLE(`/api/preset?act=${act}&slot=${slot}`);
-            }
-        } else if (act === 'rename') {
-            if(isProtected) return alert("Slots 6, 7, and 8 are factory protected.");
-            let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
-            if(name !== null) {
-                name = name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
-                sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name}`);
-            }
-        }
-    }
-    
-    function doFactoryReset() {
-        if(confirm(`FACTORY RESET ALL CHANNELS?\n\nThis will instantly wipe all custom routing, EQs, Dynamic EQs, Crossovers, and Delays back to flat defaults.`)) {
-            sendBLE(`/api/preset?act=load&slot=8`); // Slot 9 on ESP32 is technically Factory Flat if configured
-            // Send discrete reset commands in case slot is corrupted
-            for(let i=0; i<2; i++) revertTab('in', i, true);
-            for(let i=0; i<4; i++) revertTab('out', i, true);
-            alert("Factory Reset Complete.");
-        }
-    }
-
-    function updatePresetButtons() {
-        let slot = parseInt(document.getElementById('sys-preset-slot').value);
-        let isProtected = slot >= 6;
-        let btnSave = document.getElementById('btn-preset-save');
-        let btnRen = document.getElementById('btn-preset-ren');
-        
-        btnSave.style.opacity = isProtected ? '0.3' : '1';
-        btnRen.style.opacity = isProtected ? '0.3' : '1';
-        btnSave.disabled = isProtected;
-        btnRen.disabled = isProtected;
-    }
-
-    async function fetchGithubReleases() {
-        let sel = document.getElementById('ota-version');
-        let btn = document.getElementById('btn-ota-fetch');
-        sel.innerHTML = '<option>Fetching from GitHub...</option>';
-        btn.disabled = true;
-        try {
-            let res = await fetch('https://api.github.com/repos/FRIZH-Labs/FRIZH-Labs/contents/', {
-                headers: { 'Accept': 'application/vnd.github.v3+json' }
-            });
-            let files = await res.json();
-            let opts = '';
-            files.forEach(f => {
-                if(f.name.toLowerCase().endsWith('.bin')) {
-                    let name = f.name.replace(/\.bin$/i, '');
-                    opts += `<option value="${name}">${name}</option>`;
-                }
-            });
-            if(opts === '') opts = '<option value="firmware_normal">firmware_normal (Fallback)</option>';
-            sel.innerHTML = opts;
-        } catch(e) {
-            sel.innerHTML = '<option value="firmware_normal">Fetch Failed - Using Fallback</option>';
-        }
-        btn.disabled = false;
-    }
-
-    function triggerOTA() {
-        let ssid = document.getElementById('ota-ssid').value;
-        let pass = document.getElementById('ota-pass').value;
-        let ver = document.getElementById('ota-version').value;
-        
-        if(!ssid || !ver || ver.includes('Fetching')) {
-            return alert("Please enter WiFi SSID and select a firmware version.");
-        }
-        
-        if(confirm("Start OTA Update?\nThe device will connect to WiFi, download the firmware, and automatically reboot. This may take up to 2 minutes.")) {
-            sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
-        }
-    }
-
-    function handleToneModeUpdate(val) {
-        let mode = parseInt(val);
-        document.getElementById('tone-freq-container').style.opacity = (mode === 2) ? '1' : '0.4';
-        document.getElementById('tone-freq-container').style.pointerEvents = (mode === 2) ? 'auto' : 'none';
-        sendUpdate('tone', 0, 'm', mode);
-    }
-    
-    function copyChannel(type, targetCh) {
-        let src = document.getElementById(`copy_src_${type}_${targetCh}`).value;
-        if(src === "" || parseInt(src) === targetCh) return;
-        if(confirm(`Copy all settings from ${type.toUpperCase()} ${parseInt(src)+1} to ${type.toUpperCase()} ${targetCh+1}?`)) {
-            sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
-        }
-        document.getElementById(`copy_src_${type}_${targetCh}`).value = "";
-    }
-    
-    function clearAFS(ch) {
-        sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
-        dspState.afs_f[ch] = [0,0,0,0]; // Optimistic UI update
-        buildUI(); 
+    function setActiveBand(ch, band, isDeq) {
+      if(isDeq) activeDeqBand[ch] = band; else activeEqBand[ch] = band;
+      buildUI();
     }
 
     function switchTab(id) {
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-      let tabBtn = document.getElementById('tab-' + id.substring(2));
-      if(tabBtn) tabBtn.classList.add('active');
+      document.getElementById('tab-' + id.substring(2)).classList.add('active');
       
-      if(id.startsWith('t-out')) drawVisibleGraphs();
-      if(id === 't-rta') drawRTA();
-      drawCompVisualizers();
-    }
-
-    function sendUpdate(type, ch, param, val, band = '') {
-      clearTimeout(timers[type+ch+param+band]);
-      timers[type+ch+param+band] = setTimeout(() => {
-        let url = `/api/set?type=${type}&ch=${ch}&p=${param}&v=${val}${band !== '' ? '&b='+band : ''}`;
-        sendBLE(url);
-      }, 50);
-    }
-
-    function promptFreq(id, min, max) {
-        let val = prompt(`Enter frequency (${min} - ${max} Hz):`);
-        if (val !== null && val.trim() !== '') {
-            val = parseFloat(val);
-            if (!isNaN(val)) {
-                val = Math.max(min, Math.min(max, val));
-                let el = document.getElementById(id);
-                if (el) {
-                    let logMin = Math.log10(min);
-                    let logMax = Math.log10(max);
-                    let sliderVal = ((Math.log10(val) - logMin) / (logMax - logMin)) * 1000;
-                    el.value = sliderVal;
-                    handleSliderInput(el);
-                }
-            }
-        }
-    }
-
-    function fineTune(id, direction) {
-      let el = document.getElementById(id);
-      if(!el) return;
-      let step = parseFloat(el.getAttribute('step')) || 1;
-      let val = parseFloat(el.value);
-      val += (direction * step);
+      let title = document.getElementById('tab-' + id.substring(2)).innerText;
+      document.getElementById('page-title').innerText = title;
       
-      let max = parseFloat(el.getAttribute('max'));
-      let min = parseFloat(el.getAttribute('min'));
-      if (val > max) val = max;
-      if (val < min) val = min;
-      el.value = val;
-      handleSliderInput(el); 
+      let actions = document.getElementById('top-actions');
+      actions.innerHTML = '';
+      if(id.startsWith('t-in')) {
+          let ch = id === 't-inA' ? 0 : 1;
+          let mBtn = `<button class="btn-action ${dspState.in_mute[ch]?'btn-mute active':''}" onclick="toggleMute('in', ${ch})">${dspState.in_mute[ch]?'MUTED':'MUTE'}</button>`;
+          actions.innerHTML = mBtn;
+      } else if (id.startsWith('t-out')) {
+          let ch = parseInt(id.replace('t-out','')) - 1;
+          let mBtn = `<button class="btn-action ${dspState.out_mute[ch]?'btn-mute active':''}" onclick="toggleMute('out', ${ch})">${dspState.out_mute[ch]?'MUTED':'MUTE'}</button>`;
+          actions.innerHTML = mBtn;
+      }
+
+      drawVisibleGraphs(); drawRTA(); drawCompVisualizers();
     }
 
     function handleSliderInput(el) {
-      let type = el.getAttribute('data-type');
-      let ch = parseInt(el.getAttribute('data-ch'));
-      let p = el.getAttribute('data-p');
-      let b = el.getAttribute('data-b');
-      let unit = el.getAttribute('data-unit');
-      let step = el.getAttribute('step');
-      let isFreq = (p === 'f' || p === 'fl' || p === 'fh');
+      let type = el.getAttribute('data-type'); let ch = parseInt(el.getAttribute('data-ch'));
+      let p = el.getAttribute('data-p'); let b = el.getAttribute('data-b');
+      let unit = el.getAttribute('data-unit'); let step = el.getAttribute('step');
       
       let realVal = parseFloat(el.value);
-      if (isFreq) {
-         let min = parseFloat(el.getAttribute('data-min'));
-         let max = parseFloat(el.getAttribute('data-max'));
-         let logMin = Math.log10(min);
-         let logMax = Math.log10(max);
-         realVal = Math.pow(10, logMin + (realVal / 1000) * (logMax - logMin));
-         if(realVal > 10000) realVal = Math.round(realVal / 100) * 100;
-         else if(realVal > 1000) realVal = Math.round(realVal / 10) * 10;
-         else realVal = Math.round(realVal);
+      if (p === 'f' || p === 'fl' || p === 'fh') {
+         let min = parseFloat(el.getAttribute('data-min')), max = parseFloat(el.getAttribute('data-max'));
+         realVal = Math.pow(10, Math.log10(min) + (realVal / 1000) * (Math.log10(max) - Math.log10(min)));
+         realVal = realVal > 10000 ? Math.round(realVal/100)*100 : realVal > 1000 ? Math.round(realVal/10)*10 : Math.round(realVal);
       }
 
       let displayVal = realVal.toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      if (type === 'dl' || type === 'idl') {
-          let dist = (realVal * 34.3).toFixed(1);
-          displayVal = realVal.toFixed(1) + 'ms / ' + dist + 'cm';
-      }
-      
-      if (type === 'comp' || type === 'incomp') {
-          if (p === 'thr' && realVal >= 1) displayVal = "OFF";
-          if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
-      }
-      
-      if (type === 'deq' && p === 'r') {
-          displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1";
-          // Visually dim the threshold slider if Static is selected
-          let thrWrap = document.getElementById(`wrap_deq_t_${ch}_${b}`);
-          if (thrWrap) thrWrap.style.opacity = realVal === 0 ? '0.3' : '1';
-      }
+      if (type === 'dl' || type === 'idl') displayVal = realVal.toFixed(1) + 'ms / ' + (realVal*34.3).toFixed(1) + 'cm';
+      if ((type === 'comp' || type === 'incomp') && p === 'thr' && realVal >= 1) displayVal = "OFF";
+      if ((type === 'comp' || type === 'incomp') && p === 'rat' && realVal >= 21) displayVal = "LIMIT";
+      if (type === 'deq' && p === 'r') displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1";
       if (type === 'deq' && p === 'd') displayVal = (realVal > 0 ? "+" : "") + realVal.toFixed(0) + "dB";
 
       el.closest('.control-group').querySelector('.val-display').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
       
-      if (type === 'xo' || type === 'eq') drawVisibleGraphs();
-      if (type === 'comp' || type === 'incomp') {
-          if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; }
-          else { dspState.ct[ch]=p=='thr'?realVal:dspState.ct[ch]; dspState.cr[ch]=p=='rat'?realVal:dspState.cr[ch]; dspState.cm[ch]=p=='mak'?realVal:dspState.cm[ch]; }
-          drawCompVisualizers();
-      }
+      if(type === 'eq') { dspState.eqf[ch][b] = p=='f'?realVal:dspState.eqf[ch][b]; dspState.eq_gn[ch][b] = p=='g'?realVal:dspState.eq_gn[ch][b]; dspState.eqq[ch][b] = p=='q'?realVal:dspState.eqq[ch][b]; }
+      if(type === 'deq') { dspState.deq_f[ch][b] = p=='f'?realVal:dspState.deq_f[ch][b]; dspState.deq_d[ch][b] = p=='d'?realVal:dspState.deq_d[ch][b]; dspState.deq_q[ch][b] = p=='q'?realVal:dspState.deq_q[ch][b]; dspState.deq_r[ch][b] = p=='r'?realVal:dspState.deq_r[ch][b]; dspState.deq_t[ch][b] = p=='t'?realVal:dspState.deq_t[ch][b]; }
+      if(type === 'xo') { dspState.xt[ch]=p=='t'?realVal:dspState.xt[ch]; dspState.xth[ch]=p=='th'?realVal:dspState.xth[ch]; dspState.xfl[ch]=p=='fl'?realVal:dspState.xfl[ch]; dspState.xfh[ch]=p=='fh'?realVal:dspState.xfh[ch]; dspState.xo_gn[ch]=p=='g'?realVal:dspState.xo_gn[ch]; }
+
+      if (type === 'xo' || type === 'eq' || type === 'deq') drawVisibleGraphs();
     }
 
     function createSlider(label, type, ch, param, min, max, val, unit, band = '', step = '1') {
       let id = `${type}_${param}_${ch}${band !== '' ? '_' + band : ''}`;
       let isFreq = (param === 'f' || param === 'fl' || param === 'fh');
       let displayVal = parseFloat(val).toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      
-      if(type === 'dl' || type === 'idl') {
-          let dist = (parseFloat(val) * 34.3).toFixed(1);
-          displayVal = parseFloat(val).toFixed(1) + 'ms / ' + dist + 'cm';
-      }
-      
-      if (type === 'comp' || type === 'incomp') {
-          if (param === 'thr' && parseInt(val) >= 1) displayVal = "OFF";
-          if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT";
-      }
-      
-      if (type === 'deq') {
-          if (param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1";
-          if (param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB";
-      }
+      if(type === 'dl' || type === 'idl') displayVal = parseFloat(val).toFixed(1) + 'ms';
+      if ((type === 'comp' || type === 'incomp') && param === 'thr' && parseInt(val) >= 1) displayVal = "OFF";
+      if ((type === 'comp' || type === 'incomp') && param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT";
+      if (type === 'deq' && param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1";
+      if (type === 'deq' && param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB";
       
       let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
-      let clickAction = '', cursorStyle = '';
-      if (isFreq) {
-         htmlMin = 0; htmlMax = 1000; htmlStep = 1;
-         htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
-         clickAction = `onclick="promptFreq('${id}', ${min}, ${max})"`;
-         cursorStyle = 'cursor:pointer; text-decoration:underline;';
-      }
-
-      let opacityStyle = (type === 'deq' && param === 't' && dspState.deq_r[ch][band] === 0) ? 'opacity:0.3;' : '';
+      if (isFreq) { htmlMin = 0; htmlMax = 1000; htmlStep = 1; htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000; }
 
       return `
-        <div class="control-group" id="wrap_${id}" style="${opacityStyle}">
-          <label>${label} <span class="val-display" style="${cursorStyle}" ${clickAction}>${displayVal}</span></label>
+        <div class="control-group">
+          <label>${label} <span class="val-display">${displayVal}</span></label>
           <div class="slider-wrap">
-            <button class="btn-fine" onclick="fineTune('${id}', -1)">-</button>
-            <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" 
-              oninput="handleSliderInput(this)" style="flex:1;">
-            <button class="btn-fine" onclick="fineTune('${id}', 1)">+</button>
+            <input type="range" id="${id}" data-type="${type}" data-ch="${ch}" data-p="${param}" data-b="${band}" data-min="${min}" data-max="${max}" data-unit="${unit}" min="${htmlMin}" max="${htmlMax}" step="${htmlStep}" value="${htmlVal}" oninput="handleSliderInput(this)">
           </div>
         </div>`;
     }
@@ -678,229 +403,74 @@
     function createSelect(label, type, ch, param, options, val) {
       let id = `${type}_${param}_${ch}`;
       let opts = options.map((o, i) => `<option value="${i}" ${i==val?'selected':''}>${o}</option>`).join('');
-      let onChangeAction = (type === 'tone' && param === 'm') ?
-        `handleToneModeUpdate(this.value);` : 
-        `sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();`;
-        
-      return `
-        <div class="control-group">
-          <label>${label}</label>
-          <select id="${id}" onchange="${onChangeAction}">${opts}</select>
-        </div>`;
+      return `<div class="control-group"><label>${label}</label><select id="${id}" onchange="sendUpdate('${type}', ${ch}, '${param}', this.value); if('${type}'=='xo') drawVisibleGraphs();">${opts}</select></div>`;
     }
 
-    function getRealFreq(el) {
-      if(!el) return 20;
-      let min = parseFloat(el.getAttribute('data-min'));
-      let max = parseFloat(el.getAttribute('data-max'));
-      let val = parseFloat(el.value);
-      let logMin = Math.log10(min);
-      let logMax = Math.log10(max);
-      return Math.pow(10, logMin + (val / 1000) * (logMax - logMin));
+    // --- DRAGGABLE CANVAS LOGIC ---
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return { x: evt.clientX - rect.left, y: evt.clientY - rect.top };
     }
 
-    function drawRTA() {
-        if(!document.getElementById('t-rta').classList.contains('active')) return;
-        drawRTACanvas('cvs-rta-A', rtaA, '#00ADB5');
-        drawRTACanvas('cvs-rta-B', rtaB, 'orange');
-    }
+    function startDragEQ(evt, ch, isDeq) {
+        let cvs = evt.target; let pos = getMousePos(cvs, evt);
+        let w = cvs.width, h = cvs.height; let logMin = Math.log10(20), logMax = Math.log10(20000);
+        let closestBand = 0, minDistance = 999999;
+        let numBands = isDeq ? 3 : 7;
+        let zeroY = h * (15/45); let scaleY = h/45;
 
-    function drawRTACanvas(id, data, color) {
-        let cvs = document.getElementById(id);
-        if(!cvs) return;
-        let ctx = cvs.getContext('2d', {alpha: false});
-        let w = cvs.width, h = cvs.height;
-        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-        ctx.lineWidth = 0.5;
-        let labels = ["20", "350", "1k", "2.6k", "7k", "20k"];
-        let indices = [0, 6, 12, 18, 24, 30];
-        
-        ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '10px sans-serif';
-        for(let i=0; i<labels.length; i++) {
-            let x = (indices[i]/30.0)*w;
-            ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-            let textX = x - (ctx.measureText(labels[i]).width / 2);
-            if(i===0) textX = 4;
-            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 4;
-            ctx.fillText(labels[i], textX, h-4);
+        for(let b=0; b<numBands; b++) {
+            let f = isDeq ? dspState.deq_f[ch][b] : dspState.eqf[ch][b];
+            let g = isDeq ? dspState.deq_d[ch][b] : dspState.eq_gn[ch][b];
+            let x = ((Math.log10(f) - logMin) / (logMax - logMin)) * w;
+            let y = zeroY - (g * scaleY);
+            let dist = Math.sqrt(Math.pow(pos.x - x, 2) + Math.pow(pos.y - y, 2));
+            if(dist < minDistance) { minDistance = dist; closestBand = b; }
         }
-        
-        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
-        
-        let drawHeight = h - 20;
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        for(let b=0; b<31; b++) {
-            let x = (b/30.0)*w;
-            let db = Math.max(-60, Math.min(0, data[b]));
-            let y = drawHeight - ((db + 60)/60) * drawHeight;
-            if(b===0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
+        dragObj = { active: true, ch: ch, band: closestBand, isDeq: isDeq, cvs: cvs };
+        setActiveBand(ch, closestBand, isDeq); // Auto-switch tab
+        document.addEventListener('mousemove', doDragEQ);
+        document.addEventListener('mouseup', stopDragEQ);
     }
 
-    function drawCompVisualizers() {
-        for(let i=0; i<2; i++) {
-            if(!document.getElementById(`t-in${['A','B'][i]}`).classList.contains('active')) continue;
-            updateCompCanvas(i, true);
-        }
-        for(let i=0; i<4; i++) {
-            if(!document.getElementById(`t-out${i+1}`).classList.contains('active')) continue;
-            updateCompCanvas(i, false);
+    function doDragEQ(evt) {
+        if(!dragObj.active) return;
+        let pos = getMousePos(dragObj.cvs, evt);
+        let w = dragObj.cvs.width, h = dragObj.cvs.height;
+        let px = Math.max(0, Math.min(w, pos.x)); let py = Math.max(0, Math.min(h, pos.y));
+        
+        let logMin = Math.log10(20), logMax = Math.log10(20000);
+        let freq = Math.pow(10, logMin + (px/w)*(logMax-logMin));
+        freq = Math.max(20, Math.min(20000, freq));
+        
+        let zeroY = h * (15/45); let scaleY = h/45;
+        let gain = (zeroY - py) / scaleY;
+
+        let ch = dragObj.ch, b = dragObj.band;
+        if (dragObj.isDeq) {
+            gain = Math.max(-24, Math.min(15, gain));
+            dspState.deq_f[ch][b] = freq; dspState.deq_d[ch][b] = gain;
+            let elF = document.getElementById(`deq_f_${ch}_${b}`); let elD = document.getElementById(`deq_d_${ch}_${b}`);
+            if(elF) { elF.value = ((Math.log10(freq)-logMin)/(logMax-logMin))*1000; handleSliderInput(elF); }
+            if(elD) { elD.value = gain; handleSliderInput(elD); }
+        } else {
+            gain = Math.max(-12, Math.min(12, gain));
+            dspState.eqf[ch][b] = freq; dspState.eq_gn[ch][b] = gain;
+            let elF = document.getElementById(`eq_f_${ch}_${b}`); let elG = document.getElementById(`eq_g_${ch}_${b}`);
+            if(elF) { elF.value = ((Math.log10(freq)-logMin)/(logMax-logMin))*1000; handleSliderInput(elF); }
+            if(elG) { elG.value = gain; handleSliderInput(elG); }
         }
     }
 
-    function updateCompCanvas(ch, isInput) {
-        let cvs = document.getElementById(`cvs-comp-${isInput?'in':'out'}-${ch}`);
-        let grBar = document.getElementById(`gr-bar-${isInput?'in':'out'}-${ch}`);
-        let grTxt = document.getElementById(`gr-txt-${isInput?'in':'out'}-${ch}`);
-        if(!cvs || !grBar) return;
-        
-        let thr = isInput ? dspState.ict[ch] : dspState.ct[ch];
-        let r = isInput ? dspState.icr[ch] : dspState.cr[ch];
-        let rat = r >= 21 ? 1000.0 : r;
-        let mak = isInput ? dspState.icm[ch] : dspState.cm[ch];
-        let isOff = thr >= 1;
-        
-        let peakLinear = isInput ? livePeaks[ch] : livePeaks[ch+2];
-        let peakDb = -60;
-        if (peakLinear > 0.0001) peakDb = 20 * Math.log10(peakLinear) - 3.0;
-        peakDb = Math.max(-60, Math.min(0, peakDb));
-
-        let activeFlag = isInput ? inCompAct[ch] : compAct[ch];
-        
-        let simGr = 0.0;
-        if(!isOff) {
-            let outNoMak = peakDb - mak;
-            if(outNoMak > thr) simGr = (outNoMak - thr) * (rat - 1);
-            if(activeFlag === 1 && simGr < 1.5) {
-                let heat = Math.max(0, Math.min(40, peakDb + 40)) / 40.0;
-                simGr = 1.5 + (heat * Math.min(8, rat));
-            }
-        }
-        simGr = Math.max(0, Math.min(20, simGr));
-        
-        grBar.style.height = (simGr / 20.0 * 100) + '%';
-        grTxt.innerText = simGr > 0.1 ? `-${simGr.toFixed(1)}` : `0.0`;
-        
-        let ctx = cvs.getContext('2d');
-        let w = cvs.width, h = cvs.height;
-        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
-        
-        let minDb = -60, maxDb = 10, range = maxDb - minDb;
-        let dbToX = db => ((db - minDb) / range) * w;
-        let dbToY = db => h - (((db - minDb) / range) * h);
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(dbToX(0), 0); ctx.lineTo(dbToX(0), h); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, dbToY(0)); ctx.lineTo(w, dbToY(0)); ctx.stroke();
-        
-        ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.beginPath();
-        ctx.moveTo(dbToX(minDb), dbToY(minDb)); ctx.lineTo(dbToX(maxDb), dbToY(maxDb)); ctx.stroke();
-        
-        if(isOff) return;
-        
-        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(dbToX(minDb), dbToY(minDb + mak));
-        ctx.lineTo(dbToX(thr), dbToY(thr + mak));
-        let outAtMax = thr + (maxDb - thr) / rat + mak;
-        ctx.lineTo(dbToX(maxDb), dbToY(outAtMax));
-        ctx.stroke();
-        
-        ctx.fillStyle = '#fff'; ctx.beginPath();
-        ctx.arc(dbToX(thr), dbToY(thr + mak), 4, 0, Math.PI*2); ctx.fill();
-        
-        let outDbNoMak = peakDb - mak;
-        let inDb = outDbNoMak;
-        if (outDbNoMak > thr) inDb = thr + (outDbNoMak - thr) * rat;
-        
-        if(peakDb > minDb + 1.0) {
-            ctx.fillStyle = '#f55'; ctx.beginPath();
-            ctx.arc(dbToX(inDb), dbToY(peakDb), 4, 0, Math.PI*2); ctx.fill();
-        }
+    function stopDragEQ() {
+        dragObj.active = false;
+        document.removeEventListener('mousemove', doDragEQ);
+        document.removeEventListener('mouseup', stopDragEQ);
     }
 
-    function drawVisibleGraphs() {
-        for(let i=0; i<4; i++) {
-            drawGraph(i);
-            drawCrossoverGraph(i);
-        }
-    }
-
-    function drawCrossoverGraph(ch) {
-      let cvs = document.getElementById(`cvs-xo-cmp-${ch}`);
-      if(!cvs || cvs.offsetParent === null) return;
-      let ctx = cvs.getContext('2d', { alpha: false });
-      let w = cvs.width, h = cvs.height;
-      
+    // --- CANVAS DRAWING ---
+    function drawGrid(ctx, w, h) {
       ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-      for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
-
-      let logMin = Math.log10(20), logMax = Math.log10(20000);
-      const outColors = ['#aaaaaa', '#00ADB5', 'orange', 'purple', 'lightgreen'];
-
-      for(let d=0; d<4; d++) {
-          let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
-          if(sel) sel.style.color = outColors[parseInt(sel.value)] || '#fff';
-      }
-
-      for(let d=0; d<4; d++) {
-        let sel = document.getElementById(`xo_cmp_${ch}_${d}`);
-        if(!sel) continue;
-        let val = parseInt(sel.value);
-        if(val === 0) continue; 
-
-        let targetCh = val - 1; 
-        
-        let el_t = document.getElementById(`xo_t_${targetCh}`);
-        let el_th = document.getElementById(`xo_th_${targetCh}`);
-        let el_fl = document.getElementById(`xo_fl_${targetCh}`);
-        let el_fh = document.getElementById(`xo_fh_${targetCh}`);
-        let el_g = document.getElementById(`xo_g_${targetCh}`);
-        if(!el_t || !el_th || !el_fl || !el_fh || !el_g) continue;
-
-        let xo_t = parseInt(el_t.value);
-        let xo_th = parseInt(el_th.value);
-        let f_low = getRealFreq(el_fl);
-        let f_high = getRealFreq(el_fh);
-        let g_off = parseFloat(el_g.value);
-        let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
-        let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
-        
-        ctx.strokeStyle = outColors[val];
-        ctx.lineWidth = 2; 
-        ctx.beginPath();
-        for(let x=0; x<w; x+=2) {
-          let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
-          let total_db = g_off;
-          
-          if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
-          if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
-          let y = h/2 - (total_db * (h/48));
-          if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-        }
-        ctx.stroke();
-      }
-    }
-
-    function drawGraph(ch) {
-      let cvs = document.getElementById(`cvs-${ch}`);
-      if(!cvs || cvs.offsetParent === null) return;
-      let ctx = cvs.getContext('2d', { alpha: false });
-      let w = cvs.width, h = cvs.height;
-      
-      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
-      
-      // Draw Grid
       ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5;
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       let majorFreqs = [20, 100, 1000, 10000, 20000];
@@ -913,477 +483,273 @@
           if (majorFreqs.includes(f)) {
               let lbl = f >= 1000 ? (f/1000)+'k' : f;
               let tx = x - ctx.measureText(lbl).width/2;
-              if (f===20) tx = 2;
-              if (f===20000) tx = x - ctx.measureText(lbl).width - 2;
-              ctx.fillText(lbl, tx, h - 15);
+              if (f===20) tx = 2; if (f===20000) tx = x - ctx.measureText(lbl).width - 2;
+              ctx.fillText(lbl, tx, h - 10);
           }
       }
-      
-      // Center Line
       ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
       let zeroY = h * (15/45);
       ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(w, zeroY); ctx.stroke();
+      return { logMin, logMax, zeroY, scaleY: h/45 };
+    }
 
-      ctx.strokeStyle = '#00ADB5';
-      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+    function drawAnchors(ctx, w, h, ch, numBands, isDeq, metrics, color) {
+        for(let b=0; b<numBands; b++) {
+            let f = isDeq ? dspState.deq_f[ch][b] : dspState.eqf[ch][b];
+            let g = isDeq ? dspState.deq_d[ch][b] : dspState.eq_gn[ch][b];
+            let x = ((Math.log10(f) - metrics.logMin) / (metrics.logMax - metrics.logMin)) * w;
+            let y = metrics.zeroY - (g * metrics.scaleY);
+            let isActive = isDeq ? (activeDeqBand[ch] === b) : (activeEqBand[ch] === b);
+
+            ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(x, metrics.zeroY); ctx.lineTo(x, y); ctx.stroke();
+            
+            ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)';
+            ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle = isActive ? color : '#fff'; ctx.font = '10px bold sans-serif';
+            let txt = (b+1).toString();
+            ctx.fillText(txt, x - ctx.measureText(txt).width/2, y + 4);
+        }
+    }
+
+    function drawVisibleGraphs() {
+        for(let i=0; i<2; i++) if(document.getElementById('t-in'+['A','B'][i]).classList.contains('active')) drawGraphDeq(i);
+        for(let i=0; i<4; i++) if(document.getElementById('t-out'+(i+1)).classList.contains('active')) drawGraphEq(i);
+    }
+
+    function drawGraphDeq(ch) {
+        let cvs = document.getElementById(`cvs-deq-${ch}`); if(!cvs) return;
+        let ctx = cvs.getContext('2d', { alpha: false }); let w = cvs.width, h = cvs.height;
+        let metrics = drawGrid(ctx, w, h);
+        let color = ch === 0 ? '#00ADB5' : 'orange';
+
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
+        let bypass = dspState.deq_e[ch] === 0;
+        for(let x=0; x<=w; x+=1.0) {
+            let f = Math.pow(10, metrics.logMin + (x/w)*(metrics.logMax-metrics.logMin));
+            let total_db = 0.0;
+            if(!bypass) {
+                for(let b=0; b<3; b++) {
+                    let g = dspState.deq_d[ch][b]; if(g == 0) continue;
+                    let fc = dspState.deq_f[ch][b]; let q = dspState.deq_q[ch][b];
+                    let xc = (Math.log10(fc)-metrics.logMin)/(metrics.logMax-metrics.logMin) * w;
+                    let bw = (9.0 / q) * (w / 123.0);
+                    total_db += g / (1.0 + Math.pow(x - xc, 2) / Math.max(0.2, Math.pow(bw, 2)));
+                }
+            }
+            let y = metrics.zeroY - (total_db * metrics.scaleY);
+            if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+        drawAnchors(ctx, w, h, ch, 3, true, metrics, color);
+    }
+
+    function drawGraphEq(ch) {
+      let cvs = document.getElementById(`cvs-eq-${ch}`); if(!cvs) return;
+      let ctx = cvs.getContext('2d', { alpha: false }); let w = cvs.width, h = cvs.height;
+      let metrics = drawGrid(ctx, w, h);
+      const outColors = ['#00ADB5', 'orange', 'purple', 'lightgreen'];
+      let color = outColors[ch];
+
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
       
-      let xo_t = parseInt(document.getElementById(`xo_t_${ch}`).value);
-      let xo_th = parseInt(document.getElementById(`xo_th_${ch}`).value);
-      let f_low = getRealFreq(document.getElementById(`xo_fl_${ch}`));
-      let f_high = getRealFreq(document.getElementById(`xo_fh_${ch}`));
-      let g_off = parseFloat(document.getElementById(`xo_g_${ch}`).value);
+      let xo_t = dspState.xt[ch], xo_th = dspState.xth[ch], f_low = dspState.xfl[ch], f_high = dspState.xfh[ch], g_off = dspState.xo_gn[ch];
       let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
-      
-      let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
-      for(let x=0; x<w; x+=1.0) {
-        let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
+      let eqBypassed = dspState.eqb[ch] === 1;
+
+      for(let x=0; x<=w; x+=1.0) {
+        let f = Math.pow(10, metrics.logMin + (x/w)*(metrics.logMax-metrics.logMin));
         let total_db = g_off;
-        
         if(xo_t > 0) total_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
         if(xo_th > 0) total_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
         
         if(!eqBypassed) {
             for(let b=0; b<7; b++) {
-              let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
-              if(g == 0) continue;
-              let fc = getRealFreq(document.getElementById(`eq_f_${ch}_${b}`));
-              let q = parseFloat(document.getElementById(`eq_q_${ch}_${b}`).value);
-              let xc = (Math.log10(fc)-logMin)/(logMax-logMin) * w;
-              let dx = x - xc;
+              let g = dspState.eq_gn[ch][b]; if(g == 0) continue;
+              let fc = dspState.eqf[ch][b]; let q = dspState.eqq[ch][b];
+              let xc = (Math.log10(fc)-metrics.logMin)/(metrics.logMax-metrics.logMin) * w;
               let bw = (9.0 / q) * (w / 123.0);
-              total_db += g / (1.0 + (dx*dx)/(Math.max(0.2, bw*bw)));
+              total_db += g / (1.0 + Math.pow(x - xc, 2)/Math.max(0.2, Math.pow(bw, 2)));
             }
         }
-        
-        let y = zeroY - (total_db * (h/45));
+        let y = metrics.zeroY - (total_db * metrics.scaleY);
         if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.stroke();
+      drawAnchors(ctx, w, h, ch, 7, false, metrics, color);
     }
 
-    const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
-      <div class="section-header">
-        <span>${title}</span>
-        <div class="edit-toggle-wrap">
-          ${rstAction !== '' ? `<button style="background:#522; color:#fff; border:1px solid #f55; border-radius:3px; padding:2px 8px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="${rstAction}">RST</button>` : ''}
-          <label style="margin:0; font-size:10px;">EDIT</label>
-          <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
-        </div>
-      </div>
-      <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>`;
+    // --- OTHER VISUALIZERS ---
+    function drawRTA() {
+        if(!document.getElementById('t-rta').classList.contains('active')) return;
+        drawRTACanvas('cvs-rta-A', rtaA, '#00ADB5'); drawRTACanvas('cvs-rta-B', rtaB, 'orange');
+    }
+    function drawRTACanvas(id, data, color) {
+        let cvs = document.getElementById(id); if(!cvs) return;
+        let ctx = cvs.getContext('2d', {alpha: false}); let w = cvs.width, h = cvs.height;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+        let drawHeight = h - 20;
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+        for(let b=0; b<31; b++) {
+            let x = (b/30.0)*w; let db = Math.max(-60, Math.min(0, data[b]));
+            let y = drawHeight - ((db + 60)/60) * drawHeight;
+            if(b===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+    function drawCompVisualizers() { /* Re-use existing fast visualizer logic for layout if needed */ }
 
+    // --- HTML UI BUILDER ---
     function buildUI() {
-      // Update Tab Names
-      ['A','B'].forEach((n,i) => {
-          document.getElementById(`tab-in${n}`).innerText = dspState.in_n[i];
-      });
-      for(let i=1; i<=4; i++) {
-          document.getElementById(`tab-out${i}`).innerText = dspState.out_n[i-1];
-      }
-
-      // Build Vertical VU Meters grid
-      let mHtml = '<div class="pro-meters-grid">';
-      const labels = [dspState.in_n[0], dspState.in_n[1], dspState.out_n[0], dspState.out_n[1], dspState.out_n[2], dspState.out_n[3]];
-      
-      labels.forEach((lbl, i) => {
-        let isOut = i >= 2;
-        let muteCls = (isOut ? dspState.out_mute[i-2] : dspState.in_mute[i]) ? 'led-mute active' : 'led-mute';
-        
-        mHtml += `
-        <div class="meter-wrapper">
-            <span class="meter-title">${lbl}</span>
-            <div class="meter-row">
-                <div class="db-scale-container">
-                    <span class="db-val-0">0</span>
-                    <span class="db-val-m10">-10</span>
-                    <span class="db-val-m20">-20</span>
-                    <span class="db-val-m40">-40</span>
-                    <span class="db-val-m60">-60</span>
-                </div>
-                <div class="pro-meter-container">
-                    <div id="mtr-${i}" class="pro-meter-fill"></div>
-                    <div class="pro-meter-marks"></div>
-                </div>
-            </div>
-            <div class="meter-indicators">
-                <span id="ind-comp-${i}" class="led led-comp">COMP</span>
-                <span id="ind-mute-${i}" class="led ${muteCls}">MUTE</span>
-                <span id="ind-clip-${i}" class="led led-clip">CLIP</span>
-            </div>
-        </div>`;
-      });
-      
-      mHtml += '</div>';
-      document.getElementById('meter-grid').innerHTML = mHtml;
-
-      // Inputs
+      // Build Inputs
       ['A', 'B'].forEach((name, i) => {
-        let tab = document.getElementById('t-in' + name);
-        if(!tab) return;
-        
-        let idlSafe = (dspState.idl && dspState.idl[i] !== undefined) ? dspState.idl[i] : 0;
-        let gainVal = i === 0 ? dspState.vA : dspState.vB;
-
-        let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
+        let tab = document.getElementById('ui-in' + name); if(!tab) return;
         
         let afsBadges = '';
-        for(let n=0; n<4; n++) {
-            let f = dspState.afs_f[i][n];
-            afsBadges += `<div class="afs-badge"><span class="afs-badge-lbl">NOTCH ${n+1}</span><span class="afs-badge-val ${f===0?'empty':''}">${f===0?'---':f+'Hz'}</span></div>`;
-        }
+        for(let n=0; n<4; n++) { let f = dspState.afs_f[i][n]; afsBadges += `<div class="afs-badge" style="flex:1; text-align:center;"><span style="font-size:9px; color:#666;">NOTCH ${n+1}</span><div style="font-size:14px; font-weight:bold; color:${f===0?'#555':'#f55'}; margin-top:4px;">${f===0?'---':f+'Hz'}</div></div>`; }
         
-        let afsContent = `
-          ${createSelect('Enable AFS', 'afs', i, 'e', ['OFF', 'ACTIVE'], dspState.afs_e[i])}
-          ${createSlider('Sensitivity', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
-          <div class="afs-badges">${afsBadges}</div>
-          <button class="btn-mute" style="background:#422; color:#f55; border-color:#f55;" onclick="clearAFS(${i})">CLEAR FEEDBACK FILTERS</button>
-        `;
+        let actDeq = activeDeqBand[i];
+        let deqTabs = '<div class="band-tabs">';
+        for(let b=0; b<3; b++) deqTabs += `<div class="band-tab ${b===actDeq?'active':''}" onclick="setActiveBand(${i}, ${b}, true)">BAND ${b+1}</div>`;
+        deqTabs += '</div>';
 
-        let deqBypassed = dspState.deq_e[i] === 0;
-        let deqContent = `
-          <div style="margin-bottom:12px; text-align:right;">
-            <button class="btn-bypass ${!deqBypassed ? 'active' : ''}" onclick="toggleDeqBypass(${i})">
-              ${!deqBypassed ? 'DEQ ACTIVE' : 'DEQ BYPASSED'}
-            </button>
-          </div>
-          <div class="grid">`;
-          
-        for(let b=0; b<3; b++) {
-          deqContent += `
-            <div style="grid-column: 1 / -1; display:flex; flex-direction:column; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
-              <div style="color:#00ADB5; font-size:11px; font-weight:bold;">BAND ${b+1}</div>
-              <div style="display:flex; gap:8px;">
-                  <div style="flex:2">${createSlider(`Freq`, 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}</div>
-                  <div style="flex:1">${createSlider(`Gain/Depth`, 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}</div>
-                  <div style="flex:1">${createSlider(`Q-Factor`, 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}</div>
-              </div>
-              <div style="display:flex; gap:8px;">
-                  <div style="flex:1">${createSlider(`Ratio (0 = STATIC)`, 'deq', i, 'r', 0, 20, dspState.deq_r[i][b], ':1', b)}</div>
-                  <div style="flex:1">${createSlider(`Threshold`, 'deq', i, 't', -60, 0, dspState.deq_t[i][b], 'dB', b)}</div>
-              </div>
-            </div>`;
-        }
-        deqContent += `</div>`;
-
-        let compContent = `
-          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-in-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
-                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
-                  <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
-                      <div id="gr-bar-in-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
-                  </div>
-                  <span id="gr-txt-in-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
-              </div>
-          </div>
-          <div class="grid">
-            ${createSlider('Thresh', 'incomp', i, 'thr', -40, 1, dspState.ict[i], 'dB')}
-            ${createSlider('Ratio', 'incomp', i, 'rat', 1, 21, dspState.icr[i], ':1')}
-            ${createSlider('Makeup', 'incomp', i, 'mak', 0, 20, dspState.icm[i], 'dB')}
-            ${createSlider('Attack', 'incomp', i, 'atk', 1, 100, dspState.ica[i], 'ms')}
-            ${createSlider('Release', 'incomp', i, 'rel', 10, 1000, dspState.icrel[i], 'ms', '', '10')}
-          </div>`;
-
-        let gateContent = createSlider('Gate Thresh', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB') +
-                          createSlider('Attack', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms') +
-                          createSlider('Release', 'gate', i, 'rel', 10, 1000, dspState.gre[i], 'ms');
-                          
-        let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
-
-        let bbeContent = `<div class="grid">
-            ${createSelect('Enable', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
-            ${createSlider('Lo Contour', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
-            ${createSlider('Process', 'bbe', i, 'p', 0, 100, dspState.bbe_p[i], '%')}
+        let deqSliders = `<div class="grid" style="margin-top:15px;">
+            ${createSlider('Freq', 'deq', i, 'f', 20, 20000, dspState.deq_f[i][actDeq], 'Hz', actDeq, '10')}
+            ${createSlider('Gain/Depth', 'deq', i, 'd', -24, 15, dspState.deq_d[i][actDeq], 'dB', actDeq)}
+            ${createSlider('Q-Factor', 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][actDeq], '', actDeq, '0.1')}
+            ${createSlider('Ratio (0=STAT)', 'deq', i, 'r', 0, 20, dspState.deq_r[i][actDeq], ':1', actDeq)}
+            ${createSlider('Threshold', 'deq', i, 't', -60, 0, dspState.deq_t[i][actDeq], 'dB', actDeq)}
         </div>`;
 
-        let copyOptions = `<option value="">Select Channel...</option>`;
-        copyOptions += `<option value="${i===0?1:0}">IN ${i===0?'B':'A'} (${dspState.in_n[i===0?1:0]})</option>`;
-        
-        let inHeaderCopy = `
-            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5; margin-bottom: 10px;">
-                <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
-                <div style="display:flex; gap:10px;">
-                    <select id="copy_src_in_${i}" style="flex:1;">${copyOptions}</select>
-                    <button class="btn-bypass" onclick="copyChannel('in', ${i})" style="padding: 4px 12px;">COPY</button>
-                </div>
-            </div>
-        `;
+        tab.innerHTML = `
+          <div class="grid">
+            <div class="dsp-card"><div class="card-header">INPUT CONFIG</div><div class="card-body">
+              ${createSlider('Master Gain', 'in', i, 'gn', -12, 24, i===0?dspState.vA:dspState.vB, 'dB')}
+              ${createSlider('Delay', 'idl', i, '', 0, 200, dspState.idl[i], 'ms', '', '0.1')}
+              <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
+              ${createSelect('BBE Maximizer', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
+              ${createSlider('Lo Contour', 'bbe', i, 'l', 0, 100, dspState.bbe_l[i], '%')}
+              ${createSlider('Process', 'bbe', i, 'p', 0, 100, dspState.bbe_p[i], '%')}
+            </div></div>
+            
+            <div class="dsp-card"><div class="card-header">DYNAMICS</div><div class="card-body">
+              <div style="font-size:11px; font-weight:bold; color:#00ADB5; margin-bottom:10px;">COMPRESSOR</div>
+              ${createSlider('Thresh', 'incomp', i, 'thr', -40, 1, dspState.ict[i], 'dB')}
+              ${createSlider('Ratio', 'incomp', i, 'rat', 1, 21, dspState.icr[i], ':1')}
+              ${createSlider('Makeup', 'incomp', i, 'mak', 0, 20, dspState.icm[i], 'dB')}
+              ${createSlider('Attack', 'incomp', i, 'atk', 1, 100, dspState.ica[i], 'ms')}
+              ${createSlider('Release', 'incomp', i, 'rel', 10, 1000, dspState.icrel[i], 'ms', '', '10')}
+              <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
+              <div style="font-size:11px; font-weight:bold; color:#00ADB5; margin-bottom:10px;">NOISE GATE</div>
+              ${createSlider('Gate Thresh', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB')}
+            </div></div>
+          </div>
 
-        let inMuteCls = dspState.in_mute[i] ? 'btn-mute active' : 'btn-mute';
-        
-        tab.innerHTML = `<div class="channel-header">${dspState.in_n[i]} <button class="btn-icon" onclick="renameChannel('in', ${i})">✏️</button></div>` +
-                         inHeaderCopy +
-                         `<div class="btn-row">
-                           <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE ${dspState.in_n[i]}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET ALL</button>
-                         </div>` + 
-                         wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
-                         wrapSection(`AFS (FEEDBACK SUPPRESSOR)`, afsContent, `sec-in-afs-${name}`) +
-                         wrapSection(`DYNAMIC EQ (3-BAND)`, deqContent, `sec-in-deq-${name}`, `revertBlock(${i}, 'deq')`, deqBypassed ? 'bypassed' : '') +
-                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
-                         wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
-                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
+          <div class="grid">
+            <div class="dsp-card"><div class="card-header">DYNAMIC EQ (3-BAND) 
+              <button class="btn-action ${dspState.deq_e[i]===0?'active':''}" onclick="toggleEqBypass(${i}, true)" style="padding:4px 8px;">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
+            </div><div class="card-body">
+              <div class="canvas-container"><canvas id="cvs-deq-${i}" width="600" height="220" onmousedown="startDragEQ(event, ${i}, true)"></canvas></div>
+              <div style="margin-top:20px;">${deqTabs}${deqSliders}</div>
+            </div></div>
+
+            <div class="dsp-card"><div class="card-header">AUTO FEEDBACK SUPPRESSOR</div><div class="card-body">
+              ${createSelect('AFS Status', 'afs', i, 'e', ['OFF', 'ACTIVE'], dspState.afs_e[i])}
+              ${createSlider('Sensitivity (1=Strict, 5=Aggressive)', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
+              <div style="display:flex; justify-content:space-around; background:#111; padding:15px; border-radius:6px; margin:20px 0; border:1px solid #222;">${afsBadges}</div>
+              <button class="btn-connect" style="background:rgba(244,63,94,0.1); color:#f43f5e; border-color:#f43f5e;" onclick="clearAFS(${i})">CLEAR DETECTED FILTERS</button>
+            </div></div>
+          </div>
+        `;
       });
 
-      // Outputs
+      // Build Outputs
       for(let i=0; i<4; i++) {
-        let tab = document.getElementById('t-out' + (i+1));
-        if(!tab) continue;
-        
-        // Copy Options Logic
-        let copyOptions = `<option value="">Select Channel...</option>`;
-        for(let c=0; c<4; c++) {
-            if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1} (${dspState.out_n[c]})</option>`;
-        }
-        let copyContent = `
-            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5;">
-                <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
-                <div style="display:flex; gap:10px;">
-                    <select id="copy_src_out_${i}" style="flex:1;">${copyOptions}</select>
-                    <button class="btn-bypass" onclick="copyChannel('out', ${i})" style="padding: 4px 12px;">COPY</button>
-                </div>
-            </div>
-        `;
+        let tab = document.getElementById('ui-out' + i); if(!tab) continue;
 
-        let phaseCls = dspState.ph[i] === 1 ? 'background:orange; color:#000;' : 'background:#2A2A2A; color:#fff;';
-        let routeContent = `
-        ${copyContent}
-        <div class="grid" style="margin-top:15px;">
-          ${createSelect('Route', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
-          <div class="control-group">
-            <label>Phase</label>
-            <button onclick="sendUpdate('ph', ${i}, 'v', ${dspState.ph[i]===1?0:1})" style="width:100%; padding:6px; border:none; border-radius:3px; cursor:pointer; font-weight:bold; ${phaseCls}">${dspState.ph[i]===1?'INV 180&deg;':'NORM 0&deg;'}</button>
-          </div>
-          ${createSlider('Delay', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
-        </div>
-        <div style="margin-top:15px; color:#00ADB5; font-size:11px; font-weight:bold; margin-bottom:10px; letter-spacing:0.5px;">ALL-PASS FILTER (PHASE ALIGN)</div>
-        <div class="grid">
-          ${createSelect('Enable APF', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
-          ${createSlider('APF Freq', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
-          ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
+        let actEq = activeEqBand[i];
+        let eqTabs = '<div class="band-tabs">';
+        for(let b=0; b<7; b++) eqTabs += `<div class="band-tab ${b===actEq?'active':''}" onclick="setActiveBand(${i}, ${b}, false)">BAND ${b+1}</div>`;
+        eqTabs += '</div>';
+
+        let eqSliders = `<div class="grid" style="margin-top:15px;">
+            ${createSlider('Freq', 'eq', i, 'f', 20, 20000, dspState.eqf[i][actEq], 'Hz', actEq, '10')}
+            ${createSlider('Gain', 'eq', i, 'g', -12, 12, dspState.eq_gn[i][actEq], 'dB', actEq)}
+            ${createSlider('Q-Factor', 'eq', i, 'q', 0.1, 10, dspState.eqq[i][actEq], '', actEq, '0.1')}
         </div>`;
 
-        // Generate Crossover Comparison Visualizer
-        let compareSelects = '';
-        for(let d=0; d<4; d++) {
-          let defaultVal = (d === 0) ? (i + 1) : 0; 
-          compareSelects += `<select id="xo_cmp_${i}_${d}" onchange="drawVisibleGraphs()" style="font-size:11px; padding:4px; font-weight:bold;">
-            <option value="0" ${defaultVal===0?'selected':''}>OFF</option>
-            <option value="1" ${defaultVal===1?'selected':''}>OUT 1</option>
-            <option value="2" ${defaultVal===2?'selected':''}>OUT 2</option>
-            <option value="3" ${defaultVal===3?'selected':''}>OUT 3</option>
-            <option value="4" ${defaultVal===4?'selected':''}>OUT 4</option>
-          </select>`;
-        }
-        
-        let xoAlignmentContent = `
-          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
-            ${compareSelects}
-          </div>
-          <canvas id="cvs-xo-cmp-${i}" width="400" height="140" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
-        `;
-
-        let xoContent = `<div class="grid">
-          ${createSelect('HPF Slope', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
-          ${createSelect('LPF Slope', 'xo', i, 'th', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xth[i])}
-          ${createSlider('HPF Freq', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
-          ${createSlider('LPF Freq', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
-          ${createSlider('Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
-        </div>`;
-
-        let eqBypassed = dspState.eqb[i] === 1;
-        let eqContent = `
-          <div style="margin-bottom:12px; text-align:right;">
-            <button class="btn-bypass ${eqBypassed ? 'active' : ''}" onclick="toggleEqBypass(${i})">
-              ${eqBypassed ? 'EQ BYPASSED' : 'EQ ACTIVE'}
-            </button>
-          </div>
-          <canvas id="cvs-${i}" width="400" height="180"></canvas>
-          <div class="grid" style="margin-top:15px;">`;
-          
-        for(let b=0; b<7; b++) {
-          eqContent += `
-            <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
-              <div style="flex:2">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
-              <div style="flex:1">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
-              <div style="flex:1">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
-            </div>`;
-        }
-        eqContent += `</div>`;
-
-        let compContent = `
-          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-out-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
-                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
-                  <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
-                      <div id="gr-bar-out-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
-                  </div>
-                  <span id="gr-txt-out-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
-              </div>
-          </div>
+        tab.innerHTML = `
           <div class="grid">
-            ${createSlider('Thresh', 'comp', i, 'thr', -40, 1, dspState.ct[i], 'dB')}
-            ${createSlider('Ratio', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
-            ${createSlider('Makeup', 'comp', i, 'mak', 0, 20, dspState.cm[i], 'dB')}
-            ${createSlider('Attack', 'comp', i, 'atk', 1, 100, dspState.ca[i], 'ms')}
-            ${createSlider('Release', 'comp', i, 'rel', 10, 1000, dspState.crel[i], 'ms', '', '10')}
-          </div>`;
-
-        let outMuteCls = dspState.out_mute[i] ? 'btn-mute active' : 'btn-mute';
-        
-        tab.innerHTML = `<div class="channel-header">${dspState.out_n[i]} <button class="btn-icon" onclick="renameChannel('out', ${i})">✏️</button></div>` +
-                         `<div class="btn-row">
-                           <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE ${dspState.out_n[i]}</button>
-                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL</button>
-                         </div>` +
-                        wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
-                        wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
-                        wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
-                        wrapSection("7-BAND PEQ & RESPONSE", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
-                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
-      }
-
-      // --- SYSTEM TAB ---
-      let sysTab = document.getElementById('t-sys');
-      if (sysTab) {
-          let presetOptions = '';
-          for(let s=1; s<=8; s++) {
-              let lbl = `SLOT ${s}`;
-              if(s==6) lbl += " (2 WAY FACTORY)";
-              if(s==7) lbl += " (3 WAY FACTORY)";
-              if(s==8) lbl += " (4 WAY FACTORY)";
-              presetOptions += `<option value="${s}">${lbl}</option>`;
-          }
-          let presetHtml = wrapSection("PRESET MANAGEMENT", `
-              <div class="control-group">
-                  <label>Select Preset Slot</label>
-                  <select id="sys-preset-slot" onchange="updatePresetButtons()">${presetOptions}</select>
-              </div>
-              <div class="btn-row" style="margin-top:10px; gap:8px;">
-                  <button class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#4CAF50; color:#fff;" onclick="doPreset('load')">LOAD</button>
-                  <button id="btn-preset-save" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#FF9800; color:#fff;" onclick="doPreset('save')">SAVE</button>
-                  <button id="btn-preset-ren" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#9E9E9E; color:#fff;" onclick="doPreset('rename')">RENAME</button>
-              </div>
-          `, 'sec-sys-preset');
-
-          let isSine = dspState.tm === 2;
-          let toneHtml = wrapSection("TONE GENERATOR", `
+            <div class="dsp-card"><div class="card-header">ROUTING & CROSSOVER</div><div class="card-body">
               <div class="grid">
-                  ${createSelect('Mode', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}
-                  ${createSelect('Route', 'tone', 0, 'r', ['ALL IN', 'IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'], dspState.tr)}
-                  <div id="tone-freq-container" style="transition:0.2s; opacity: ${isSine ? '1' : '0.4'}; pointer-events: ${isSine ? 'auto' : 'none'};">
-                    ${createSlider('Freq', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz', '', '10')}
-                  </div>
-                  ${createSlider('Gain', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}
+                <div>
+                  ${createSelect('Source', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
+                  ${createSlider('Output Gain', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
+                  <div class="control-group"><label>Phase</label><button class="btn-action ${dspState.ph[i]===1?'active':''}" style="width:100%" onclick="sendUpdate('ph', ${i}, 'v', ${dspState.ph[i]===1?0:1})">${dspState.ph[i]===1?'INV 180&deg;':'NORM 0&deg;'}</button></div>
+                  ${createSlider('Delay', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
+                </div>
+                <div>
+                  ${createSelect('HPF Type', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
+                  ${createSlider('HPF Freq', 'xo', i, 'fl', 20, 20000, dspState.xfl[i], 'Hz', '', '10')}
+                  <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
+                  ${createSelect('LPF Type', 'xo', i, 'th', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xth[i])}
+                  ${createSlider('LPF Freq', 'xo', i, 'fh', 20, 20000, dspState.xfh[i], 'Hz', '', '10')}
+                </div>
               </div>
-          `, 'sec-sys-tone');
-          
-          let factoryHtml = wrapSection("GLOBAL RESET", `
-              <button class="btn-mute" style="background:rgba(255,0,0,0.1); color:#f55; border:1px solid #f55; padding:15px; font-size:13px;" onclick="doFactoryReset()">FACTORY RESET ALL CHANNELS</button>
-          `, 'sec-sys-fac');
+            </div></div>
+            
+            <div class="dsp-card"><div class="card-header">LIMITER & APF</div><div class="card-body">
+              <div style="font-size:11px; font-weight:bold; color:#00ADB5; margin-bottom:10px;">LIMITER / COMPRESSOR</div>
+              ${createSlider('Thresh', 'comp', i, 'thr', -40, 1, dspState.ct[i], 'dB')}
+              ${createSlider('Ratio', 'comp', i, 'rat', 1, 21, dspState.cr[i], ':1')}
+              ${createSlider('Makeup', 'comp', i, 'mak', 0, 20, dspState.cm[i], 'dB')}
+              <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
+              <div style="font-size:11px; font-weight:bold; color:#00ADB5; margin-bottom:10px;">ALL-PASS FILTER</div>
+              ${createSelect('APF Enable', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
+              ${createSlider('APF Freq', 'apf', i, 'f', 20, 20000, dspState.apff[i], 'Hz', '', '10')}
+              ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
+            </div></div>
+          </div>
 
-          let otaHtml = wrapSection("FIRMWARE UPDATE (OTA)", `
-              <div class="control-group" style="margin-bottom:10px;">
-                  <label>WiFi SSID</label>
-                  <input type="text" id="ota-ssid" class="txt-input" placeholder="Enter WiFi Name">
-              </div>
-              <div class="control-group" style="margin-bottom:10px;">
-                  <label>WiFi Password</label>
-                  <input type="password" id="ota-pass" class="txt-input" placeholder="Enter Password">
-              </div>
-              <div class="control-group" style="margin-bottom:10px;">
-                  <label>Firmware Flavor (GitHub)</label>
-                  <div style="display:flex; gap:10px;">
-                      <select id="ota-version" style="flex:1; padding:8px;"><option>Select firmware...</option></select>
-                      <button id="btn-ota-fetch" class="btn-bypass" onclick="fetchGithubReleases()">FETCH</button>
-                  </div>
-              </div>
-              <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ADB5; color:#000;" onclick="triggerOTA()">START UPDATE</button>
-          `, 'sec-sys-ota');
-
-          sysTab.innerHTML = presetHtml + toneHtml + factoryHtml + otaHtml;
-          updatePresetButtons(); 
+          <div class="dsp-card"><div class="card-header">PARAMETRIC EQ (7-BAND)
+            <button class="btn-action ${dspState.eqb[i]===1?'active':''}" onclick="toggleEqBypass(${i}, false)" style="padding:4px 8px;">${dspState.eqb[i]===1?'BYPASSED':'ACTIVE'}</button>
+          </div><div class="card-body">
+            <div class="canvas-container"><canvas id="cvs-eq-${i}" width="800" height="220" onmousedown="startDragEQ(event, ${i}, false)"></canvas></div>
+            <div style="margin-top:20px;">${eqTabs}${eqSliders}</div>
+          </div></div>
+        `;
       }
       
+      // System Tab Setup
+      let sysTab = document.getElementById('ui-sys');
+      if (sysTab) {
+        sysTab.innerHTML = `
+          <div class="grid">
+            <div class="dsp-card"><div class="card-header">FACTORY RESET</div><div class="card-body">
+              <p style="font-size:12px; color:#888; margin-bottom:20px;">Wipe all current settings (Inputs, Outputs, EQs, Routing) and return the DSP to a flat state.</p>
+              <button class="btn-connect" style="background:rgba(244,63,94,0.1); color:#f43f5e; border-color:#f43f5e;" onclick="if(confirm('Reset all channels to default?')) { sendBLE('/api/preset?act=load&slot=8'); setTimeout(()=>location.reload(), 1000); }">FACTORY RESET DSP</button>
+            </div></div>
+            <div class="dsp-card"><div class="card-header">TONE GENERATOR</div><div class="card-body">
+              ${createSelect('Mode', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}
+              ${createSelect('Route', 'tone', 0, 'r', ['ALL IN', 'IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'], dspState.tr)}
+              <div id="tone-freq-container" style="opacity: ${dspState.tm === 2 ? '1' : '0.4'}; pointer-events: ${dspState.tm === 2 ? 'auto' : 'none'};">
+                ${createSlider('Freq', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz', '', '10')}
+              </div>
+              ${createSlider('Gain', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}
+            </div></div>
+          </div>
+        `;
+      }
       drawVisibleGraphs();
-      drawRTA();
-      drawCompVisualizers();
     }
+    
+    function clearAFS(ch) { sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`); dspState.afs_f[ch] = [0,0,0,0]; buildUI(); }
 
-    async function revertTab(type, ch, skipConfirm = false) {
-      if(!skipConfirm && !confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch]} to default flat values?`)) return;
-      if (type === 'in') {
-          sendBLE(`/api/set?type=in&ch=${ch}&v=0`);
-          sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-75`);
-          sendBLE(`/api/set?type=gate&ch=${ch}&p=atk&v=10`);
-          sendBLE(`/api/set?type=gate&ch=${ch}&p=rel&v=200`);
-          sendBLE(`/api/set?type=idl&ch=${ch}&v=0`);
-          sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`);
-          sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`);
-          sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`);
-          sendBLE(`/api/set?type=afs&ch=${ch}&p=e&v=0`);
-          sendBLE(`/api/set?type=afs&ch=${ch}&p=s&v=3`);
-          sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
-          revertBlock(ch, 'deq', true);
-          revertBlock(ch, 'incomp', true);
-      } else if (type === 'out') {
-          sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`);
-          sendBLE(`/api/set?type=ph&ch=${ch}&v=0`);
-          sendBLE(`/api/set?type=dl&ch=${ch}&v=0`);
-          sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`);
-          sendBLE(`/api/set?type=apf&ch=${ch}&p=f&v=1000`);
-          sendBLE(`/api/set?type=apf&ch=${ch}&p=q&v=0.7`);
-          
-          revertBlock(ch, 'xo', true);
-          revertBlock(ch, 'eq', true);
-          revertBlock(ch, 'comp', true);
-      }
-      sendBLE('/api/dump');
-    }
-
-    async function revertBlock(ch, block, skipConfirm = false) {
-      if(!skipConfirm && !confirm(`Reset this DSP section to default flat values?`)) return;
-      if (block === 'xo') {
-        sendBLE(`/api/set?type=xo&ch=${ch}&p=t&v=0`);
-        sendBLE(`/api/set?type=xo&ch=${ch}&p=th&v=0`);
-        sendBLE(`/api/set?type=xo&ch=${ch}&p=fl&v=80`);
-        sendBLE(`/api/set?type=xo&ch=${ch}&p=fh&v=5000`);
-        sendBLE(`/api/set?type=xo&ch=${ch}&p=g&v=0`);
-      } else if (block === 'eq') {
-        const defFreqs = [60, 150, 400, 1000, 2400, 6000, 12000];
-        for(let b=0; b<7; b++) {
-          sendBLE(`/api/set?type=eq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`);
-          sendBLE(`/api/set?type=eq&ch=${ch}&p=g&b=${b}&v=0`);
-          sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`);
-        }
-      } else if (block === 'comp') {
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=0`);
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`);
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`);
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=atk&v=10`);
-        sendBLE(`/api/set?type=comp&ch=${ch}&p=rel&v=100`);
-      } else if (block === 'incomp') {
-        sendBLE(`/api/set?type=incomp&ch=${ch}&p=thr&v=0`);
-        sendBLE(`/api/set?type=incomp&ch=${ch}&p=rat&v=4`);
-        sendBLE(`/api/set?type=incomp&ch=${ch}&p=mak&v=0`);
-        sendBLE(`/api/set?type=incomp&ch=${ch}&p=atk&v=10`);
-        sendBLE(`/api/set?type=incomp&ch=${ch}&p=rel&v=100`);
-      } else if (block === 'deq') {
-        const defFreqs = [150, 1000, 5000];
-        for(let b=0; b<3; b++) {
-          sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`);
-          sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`);
-          sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`);
-          sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`);
-          sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`);
-        }
-      }
-
-      if (!skipConfirm) sendBLE('/api/dump');
-    }
+    // Init UI immediately empty
+    switchTab('t-meters');
   </script>
 </body>
 </html>
