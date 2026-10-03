@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>FRIZH DLMS 24</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <style>
     body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; }
     
@@ -37,7 +37,6 @@
     select:focus { border-color: #00ADB5; }
     .val-display { float: right; color: #00ADB5; font-weight: bold; font-family: monospace; font-size: 12px; }
     
-    /* Text Inputs for OTA */
     .txt-input { width: 100%; padding: 8px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; outline: none; font-family: inherit; box-sizing: border-box; }
     .txt-input:focus { border-color: #00ADB5; }
 
@@ -46,12 +45,10 @@
     .meter-unit { display: flex; align-items: flex-end; gap: 2px; }
     .meter-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
     .meter-title { font-weight: 800; color: #fff; font-size: 11px; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.7; }
-    
     .pro-meter-container { width: 30px; height: 180px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
     .pro-meter-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
     .pro-meter-marks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(to top, transparent, transparent 3px, #0a0a0a 3px, #0a0a0a 4px); pointer-events: none; }
     
-    /* DB Scale */
     .scale-wrapper { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; height: 100%; padding-right: 5px; }
     .meter-row { display: flex; align-items: flex-start; gap: 2px; }
     .db-scale-container { position: relative; height: 180px; width: 24px; }
@@ -63,7 +60,6 @@
     .db-val-m60 { top: 100%; color: #666666; }
 
     .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
-    
     .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
     .led.active { opacity: 1; color: #fff; }
     .led-mute.active { background: #e60000; border-color: #ff3333; box-shadow: 0 0 8px #e60000; }
@@ -71,7 +67,12 @@
     .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
     .led-placeholder { height: 16px; width: 32px; } 
 
-    @media (min-width: 768px) {
+    /* High-DPI Desktop Layout */
+    .app-container { max-width: 1400px; margin: 0 auto; }
+    .desktop-layout { display: flex; flex-direction: column; gap: 20px; }
+    .desktop-layout-left, .desktop-layout-right { display: flex; flex-direction: column; gap: 15px; }
+
+    @media (min-width: 1024px) {
         .pro-meters-grid { height: 480px; gap: 20px; }
         .pro-meter-container { width: 45px; height: 320px; }
         .db-scale-container { height: 320px; width: 35px; }
@@ -79,9 +80,15 @@
         .meter-title { font-size: 14px; margin-bottom: 12px; }
         .led { width: 45px; padding: 5px 0; font-size: 10px; }
         .led-placeholder { height: 22px; width: 45px; }
+
+        .tabs { justify-content: center; margin-bottom: 25px; }
+        .tab { flex: 0 1 auto; padding: 10px 25px; }
+        .desktop-layout { flex-direction: row; align-items: flex-start; }
+        .desktop-layout-left { flex: 1; position: sticky; top: 15px; }
+        .desktop-layout-right { flex: 1.2; }
     }
 
-    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
+    canvas { background: #000; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); width: 100%; touch-action: none; }
     
     .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; transition: 0.2s; }
     .btn-revert:hover { background: #555; }
@@ -119,7 +126,6 @@
     .btn-cancel { background:#333; color:#fff; border: 1px solid #555 !important; }
     .btn-cancel:hover { background:#444; }
 
-    /* Channel Header */
     .channel-header { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 15px; }
     .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
     .btn-icon:hover { color: #00ADB5; }
@@ -145,6 +151,7 @@
     </div>
   </div>
 
+<div class="app-container">
   <div class="app-header">
     <div class="app-title">FRIZH DLMS 24</div>
     <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
@@ -170,9 +177,9 @@
   
   <div id="t-rta" class="panel">
      <div class="section-header" style="border-radius: 4px;">INPUT A SPECTRUM</div>
-     <canvas id="cvs-rta-A" width="400" height="140"></canvas>
+     <canvas id="cvs-rta-A" style="height: 160px;"></canvas>
      <div class="section-header" style="margin-top:20px; border-radius: 4px;">INPUT B SPECTRUM</div>
-     <canvas id="cvs-rta-B" width="400" height="140"></canvas>
+     <canvas id="cvs-rta-B" style="height: 160px;"></canvas>
   </div>
   
   <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
@@ -182,11 +189,13 @@
   <div id="t-out3" class="panel"></div>
   <div id="t-out4" class="panel"></div>
   <div id="t-sys" class="panel"></div>
+</div>
 
   <script>
     let dspState = {};
     let initialState = null;
     let timers = {};
+    let draggingBand = { ch: -1, band: -1 };
     
     // Live Audio State
     let livePeaks = [0,0,0,0,0,0]; // A, B, 1, 2, 3, 4 (in Linear value)
@@ -200,6 +209,24 @@
     let bleQueue = [];
     let isWriting = false;
     let jsonBuffer = "";
+
+    window.addEventListener('resize', () => {
+        drawVisibleGraphs();
+        drawRTA();
+        drawCompVisualizers();
+    });
+
+    function getDpiCtx(cvs) {
+        if(!cvs) return null;
+        let dpr = window.devicePixelRatio || 1;
+        let rect = cvs.getBoundingClientRect();
+        if(rect.width === 0) return null; // Hidden
+        cvs.width = rect.width * dpr;
+        cvs.height = rect.height * dpr;
+        let ctx = cvs.getContext('2d', {alpha: false});
+        ctx.scale(dpr, dpr);
+        return { ctx, w: rect.width, h: rect.height };
+    }
 
     function handleBleIconClick() {
       if (bleDevice && bleDevice.gatt.connected) {
@@ -312,10 +339,8 @@
                 
                 let btn = document.getElementById(`btn-mute-out-${i}`);
                 if(btn) btn.classList.toggle('active', dspState.out_mute[i]);
-                
                 let muteLed = document.getElementById(`ind-mute-${i+2}`);
                 if(muteLed) muteLed.classList.toggle('active', dspState.out_mute[i]);
-                
                 let compLed = document.getElementById(`ind-comp-${i+2}`);
                 if(compLed) compLed.classList.toggle('active', compAct[i] === 1);
               }
@@ -354,7 +379,6 @@
               if(!dspState.bbe_e) dspState.bbe_e = [0,0];
               if(!dspState.bbe_l) dspState.bbe_l = [50,50];
               if(!dspState.bbe_p) dspState.bbe_p = [50,50];
-              
               if(!dspState.ict) dspState.ict = [0,0];
               if(!dspState.icr) dspState.icr = [4,4];
               if(!dspState.icm) dspState.icm = [0,0];
@@ -362,19 +386,15 @@
               if(!dspState.icrel) dspState.icrel = [100,100];
               if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
               if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
-
-              // Initialize AFS and DEQ Defaults
               if(!dspState.afs_e) dspState.afs_e = [0,0];
               if(!dspState.afs_s) dspState.afs_s = [3,3];
               if(!dspState.afs_f) dspState.afs_f = [[0,0,0,0], [0,0,0,0]];
-              
               if(!dspState.deq_e) dspState.deq_e = [0,0];
               if(!dspState.deq_f) dspState.deq_f = [[150,1000,5000], [150,1000,5000]];
               if(!dspState.deq_q) dspState.deq_q = [[1.4,1.4,1.4], [1.4,1.4,1.4]];
               if(!dspState.deq_t) dspState.deq_t = [[-20,-20,-20], [-20,-20,-20]];
-              if(!dspState.deq_r) dspState.deq_r = [[0,0,0], [0,0,0]]; // STATIC EQ DEFAULT
-              if(!dspState.deq_d) dspState.deq_d = [[0,0,0], [0,0,0]]; // FLAT DEFAULT
-
+              if(!dspState.deq_r) dspState.deq_r = [[0,0,0], [0,0,0]];
+              if(!dspState.deq_d) dspState.deq_d = [[0,0,0], [0,0,0]]; 
               initialState = JSON.stringify(dspState);
               buildUI();
           } catch(e) { console.log("JSON Parse err", e); }
@@ -410,13 +430,13 @@
 
     function clearAFS(ch) {
         sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
-        dspState.afs_f[ch] = [0,0,0,0]; // Optimistic UI update
+        dspState.afs_f[ch] = [0,0,0,0]; 
         buildUI(); 
     }
 
     function doFactoryReset() {
         if(confirm(`FACTORY RESET ALL CHANNELS?\n\nThis will instantly wipe all custom routing, EQs, Dynamic EQs, Crossovers, and Delays back to flat defaults.`)) {
-            sendBLE(`/api/preset?act=load&slot=8`); // Load Factory Flat Slot if ESP supports
+            sendBLE(`/api/preset?act=load&slot=8`);
             for(let i=0; i<2; i++) revertTab('in', i, true);
             for(let i=0; i<4; i++) revertTab('out', i, true);
             alert("Factory Reset Complete.");
@@ -499,7 +519,6 @@
         if(!ssid || !ver || ver.includes('Fetching')) {
             return alert("Please enter WiFi SSID and select a firmware version.");
         }
-        
         if(confirm("Start OTA Update?\nThe device will connect to WiFi, download the firmware, and automatically reboot. This may take up to 2 minutes.")) {
             sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
         }
@@ -606,11 +625,25 @@
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
 
+      // Update State immediately so dragging logic is synced
+      if (type === 'eq') {
+          if(p === 'f') dspState.eqf[ch][b] = realVal;
+          if(p === 'g') dspState.eq_gn[ch][b] = realVal;
+          if(p === 'q') dspState.eqq[ch][b] = realVal;
+      }
+      if (type === 'xo') {
+          if(p === 't') dspState.xt[ch] = realVal;
+          if(p === 'th') dspState.xth[ch] = realVal;
+          if(p === 'fl') dspState.xfl[ch] = realVal;
+          if(p === 'fh') dspState.xfh[ch] = realVal;
+          if(p === 'g') dspState.xo_gn[ch] = realVal;
+      }
+
       if (type === 'deq' && p === 'r') {
           displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1";
           let thrWrap = document.getElementById(`wrap_deq_t_${ch}_${b}`);
           if (thrWrap) thrWrap.style.opacity = realVal === 0 ? '0.3' : '1';
-          dspState.deq_r[ch][b] = realVal; // Keep local state updated for opacity
+          dspState.deq_r[ch][b] = realVal; 
       }
       if (type === 'deq' && p === 'd') displayVal = (realVal > 0 ? "+" : "") + realVal.toFixed(0) + "dB";
 
@@ -698,10 +731,10 @@
     }
 
     function drawRTACanvas(id, data, color) {
-        let cvs = document.getElementById(id);
-        if(!cvs) return;
-        let ctx = cvs.getContext('2d', {alpha: false});
-        let w = cvs.width, h = cvs.height;
+        let ctxData = getDpiCtx(document.getElementById(id));
+        if(!ctxData) return;
+        let { ctx, w, h } = ctxData;
+
         ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
         
         ctx.strokeStyle = 'rgba(255,255,255,0.1)';
@@ -754,6 +787,10 @@
         let grBar = document.getElementById(`gr-bar-${isInput?'in':'out'}-${ch}`);
         let grTxt = document.getElementById(`gr-txt-${isInput?'in':'out'}-${ch}`);
         if(!cvs || !grBar) return;
+
+        let ctxData = getDpiCtx(cvs);
+        if(!ctxData) return;
+        let { ctx, w, h } = ctxData;
         
         let thr = isInput ? dspState.ict[ch] : dspState.ct[ch];
         let r = isInput ? dspState.icr[ch] : dspState.cr[ch];
@@ -782,8 +819,6 @@
         grBar.style.height = (simGr / 20.0 * 100) + '%';
         grTxt.innerText = simGr > 0.1 ? `-${simGr.toFixed(1)}` : `0.0`;
         
-        let ctx = cvs.getContext('2d');
-        let w = cvs.width, h = cvs.height;
         ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
         
         let minDb = -60, maxDb = 10, range = maxDb - minDb;
@@ -829,9 +864,9 @@
 
     function drawCrossoverGraph(ch) {
       let cvs = document.getElementById(`cvs-xo-cmp-${ch}`);
-      if(!cvs || cvs.offsetParent === null) return;
-      let ctx = cvs.getContext('2d', { alpha: false });
-      let w = cvs.width, h = cvs.height;
+      let ctxData = getDpiCtx(cvs);
+      if(!ctxData) return;
+      let { ctx, w, h } = ctxData;
       
       ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
       ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
@@ -853,18 +888,11 @@
 
         let targetCh = val - 1; 
         
-        let el_t = document.getElementById(`xo_t_${targetCh}`);
-        let el_th = document.getElementById(`xo_th_${targetCh}`);
-        let el_fl = document.getElementById(`xo_fl_${targetCh}`);
-        let el_fh = document.getElementById(`xo_fh_${targetCh}`);
-        let el_g = document.getElementById(`xo_g_${targetCh}`);
-        if(!el_t || !el_th || !el_fl || !el_fh || !el_g) continue;
-
-        let xo_t = parseInt(el_t.value);
-        let xo_th = parseInt(el_th.value);
-        let f_low = getRealFreq(el_fl);
-        let f_high = getRealFreq(el_fh);
-        let g_off = parseFloat(el_g.value);
+        let xo_t = dspState.xt[targetCh] || 0;
+        let xo_th = dspState.xth[targetCh] || 0;
+        let f_low = dspState.xfl[targetCh] || 80;
+        let f_high = dspState.xfh[targetCh] || 5000;
+        let g_off = dspState.xo_gn[targetCh] || 0;
         let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
         let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
         
@@ -884,15 +912,111 @@
       }
     }
 
+    function attachEqDragListeners(canvas, ch) {
+        if(canvas.dataset.dragAttached) return;
+        canvas.dataset.dragAttached = 'true';
+
+        let isDragging = false;
+
+        function getMousePos(evt) {
+            let rect = canvas.getBoundingClientRect();
+            let clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+            let clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top,
+                rectW: rect.width,
+                rectH: rect.height
+            };
+        }
+
+        function onDown(e) {
+            let pos = getMousePos(e);
+            let minDist = Infinity;
+            let nearestB = -1;
+            let logMin = Math.log10(20), logMax = Math.log10(20000);
+            let zeroY = pos.rectH * (15/45);
+
+            if(dspState.eqb && dspState.eqb[ch] === 1) return; // Bypassed
+
+            for(let b=0; b<7; b++) {
+                let f = dspState.eqf[ch][b];
+                let g = dspState.eq_gn[ch][b];
+                let cx = ((Math.log10(f) - logMin) / (logMax - logMin)) * pos.rectW;
+                let cy = zeroY - (g * (pos.rectH/45));
+                let dist = Math.hypot(cx - pos.x, cy - pos.y);
+                if(dist < 30 && dist < minDist) {
+                    minDist = dist;
+                    nearestB = b;
+                }
+            }
+            if(nearestB !== -1) {
+                isDragging = true;
+                draggingBand = { ch, band: nearestB };
+                if(e.cancelable) e.preventDefault();
+            }
+        }
+
+        function onMove(e) {
+            if(!isDragging || draggingBand.ch !== ch) return;
+            if(e.cancelable) e.preventDefault();
+            let pos = getMousePos(e);
+            let logMin = Math.log10(20), logMax = Math.log10(20000);
+            let zeroY = pos.rectH * (15/45);
+
+            let logF = logMin + (pos.x / pos.rectW) * (logMax - logMin);
+            let newF = Math.pow(10, logF);
+            newF = Math.max(20, Math.min(20000, newF));
+
+            let newG = (zeroY - pos.y) / (pos.rectH/45);
+            newG = Math.max(-12, Math.min(12, newG));
+
+            // Sync Slider Visuals 
+            let b = draggingBand.band;
+            let elF = document.getElementById(`eq_f_${ch}_${b}`);
+            let elG = document.getElementById(`eq_g_${ch}_${b}`);
+            
+            if(elF) {
+                elF.value = ((Math.log10(newF) - logMin) / (logMax - logMin)) * 1000;
+                elF.closest('.control-group').querySelector('.val-display').innerText = newF.toFixed(0) + 'Hz';
+            }
+            if(elG) {
+                elG.value = newG;
+                elG.closest('.control-group').querySelector('.val-display').innerText = (newG>0?'+':'') + newG.toFixed(0) + 'dB';
+            }
+
+            // Update State (to render cleanly) and Queue BLE Command
+            dspState.eqf[ch][b] = newF;
+            dspState.eq_gn[ch][b] = newG;
+            sendUpdate('eq', ch, 'f', newF, b);
+            sendUpdate('eq', ch, 'g', newG, b);
+
+            drawGraph(ch);
+        }
+
+        function onUp(e) {
+            isDragging = false;
+            draggingBand = { ch: -1, band: -1 };
+            drawGraph(ch);
+        }
+
+        canvas.addEventListener('mousedown', onDown);
+        canvas.addEventListener('mousemove', onMove);
+        canvas.addEventListener('mouseup', onUp);
+        canvas.addEventListener('mouseleave', onUp);
+        canvas.addEventListener('touchstart', onDown, {passive: false});
+        canvas.addEventListener('touchmove', onMove, {passive: false});
+        canvas.addEventListener('touchend', onUp);
+    }
+
     function drawGraph(ch) {
       let cvs = document.getElementById(`cvs-${ch}`);
-      if(!cvs || cvs.offsetParent === null) return;
-      let ctx = cvs.getContext('2d', { alpha: false });
-      let w = cvs.width, h = cvs.height;
+      let ctxData = getDpiCtx(cvs);
+      if(!ctxData) return;
+      let { ctx, w, h } = ctxData;
       
       ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
       
-      // Draw Grid
       ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5;
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       let majorFreqs = [20, 100, 1000, 10000, 20000];
@@ -911,24 +1035,28 @@
           }
       }
       
-      // Center Line
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
       let zeroY = h * (15/45);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(w, zeroY); ctx.stroke();
 
-      ctx.strokeStyle = '#00ADB5';
-      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
-      
-      let xo_t = parseInt(document.getElementById(`xo_t_${ch}`).value);
-      let xo_th = parseInt(document.getElementById(`xo_th_${ch}`).value);
-      let f_low = getRealFreq(document.getElementById(`xo_fl_${ch}`));
-      let f_high = getRealFreq(document.getElementById(`xo_fh_${ch}`));
-      let g_off = parseFloat(document.getElementById(`xo_g_${ch}`).value);
+      let outColors = ['#00ADB5', 'orange', 'purple', 'lightgreen'];
+      let color = outColors[ch] || '#00ADB5';
+
+      let xo_t = dspState.xt[ch] || 0;
+      let xo_th = dspState.xth[ch] || 0;
+      let f_low = dspState.xfl[ch] || 20;
+      let f_high = dspState.xfh[ch] || 20000;
+      let g_off = dspState.xo_gn[ch] || 0;
       let orderL = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_t] || 2.0;
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
       
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
-      for(let x=0; x<w; x+=1.0) {
+
+      let path = new Path2D();
+      let fillPath = new Path2D();
+      let first = true;
+
+      for(let x=0; x<=w; x+=1.0) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
         let total_db = g_off;
         
@@ -937,21 +1065,64 @@
         
         if(!eqBypassed) {
             for(let b=0; b<7; b++) {
-              let g = parseFloat(document.getElementById(`eq_g_${ch}_${b}`).value);
+              let g = dspState.eq_gn[ch][b];
               if(g == 0) continue;
-              let fc = getRealFreq(document.getElementById(`eq_f_${ch}_${b}`));
-              let q = parseFloat(document.getElementById(`eq_q_${ch}_${b}`).value);
-              let xc = (Math.log10(fc)-logMin)/(logMax-logMin) * w;
-              let dx = x - xc;
-              let bw = (9.0 / q) * (w / 123.0);
-              total_db += g / (1.0 + (dx*dx)/(Math.max(0.2, bw*bw)));
+              let fc = dspState.eqf[ch][b];
+              let q = dspState.eqq[ch][b];
+              let logRatio = Math.log10(f/fc);
+              let res = g * Math.exp(-Math.pow(logRatio * q * 2.8, 2));
+              total_db += res;
             }
         }
         
         let y = zeroY - (total_db * (h/45));
-        if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        if(first) {
+            path.moveTo(x,y);
+            fillPath.moveTo(x, zeroY);
+            fillPath.lineTo(x, y);
+            first = false;
+        } else {
+            path.lineTo(x,y);
+            fillPath.lineTo(x, y);
+        }
+        if(x >= w - 1.0) fillPath.lineTo(x, zeroY);
       }
-      ctx.stroke();
+      
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.15;
+      ctx.fill(fillPath);
+      ctx.globalAlpha = 1.0;
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5; 
+      ctx.lineJoin = 'round';
+      ctx.stroke(path);
+
+      if(!eqBypassed) {
+          for(let b=0; b<7; b++) {
+              let fc = dspState.eqf[ch][b];
+              let g = dspState.eq_gn[ch][b];
+              let cx = ((Math.log10(fc) - logMin) / (logMax - logMin)) * w;
+              let cy = zeroY - (g * (h/45));
+              let isActive = (draggingBand.ch === ch && draggingBand.band === b);
+
+              ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
+
+              ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.24)';
+              ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
+
+              ctx.fillStyle = '#000';
+              ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
+
+              ctx.fillStyle = isActive ? color : '#fff';
+              ctx.font = 'bold 10px sans-serif';
+              let textW = ctx.measureText((b+1).toString()).width;
+              ctx.fillText((b+1).toString(), cx - textW/2, cy + 3.5);
+          }
+      }
+      attachEqDragListeners(cvs, ch);
     }
 
     const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
@@ -1045,14 +1216,12 @@
           deqContent += `
             <div style="grid-column: 1 / -1; display:flex; flex-direction:column; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
               <div style="color:#00ADB5; font-size:11px; font-weight:bold;">BAND ${b+1}</div>
-              <div style="display:flex; gap:8px;">
-                  <div style="flex:2">${createSlider(`Freq`, 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}</div>
-                  <div style="flex:1">${createSlider(`Gain/Depth`, 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}</div>
-                  <div style="flex:1">${createSlider(`Q-Factor`, 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}</div>
-              </div>
-              <div style="display:flex; gap:8px;">
-                  <div style="flex:1">${createSlider(`Ratio (0 = STATIC)`, 'deq', i, 'r', 0, 20, dspState.deq_r[i][b], ':1', b)}</div>
-                  <div style="flex:1">${createSlider(`Threshold`, 'deq', i, 't', -60, 0, dspState.deq_t[i][b], 'dB', b)}</div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <div style="flex:1; min-width: 140px;">${createSlider(`Freq`, 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}</div>
+                  <div style="flex:1; min-width: 140px;">${createSlider(`Gain/Depth`, 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}</div>
+                  <div style="flex:1; min-width: 140px;">${createSlider(`Q-Factor`, 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}</div>
+                  <div style="flex:1; min-width: 140px;">${createSlider(`Ratio (0 = STATIC)`, 'deq', i, 'r', 0, 20, dspState.deq_r[i][b], ':1', b)}</div>
+                  <div style="flex:1; min-width: 140px;">${createSlider(`Threshold`, 'deq', i, 't', -60, 0, dspState.deq_t[i][b], 'dB', b)}</div>
               </div>
             </div>`;
         }
@@ -1060,7 +1229,7 @@
 
         let compContent = `
           <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-in-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
+              <canvas id="cvs-comp-in-${i}" style="flex:1; height: 120px;"></canvas>
               <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
                   <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
@@ -1091,7 +1260,6 @@
 
         let copyOptions = `<option value="">Select Channel...</option>`;
         copyOptions += `<option value="${i===0?1:0}">IN ${i===0?'B':'A'} (${dspState.in_n[i===0?1:0]})</option>`;
-        
         let inHeaderCopy = `
             <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5; margin-bottom: 10px;">
                 <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
@@ -1109,14 +1277,20 @@
                          `<div class="btn-row">
                            <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE ${dspState.in_n[i]}</button>
                            <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET ALL</button>
-                         </div>` + 
-                         wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
-                         wrapSection(`AFS (FEEDBACK SUPPRESSOR)`, afsContent, `sec-in-afs-${name}`) +
-                         wrapSection(`DYNAMIC EQ (3-BAND)`, deqContent, `sec-in-deq-${name}`, `revertBlock(${i}, 'deq')`, deqBypassed ? 'bypassed' : '') +
-                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
-                         wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
-                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
+                         </div>` +
+                         `<div class="desktop-layout">
+                            <div class="desktop-layout-left">
+                                ${wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`)}
+                                ${wrapSection(`AFS (FEEDBACK SUPPRESSOR)`, afsContent, `sec-in-afs-${name}`)}
+                                ${wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`)}
+                                ${wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`)}
+                            </div>
+                            <div class="desktop-layout-right">
+                                ${wrapSection(`DYNAMIC EQ (3-BAND)`, deqContent, `sec-in-deq-${name}`, `revertBlock(${i}, 'deq')`, deqBypassed ? 'bypassed' : '')}
+                                ${wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`)}
+                                ${wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`)}
+                            </div>
+                         </div>`;
       });
 
       // Outputs
@@ -1172,7 +1346,7 @@
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
             ${compareSelects}
           </div>
-          <canvas id="cvs-xo-cmp-${i}" width="400" height="140" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
+          <canvas id="cvs-xo-cmp-${i}" style="height:140px; margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
         `;
 
         let xoContent = `<div class="grid">
@@ -1190,22 +1364,21 @@
               ${eqBypassed ? 'EQ BYPASSED' : 'EQ ACTIVE'}
             </button>
           </div>
-          <canvas id="cvs-${i}" width="400" height="180"></canvas>
           <div class="grid" style="margin-top:15px;">`;
           
         for(let b=0; b<7; b++) {
           eqContent += `
-            <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
-              <div style="flex:2">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
-              <div style="flex:1">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
-              <div style="flex:1">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
+            <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222; flex-wrap:wrap;">
+              <div style="flex:2; min-width: 140px;">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
+              <div style="flex:1; min-width: 140px;">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
+              <div style="flex:1; min-width: 140px;">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
             </div>`;
         }
         eqContent += `</div>`;
 
         let compContent = `
           <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-out-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
+              <canvas id="cvs-comp-out-${i}" style="flex:1; height:120px;"></canvas>
               <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
                   <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
@@ -1229,14 +1402,22 @@
                            <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE ${dspState.out_n[i]}</button>
                            <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL</button>
                          </div>` +
-                        wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
-                        wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
-                        wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
-                        wrapSection("7-BAND PEQ & RESPONSE", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
-                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
+                         `<div class="desktop-layout">
+                            <div class="desktop-layout-left">
+                                <div class="section-header">RESPONSE PREVIEW</div>
+                                <canvas id="cvs-${i}" style="height:220px;"></canvas>
+                                ${wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`)}
+                                ${wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`)}
+                            </div>
+                            <div class="desktop-layout-right">
+                                ${wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`)}
+                                ${wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '')}
+                                ${wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`)}
+                            </div>
+                         </div>`;
       }
 
-      // --- SYSTEM TAB ---
+      // System Tab
       let sysTab = document.getElementById('t-sys');
       if (sysTab) {
           let presetOptions = '';
@@ -1326,7 +1507,6 @@
           sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`);
           sendBLE(`/api/set?type=apf&ch=${ch}&p=f&v=1000`);
           sendBLE(`/api/set?type=apf&ch=${ch}&p=q&v=0.7`);
-          
           revertBlock(ch, 'xo', true);
           revertBlock(ch, 'eq', true);
           revertBlock(ch, 'comp', true);
@@ -1371,7 +1551,6 @@
           sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`);
         }
       }
-
       if (!skipConfirm) sendBLE('/api/dump');
     }
   </script>
