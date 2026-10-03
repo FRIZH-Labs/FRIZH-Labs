@@ -58,14 +58,16 @@
     .strip-col::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
     /* WIDGET BLOCKS */
-    .widget { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; }
-    .widget-header { padding: 6px 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-size: 10px; font-weight: 800; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; }
+    .widget { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; transition: 0.2s; }
+    .widget-header { padding: 6px 10px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border-color); font-size: 10px; font-weight: 800; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.5px; border-radius: 6px 6px 0 0; }
     .widget-body { padding: 8px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
     .widget.bypassed { opacity: 0.5; border-color: var(--accent-red); }
+    .widget-body.collapsed { display: none !important; }
+    .widget-actions { display: flex; gap: 5px; align-items: center; }
 
     /* CONTROLS (Knobs & Sliders) */
     .ctrl-row { display: flex; gap: 8px; }
-    .ctrl-col { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .ctrl-col { display: flex; flex-direction: column; gap: 6px; flex: 1; position: relative; }
     
     .fader-box { background: #111; border: 1px solid #333; padding: 6px; border-radius: 4px; text-align: center; display: flex; flex-direction: column; align-items: center; flex: 1; }
     .fader-label { font-size: 9px; color: var(--text-muted); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
@@ -76,14 +78,15 @@
     input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 3px; background: #333; border-radius: 1.5px; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #ddd; margin-top: -4.5px; border: 2px solid #222; }
     
-    .btn { background: #2a2c35; color: #fff; border: 1px solid #444; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.15s; }
+    .btn { background: #2a2c35; color: #fff; border: 1px solid #444; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold; text-transform: uppercase; transition: 0.15s; display: inline-flex; align-items: center; justify-content: center; }
     .btn:hover { background: #3a3c45; }
     .btn-primary { background: rgba(0, 173, 181, 0.15); border-color: var(--accent-cyan); color: var(--accent-cyan); }
     .btn-primary:hover { background: rgba(0, 173, 181, 0.3); }
     .btn-danger { background: rgba(244, 67, 54, 0.15); border-color: var(--accent-red); color: var(--accent-red); }
     .btn-danger:hover { background: rgba(244, 67, 54, 0.3); }
     .btn-danger.active { background: var(--accent-red); color: #fff; box-shadow: 0 0 10px rgba(244, 67, 54, 0.5); }
-    .btn-small { padding: 3px 6px; font-size: 9px; }
+    .btn-small { padding: 3px 6px; font-size: 8px; }
+    .btn-icon { padding: 2px 6px; font-size: 10px; font-family: monospace; font-weight: bold; }
 
     select.pro-sel { background: #111; color: #fff; border: 1px solid #333; padding: 4px; border-radius: 4px; font-size: 10px; width: 100%; outline: none; cursor: pointer; }
     input.pro-in { background: #111; color: #fff; border: 1px solid #333; padding: 6px; border-radius: 4px; font-size: 11px; width: 100%; outline: none; box-sizing: border-box; }
@@ -128,6 +131,7 @@
 </head>
 <body>
 
+  <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
     <div style="font-size: 32px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 4px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn btn-primary" style="font-size: 14px; padding: 12px 30px;" onclick="connectBLE()">SCAN & CONNECT</button>
@@ -405,6 +409,12 @@
       }, 15);
     }
 
+    function toggleWidget(btn) {
+        let body = btn.closest('.widget').querySelector('.widget-body');
+        body.classList.toggle('collapsed');
+        btn.innerText = body.classList.contains('collapsed') ? '□' : '_';
+    }
+
     function sendUpdate(type, ch, param, val, band = '') {
       clearTimeout(timers[type+ch+param+band]);
       timers[type+ch+param+band] = setTimeout(() => {
@@ -450,7 +460,6 @@
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
 
-      // Update Local State Immediately
       if (type === 'eq') {
           if(p === 'f') dspState.eqf[ch][b] = realVal;
           if(p === 'g') dspState.eq_gn[ch][b] = realVal;
@@ -484,25 +493,14 @@
       }
     }
 
-    // Handles Select Dropdowns
     function handleSelect(el) {
-        let type = el.getAttribute('data-type');
-        let ch = parseInt(el.getAttribute('data-ch'));
-        let p = el.getAttribute('data-p');
-        let val = parseInt(el.value);
-
-        if (type === 'xo') {
-            if(p === 't') dspState.xt[ch] = val;
-            if(p === 'th') dspState.xth[ch] = val;
-            drawVisibleGraphs();
-        } else if (type === 'rt') { dspState.rt[ch] = val;
-        } else if (type === 'bbe') { dspState['bbe_'+p][ch] = val; 
-        } else if (type === 'afs') { dspState['afs_'+p][ch] = val; 
-        } else if (type === 'apf') { dspState['apf'+p][ch] = val; 
-        } else if (type === 'tone') {
-            if(p === 'm') dspState.tm = val; 
-            if (p === 'r') dspState.tr = val;
-        }
+        let type = el.getAttribute('data-type'), ch = parseInt(el.getAttribute('data-ch')), p = el.getAttribute('data-p'), val = parseInt(el.value);
+        if (type === 'xo') { if(p === 't') dspState.xt[ch] = val; if(p === 'th') dspState.xth[ch] = val; drawVisibleGraphs(); } 
+        else if (type === 'rt') { dspState.rt[ch] = val; } 
+        else if (type === 'bbe') { dspState['bbe_'+p][ch] = val; } 
+        else if (type === 'afs') { dspState['afs_'+p][ch] = val; } 
+        else if (type === 'apf') { dspState['apf'+p][ch] = val; } 
+        else if (type === 'tone') { if(p === 'm') dspState.tm = val; if (p === 'r') dspState.tr = val; }
         sendUpdate(type, ch, p, val);
     }
 
@@ -510,19 +508,11 @@
       let id = `${type}_${param}_${ch}${band !== '' ? '_' + band : ''}`;
       let isFreq = (param === 'f' || param === 'fl' || param === 'fh');
       let displayVal = parseFloat(val).toFixed((unit === '' || step === '0.1') ? 1 : 0) + unit;
-      
       if(type === 'dl' || type === 'idl') displayVal = parseFloat(val).toFixed(1) + 'ms';
-      if (type === 'comp' || type === 'incomp') {
-          if (param === 'thr' && parseInt(val) >= 1) displayVal = "OFF";
-          if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT";
-      }
-      if (type === 'deq') {
-          if (param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1";
-          if (param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB";
-      }
+      if (type === 'comp' || type === 'incomp') { if (param === 'thr' && parseInt(val) >= 1) displayVal = "OFF"; if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT"; }
+      if (type === 'deq') { if (param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1"; if (param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB"; }
       
-      let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
-      let clickAction = '';
+      let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step, clickAction = '';
       if (isFreq) {
          htmlMin = 0; htmlMax = 1000; htmlStep = 1;
          htmlVal = ((Math.log10(val) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
@@ -546,12 +536,61 @@
               </div>`;
     }
 
+    /* --- RESET LOGIC --- */
     function clearAFS(ch) {
         sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
         dspState.afs_f[ch] = [0,0,0,0]; 
         buildUI(); 
+        setTimeout(() => sendBLE('/api/dump'), 600); // Force sync from ESP to show 0Hz
     }
 
+    function revertBand(type, ch, b) {
+        if(!confirm(`Reset Band ${b+1}?`)) return;
+        if(type === 'eq') {
+            let defFreqs = [60, 150, 400, 1000, 2400, 6000, 12000];
+            sendBLE(`/api/set?type=eq&ch=${ch}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`); sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`);
+            dspState.eq_gn[ch][b] = 0; dspState.eqf[ch][b] = defFreqs[b]; dspState.eqq[ch][b] = 1.41;
+        } else if (type === 'deq') {
+            let defFreqs = [150, 1000, 5000];
+            sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`); sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`);
+            dspState.deq_f[ch][b] = defFreqs[b]; dspState.deq_d[ch][b] = 0; dspState.deq_q[ch][b] = 1.4; dspState.deq_r[ch][b] = 0; dspState.deq_t[ch][b] = -20;
+        }
+        buildUI();
+    }
+
+    async function revertBlock(ch, block, skipConfirm = false) {
+      if(!skipConfirm && !confirm(`Reset this section to defaults?`)) return;
+      if (block === 'in_gain') { sendBLE(`/api/set?type=in&ch=${ch}&p=gn&v=0`); sendBLE(`/api/set?type=idl&ch=${ch}&v=0`); }
+      else if (block === 'gate') { sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${ch}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${ch}&p=rel&v=200`); }
+      else if (block === 'bbe') { sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`); }
+      else if (block === 'afs') { sendBLE(`/api/set?type=afs&ch=${ch}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${ch}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`); }
+      else if (block === 'rt') { sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`); sendBLE(`/api/set?type=ph&ch=${ch}&v=0`); sendBLE(`/api/set?type=dl&ch=${ch}&v=0`); }
+      else if (block === 'apf') { sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${ch}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${ch}&p=q&v=0.7`); }
+      else if (block === 'xo') { sendBLE(`/api/set?type=xo&ch=${ch}&p=t&v=0`); sendBLE(`/api/set?type=xo&ch=${ch}&p=th&v=0`); sendBLE(`/api/set?type=xo&ch=${ch}&p=fl&v=80`); sendBLE(`/api/set?type=xo&ch=${ch}&p=fh&v=5000`); sendBLE(`/api/set?type=xo&ch=${ch}&p=g&v=0`); } 
+      else if (block === 'eq') { const d = [60,150,400,1000,2400,6000,12000]; for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${ch}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=eq&ch=${ch}&p=g&b=${b}&v=0`); sendBLE(`/api/set?type=eq&ch=${ch}&p=q&b=${b}&v=1.41`); } } 
+      else if (block === 'comp') { sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${ch}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${ch}&p=rel&v=100`); } 
+      else if (block === 'incomp') { sendBLE(`/api/set?type=incomp&ch=${ch}&p=thr&v=0`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=rat&v=4`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=mak&v=0`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=atk&v=10`); sendBLE(`/api/set?type=incomp&ch=${ch}&p=rel&v=100`); } 
+      else if (block === 'deq') { const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`); } }
+      if (!skipConfirm) setTimeout(() => sendBLE('/api/dump'), 600);
+    }
+
+    async function revertTab(type, ch) {
+      if(!confirm(`Reset ENTIRE ${type.toUpperCase()} Channel to defaults?`)) return;
+      if (type === 'in') { revertBlock(ch, 'in_gain', true); revertBlock(ch, 'gate', true); revertBlock(ch, 'bbe', true); revertBlock(ch, 'afs', true); revertBlock(ch, 'incomp', true); revertBlock(ch, 'deq', true); } 
+      else if (type === 'out') { revertBlock(ch, 'rt', true); revertBlock(ch, 'apf', true); revertBlock(ch, 'xo', true); revertBlock(ch, 'eq', true); revertBlock(ch, 'comp', true); }
+      setTimeout(() => sendBLE('/api/dump'), 800);
+    }
+
+    function doFactoryReset() {
+        if(confirm(`FACTORY RESET ALL CHANNELS?\nThis will completely flatten the processor.`)) {
+            for(let i=0; i<2; i++) { revertBlock(i, 'in_gain', true); revertBlock(i, 'gate', true); revertBlock(i, 'bbe', true); revertBlock(i, 'afs', true); revertBlock(i, 'incomp', true); revertBlock(i, 'deq', true); }
+            for(let i=0; i<4; i++) { revertBlock(i, 'rt', true); revertBlock(i, 'apf', true); revertBlock(i, 'xo', true); revertBlock(i, 'eq', true); revertBlock(i, 'comp', true); }
+            sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
+            setTimeout(() => sendBLE('/api/dump'), 1200);
+        }
+    }
+
+    /* --- BASIC TOGGLES --- */
     function toggleMute(type, ch) {
       let isMuted = (type === 'in') ? (dspState.in_mute[ch] = !dspState.in_mute[ch]) : (dspState.out_mute[ch] = !dspState.out_mute[ch]);
       let btn = document.getElementById(`btn-mute-${type}-${ch}`);
@@ -564,15 +603,8 @@
         sendUpdate('ph', ch, 'v', dspState.ph[ch]);
         let btn = document.getElementById(`btn-ph-${ch}`);
         if(btn) {
-            if(dspState.ph[ch] === 1) {
-                btn.style.background = 'var(--accent-orange)';
-                btn.style.color = '#000';
-                btn.innerText = 'POLARITY: INV 180°';
-            } else {
-                btn.style.background = '#2a2c35';
-                btn.style.color = '#fff';
-                btn.innerText = 'POLARITY: NORM 0°';
-            }
+            if(dspState.ph[ch] === 1) { btn.style.background = 'var(--accent-orange)'; btn.style.color = '#000'; btn.innerText = 'POLARITY: INV 180°'; } 
+            else { btn.style.background = '#2a2c35'; btn.style.color = '#fff'; btn.innerText = 'POLARITY: NORM 0°'; }
         }
     }
 
@@ -601,7 +633,7 @@
         }
     }
 
-    /* --- SYSTEM TAB LOGIC --- */
+    /* --- SYSTEM OTA & PRESET LOGIC --- */
     async function fetchGithubReleases() {
         let sel = document.getElementById('ota-version');
         sel.innerHTML = '<option>Fetching from GitHub...</option>';
@@ -634,47 +666,21 @@
         }
     }
 
-    function doFactoryReset() {
-        if(confirm(`FACTORY RESET ALL CHANNELS?`)) {
-            sendBLE(`/api/preset?act=load&slot=8`);
-            for(let i=0; i<2; i++) {
-                sendBLE(`/api/set?type=in&ch=${i}&v=0`); sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=200`);
-                sendBLE(`/api/set?type=idl&ch=${i}&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=50`);
-                sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${i}&p=clr&v=1`);
-            }
-            for(let i=0; i<4; i++) {
-                sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
-                sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=0.7`);
-            }
-            setTimeout(() => sendBLE('/api/dump'), 1000);
-        }
-    }
-
     /* --- DRAWING GRAPHS --- */
     function drawRTA() {
         if(!document.getElementById('t-rta').classList.contains('active')) return;
-        drawSpectrum('cvs-rta-A', rtaA, '#00ADB5');
-        drawSpectrum('cvs-rta-B', rtaB, '#ff9800');
+        drawSpectrum('cvs-rta-A', rtaA, '#00ADB5'); drawSpectrum('cvs-rta-B', rtaB, '#ff9800');
     }
 
     function drawSpectrum(id, data, color) {
-        let ctxData = getDpiCtx(document.getElementById(id));
-        if(!ctxData) return;
-        let { ctx, w, h } = ctxData;
-
-        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
-        ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-        let indices = [0, 6, 12, 18, 24, 30];
-        indices.forEach(i => { let x = (i/30)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
-        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
+        let ctxData = getDpiCtx(document.getElementById(id)); if(!ctxData) return; let { ctx, w, h } = ctxData;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
+        [0, 6, 12, 18, 24, 30].forEach(i => { let x = (i/30)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
+        ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
         
-        let drawHeight = h;
         ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.beginPath();
         for(let b=0; b<31; b++) {
-            let x = (b/30.0)*w;
-            let db = Math.max(-60, Math.min(0, data[b]));
-            let y = drawHeight - ((db + 60)/60) * drawHeight;
+            let x = (b/30.0)*w; let db = Math.max(-60, Math.min(0, data[b])); let y = h - ((db + 60)/60) * h;
             if(b===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         ctx.stroke();
@@ -686,51 +692,29 @@
     }
 
     function updateCompCanvas(ch, isInput) {
-        let cvs = document.getElementById(`cvs-comp-${isInput?'in':'out'}-${ch}`);
-        let grFill = document.getElementById(`gr-fill-${isInput?'in':'out'}-${ch}`);
-        if(!cvs || !grFill) return;
+        let cvs = document.getElementById(`cvs-comp-${isInput?'in':'out'}-${ch}`); let grFill = document.getElementById(`gr-fill-${isInput?'in':'out'}-${ch}`);
+        if(!cvs || !grFill) return; let ctxData = getDpiCtx(cvs); if(!ctxData) return; let { ctx, w, h } = ctxData;
+        
+        let thr = isInput ? dspState.ict[ch] : dspState.ct[ch], r = isInput ? dspState.icr[ch] : dspState.cr[ch], rat = r >= 21 ? 1000.0 : r;
+        let mak = isInput ? dspState.icm[ch] : dspState.cm[ch], isOff = thr >= 1;
+        let peakLinear = isInput ? livePeaks[ch] : livePeaks[ch+2], peakDb = (peakLinear > 0.0001) ? Math.max(-60, Math.min(0, 20 * Math.log10(peakLinear) - 3.0)) : -60;
+        let activeFlag = isInput ? inCompAct[ch] : compAct[ch], simGr = 0.0;
 
-        let ctxData = getDpiCtx(cvs);
-        if(!ctxData) return;
-        let { ctx, w, h } = ctxData;
-        
-        let thr = isInput ? dspState.ict[ch] : dspState.ct[ch];
-        let r = isInput ? dspState.icr[ch] : dspState.cr[ch];
-        let rat = r >= 21 ? 1000.0 : r;
-        let mak = isInput ? dspState.icm[ch] : dspState.cm[ch];
-        let isOff = thr >= 1;
-        
-        let peakLinear = isInput ? livePeaks[ch] : livePeaks[ch+2];
-        let peakDb = (peakLinear > 0.0001) ? Math.max(-60, Math.min(0, 20 * Math.log10(peakLinear) - 3.0)) : -60;
-        let activeFlag = isInput ? inCompAct[ch] : compAct[ch];
-        
-        let simGr = 0.0;
         if(!isOff) {
-            let outNoMak = peakDb - mak;
-            if(outNoMak > thr) simGr = (outNoMak - thr) * (rat - 1);
+            let outNoMak = peakDb - mak; if(outNoMak > thr) simGr = (outNoMak - thr) * (rat - 1);
             if(activeFlag === 1 && simGr < 1.5) simGr = 1.5 + (Math.max(0, peakDb + 40)/40.0 * Math.min(8, rat));
         }
-        simGr = Math.max(0, Math.min(20, simGr));
-        grFill.style.height = (simGr / 20.0 * 100) + '%';
+        simGr = Math.max(0, Math.min(20, simGr)); grFill.style.height = (simGr / 20.0 * 100) + '%';
         
         ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
-        let minDb = -60, maxDb = 10, range = maxDb - minDb;
-        let dbToX = db => ((db - minDb) / range) * w;
-        let dbToY = db => h - (((db - minDb) / range) * h);
+        let minDb = -60, maxDb = 10, range = maxDb - minDb, dbToX = db => ((db - minDb) / range) * w, dbToY = db => h - (((db - minDb) / range) * h);
         
-        ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(dbToX(0), 0); ctx.lineTo(dbToX(0), h); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, dbToY(0)); ctx.lineTo(w, dbToY(0)); ctx.stroke();
+        ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(dbToX(0), 0); ctx.lineTo(dbToX(0), h); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, dbToY(0)); ctx.lineTo(w, dbToY(0)); ctx.stroke();
         ctx.strokeStyle = '#333'; ctx.beginPath(); ctx.moveTo(dbToX(minDb), dbToY(minDb)); ctx.lineTo(dbToX(maxDb), dbToY(maxDb)); ctx.stroke();
         
         if(isOff) return;
-        
         ctx.strokeStyle = isInput ? '#00ADB5' : '#ff9800'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
-        ctx.moveTo(dbToX(minDb), dbToY(minDb + mak));
-        ctx.lineTo(dbToX(thr), dbToY(thr + mak));
-        ctx.lineTo(dbToX(maxDb), dbToY(thr + (maxDb - thr) / rat + mak));
-        ctx.stroke();
-        
+        ctx.moveTo(dbToX(minDb), dbToY(minDb + mak)); ctx.lineTo(dbToX(thr), dbToY(thr + mak)); ctx.lineTo(dbToX(maxDb), dbToY(thr + (maxDb - thr) / rat + mak)); ctx.stroke();
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(dbToX(thr), dbToY(thr + mak), 4, 0, Math.PI*2); ctx.fill();
         
         if(peakDb > minDb + 1.0) {
@@ -741,61 +725,41 @@
 
     // DRAG LOGIC
     function attachDragListeners(canvas, ch, type) {
-        if(canvas.dataset.dragAttached) return;
-        canvas.dataset.dragAttached = 'true';
-        let isDragging = false;
+        if(canvas.dataset.dragAttached) return; canvas.dataset.dragAttached = 'true'; let isDragging = false;
 
         function getMousePos(evt) {
-            let rect = canvas.getBoundingClientRect();
-            let cX = evt.touches ? evt.touches[0].clientX : evt.clientX;
-            let cY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+            let rect = canvas.getBoundingClientRect(), cX = evt.touches ? evt.touches[0].clientX : evt.clientX, cY = evt.touches ? evt.touches[0].clientY : evt.clientY;
             return { x: cX - rect.left, y: cY - rect.top, w: rect.width, h: rect.height };
         }
 
         function onDown(e) {
-            let pos = getMousePos(e);
-            let minDist = Infinity, nearestB = -1;
-            let logMin = Math.log10(20), logMax = Math.log10(20000);
-            
-            if(type === 'eq' && dspState.eqb[ch] === 1) return;
-            if(type === 'deq' && dspState.deq_e[ch] === 0) return;
-            
-            let numBands = type === 'eq' ? 7 : 3;
-            let zeroY = type === 'eq' ? pos.h * (15/45) : pos.h / 2;
+            let pos = getMousePos(e), minDist = Infinity, nearestB = -1, logMin = Math.log10(20), logMax = Math.log10(20000);
+            if(type === 'eq' && dspState.eqb[ch] === 1) return; if(type === 'deq' && dspState.deq_e[ch] === 0) return;
+            let numBands = type === 'eq' ? 7 : 3, zeroY = type === 'eq' ? pos.h * (15/45) : pos.h / 2;
 
             for(let b=0; b<numBands; b++) {
-                let f = type === 'eq' ? dspState.eqf[ch][b] : dspState.deq_f[ch][b];
-                let g = type === 'eq' ? dspState.eq_gn[ch][b] : dspState.deq_d[ch][b];
-                let cx = ((Math.log10(f) - logMin) / (logMax - logMin)) * pos.w;
-                let cy = zeroY - (g * (type==='eq' ? pos.h/45 : pos.h/48));
+                let f = type === 'eq' ? dspState.eqf[ch][b] : dspState.deq_f[ch][b], g = type === 'eq' ? dspState.eq_gn[ch][b] : dspState.deq_d[ch][b];
+                let cx = ((Math.log10(f) - logMin) / (logMax - logMin)) * pos.w, cy = zeroY - (g * (type==='eq' ? pos.h/45 : pos.h/48));
                 let dist = Math.hypot(cx - pos.x, cy - pos.y);
                 if(dist < 30 && dist < minDist) { minDist = dist; nearestB = b; }
             }
-            if(nearestB !== -1) {
-                isDragging = true; draggingBand = { ch, band: nearestB, type };
-                if(e.cancelable) e.preventDefault();
-            }
+            if(nearestB !== -1) { isDragging = true; draggingBand = { ch, band: nearestB, type }; if(e.cancelable) e.preventDefault(); }
         }
 
         function onMove(e) {
-            if(!isDragging || draggingBand.ch !== ch || draggingBand.type !== type) return;
-            if(e.cancelable) e.preventDefault();
-            let pos = getMousePos(e);
-            let logMin = Math.log10(20), logMax = Math.log10(20000);
-            
-            let logF = logMin + (pos.x / pos.w) * (logMax - logMin);
-            let newF = Math.max(20, Math.min(20000, Math.pow(10, logF)));
-
+            if(!isDragging || draggingBand.ch !== ch || draggingBand.type !== type) return; if(e.cancelable) e.preventDefault();
+            let pos = getMousePos(e), logMin = Math.log10(20), logMax = Math.log10(20000);
+            let newF = Math.max(20, Math.min(20000, Math.pow(10, logMin + (pos.x / pos.w) * (logMax - logMin))));
             let b = draggingBand.band;
-            let newG = 0;
+
             if(type === 'eq') {
-                newG = Math.max(-12, Math.min(12, (pos.h*(15/45) - pos.y) / (pos.h/45)));
+                let newG = Math.max(-12, Math.min(12, (pos.h*(15/45) - pos.y) / (pos.h/45)));
                 dspState.eqf[ch][b] = newF; dspState.eq_gn[ch][b] = newG;
                 sendUpdate('eq', ch, 'f', newF, b); sendUpdate('eq', ch, 'g', newG, b);
                 updateSliderUI(`eq_f_${ch}_${b}`, newF); updateSliderUI(`eq_g_${ch}_${b}`, newG);
                 drawGraph(ch);
             } else {
-                newG = Math.max(-24, Math.min(15, (pos.h/2 - pos.y) / (pos.h/48)));
+                let newG = Math.max(-24, Math.min(15, (pos.h/2 - pos.y) / (pos.h/48)));
                 dspState.deq_f[ch][b] = newF; dspState.deq_d[ch][b] = newG;
                 sendUpdate('deq', ch, 'f', newF, b); sendUpdate('deq', ch, 'd', newG, b);
                 updateSliderUI(`deq_f_${ch}_${b}`, newF); updateSliderUI(`deq_d_${ch}_${b}`, newG);
@@ -803,84 +767,41 @@
             }
         }
 
-        function onUp(e) {
-            isDragging = false; draggingBand = { ch:-1, band:-1, type:'' };
-            if(type === 'eq') drawGraph(ch); else drawDeqGraph(ch);
-        }
+        function onUp(e) { isDragging = false; draggingBand = { ch:-1, band:-1, type:'' }; if(type === 'eq') drawGraph(ch); else drawDeqGraph(ch); }
 
-        canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove);
-        canvas.addEventListener('mouseup', onUp); canvas.addEventListener('mouseleave', onUp);
-        canvas.addEventListener('touchstart', onDown, {passive:false});
-        canvas.addEventListener('touchmove', onMove, {passive:false}); canvas.addEventListener('touchend', onUp);
-    }
-
-    function updateSliderUI(id, realVal) {
-        let el = document.getElementById(id);
-        if(!el) return;
-        let isF = id.includes('_f_');
-        if(isF) {
-            let min = parseFloat(el.getAttribute('data-min')), max = parseFloat(el.getAttribute('data-max'));
-            el.value = ((Math.log10(realVal) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))) * 1000;
-            el.closest('.fader-box').querySelector('.fader-val').innerText = realVal.toFixed(0) + 'Hz';
-        } else {
-            el.value = realVal;
-            el.closest('.fader-box').querySelector('.fader-val').innerText = (realVal>0?'+':'') + realVal.toFixed(0) + 'dB';
-        }
+        canvas.addEventListener('mousedown', onDown); canvas.addEventListener('mousemove', onMove); canvas.addEventListener('mouseup', onUp); canvas.addEventListener('mouseleave', onUp);
+        canvas.addEventListener('touchstart', onDown, {passive:false}); canvas.addEventListener('touchmove', onMove, {passive:false}); canvas.addEventListener('touchend', onUp);
     }
 
     function drawDeqGraph(ch) {
-      let cvs = document.getElementById(`cvs-deq-${ch}`);
-      let ctxData = getDpiCtx(cvs);
-      if(!ctxData) return;
-      let { ctx, w, h } = ctxData;
+      let cvs = document.getElementById(`cvs-deq-${ch}`); let ctxData = getDpiCtx(cvs); if(!ctxData) return; let { ctx, w, h } = ctxData;
       
-      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-      let logMin = Math.log10(20), logMax = Math.log10(20000);
-      
-      [20,100,1000,10000,20000].forEach(f => {
-          let x = (Math.log10(f)-logMin)/(logMax-logMin)*w;
-          ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-      });
-      let zeroY = h/2;
-      ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
+      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1; let logMin = Math.log10(20), logMax = Math.log10(20000);
+      [20,100,1000,10000,20000].forEach(f => { let x = (Math.log10(f)-logMin)/(logMax-logMin)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
+      let zeroY = h/2; ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
 
-      let isBypassed = dspState.deq_e[ch] === 0;
-      let color = ch === 0 ? '#00ADB5' : '#ff9800';
-
-      let rData = ch === 0 ? rtaA : rtaB;
-      let rtaPath = new Path2D();
+      let isBypassed = dspState.deq_e[ch] === 0, color = ch === 0 ? '#00ADB5' : '#ff9800';
+      let rData = ch === 0 ? rtaA : rtaB, rtaPath = new Path2D();
       for(let b=0; b<31; b++) {
-          let x = (b/30.0)*w; let db = Math.max(-60, Math.min(0, rData[b]));
-          let y = h - ((db+60)/60)*h;
+          let x = (b/30.0)*w, db = Math.max(-60, Math.min(0, rData[b])), y = h - ((db+60)/60)*h;
           if(b===0) { rtaPath.moveTo(x,h); rtaPath.lineTo(x,y); } else rtaPath.lineTo(x,y);
           if(b===30) rtaPath.lineTo(x,h);
       }
       ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill(rtaPath); ctx.globalAlpha = 1.0;
 
-      let liveP = livePeaks[ch]; 
-      let liveDb = (liveP > 0.0001) ? 20 * Math.log10(liveP) - 3.0 : -60;
-      
-      let boundGains = [0,0,0], dynGains = [0,0,0];
+      let liveP = livePeaks[ch], liveDb = (liveP > 0.0001) ? 20 * Math.log10(liveP) - 3.0 : -60, boundGains = [0,0,0], dynGains = [0,0,0];
       for(let b=0; b<3; b++) {
-          let t = dspState.deq_t[ch][b], r = dspState.deq_r[ch][b], d = dspState.deq_d[ch][b];
-          boundGains[b] = d;
+          let t = dspState.deq_t[ch][b], r = dspState.deq_r[ch][b], d = dspState.deq_d[ch][b]; boundGains[b] = d;
           if(r === 0) dynGains[b] = d;
-          else if(liveDb > t && r > 1.0 && d !== 0) {
-              let chg = (liveDb - t) * (1.0 - 1.0/r);
-              dynGains[b] = d < 0 ? Math.max(-chg, d) : Math.min(chg, d);
-          }
+          else if(liveDb > t && r > 1.0 && d !== 0) { let chg = (liveDb - t) * (1.0 - 1.0/r); dynGains[b] = d < 0 ? Math.max(-chg, d) : Math.min(chg, d); }
       }
 
-      let bPath = new Path2D(), dPath = new Path2D(), fPath = new Path2D();
-      let first = true;
+      let bPath = new Path2D(), dPath = new Path2D(), fPath = new Path2D(), first = true;
       for(let x=0; x<=w; x+=2) {
-          let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
-          let tBound = 0, tDyn = 0;
+          let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), tBound = 0, tDyn = 0;
           if(!isBypassed) {
               for(let b=0; b<3; b++) {
-                  let f0 = dspState.deq_f[ch][b], q = dspState.deq_q[ch][b];
-                  let bell = Math.exp(-Math.pow(Math.log10(f/f0) * q * 2.8, 2));
+                  let bell = Math.exp(-Math.pow(Math.log10(f/dspState.deq_f[ch][b]) * dspState.deq_q[ch][b] * 2.8, 2));
                   tBound += boundGains[b] * bell; tDyn += dynGains[b] * bell;
               }
           }
@@ -896,124 +817,77 @@
 
       if(!isBypassed) {
           for(let b=0; b<3; b++) {
-              let cx = ((Math.log10(dspState.deq_f[ch][b]) - logMin) / (logMax - logMin)) * w;
-              let cy = zeroY - (dspState.deq_d[ch][b] * h/48);
+              let cx = ((Math.log10(dspState.deq_f[ch][b]) - logMin) / (logMax - logMin)) * w, cy = zeroY - (dspState.deq_d[ch][b] * h/48);
               let isActive = (draggingBand.ch === ch && draggingBand.band === b && draggingBand.type === 'deq');
-              
-              ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1;
-              ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
-              ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)';
-              ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
-              
+              ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
+              ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
               ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
-              ctx.fillStyle = isActive ? color : '#fff';
-              ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-              ctx.fillText((b+1).toString(), cx, cy);
+              ctx.fillStyle = isActive ? color : '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((b+1).toString(), cx, cy);
           }
       }
       attachDragListeners(cvs, ch, 'deq');
     }
 
     function drawGraph(ch) {
-      let cvs = document.getElementById(`cvs-${ch}`);
-      let ctxData = getDpiCtx(cvs);
-      if(!ctxData) return;
-      let { ctx, w, h } = ctxData;
-      
-      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
-      
-      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-      let logMin = Math.log10(20), logMax = Math.log10(20000);
-      [20,100,1000,10000,20000].forEach(f => {
-          let x = (Math.log10(f)-logMin)/(logMax-logMin)*w;
-          ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-      });
-      let zeroY = h * (15/45);
-      ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
+      let cvs = document.getElementById(`cvs-${ch}`); let ctxData = getDpiCtx(cvs); if(!ctxData) return; let { ctx, w, h } = ctxData;
+      ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h); ctx.strokeStyle = '#222'; ctx.lineWidth = 1; let logMin = Math.log10(20), logMax = Math.log10(20000);
+      [20,100,1000,10000,20000].forEach(f => { let x = (Math.log10(f)-logMin)/(logMax-logMin)*w; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); });
+      let zeroY = h * (15/45); ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(w,zeroY); ctx.stroke();
 
       let color = ['#00ADB5', '#ff9800', '#9c27b0', '#8bc34a'][ch] || '#00ADB5';
-      let xo_t = dspState.xt && dspState.xt[ch] ? dspState.xt[ch] : 0;
-      let xo_th = dspState.xth && dspState.xth[ch] ? dspState.xth[ch] : 0;
-      let f_low = dspState.xfl && dspState.xfl[ch] ? dspState.xfl[ch] : 20;
-      let f_high = dspState.xfh && dspState.xfh[ch] ? dspState.xfh[ch] : 20000;
-      let g_off = dspState.xo_gn && dspState.xo_gn[ch] ? dspState.xo_gn[ch] : 0;
-
-      let orderL = [2,2,4,8,2,4,8][xo_t]||2, orderH = [2,2,4,8,2,4,8][xo_th]||2;
+      let xo_t = dspState.xt && dspState.xt[ch] ? dspState.xt[ch] : 0, xo_th = dspState.xth && dspState.xth[ch] ? dspState.xth[ch] : 0;
+      let f_low = dspState.xfl && dspState.xfl[ch] ? dspState.xfl[ch] : 20, f_high = dspState.xfh && dspState.xfh[ch] ? dspState.xfh[ch] : 20000;
+      let g_off = dspState.xo_gn && dspState.xo_gn[ch] ? dspState.xo_gn[ch] : 0, orderL = [2,2,4,8,2,4,8][xo_t]||2, orderH = [2,2,4,8,2,4,8][xo_th]||2;
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
 
-      let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D();
-      let first = true;
+      let xoPath = new Path2D(), combinedPath = new Path2D(), fillPath = new Path2D(), first = true;
       for(let x=0; x<=w; x+=2) {
-        let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
-        let xo_db = g_off;
-        
-        // Calculate Crossover Rolloff
+        let f = Math.pow(10, logMin + (x/w)*(logMax-logMin)), xo_db = g_off;
         if(xo_t > 0) xo_db += -10*Math.log10(1+Math.pow(f_low/f, 2*orderL));
         if(xo_th > 0) xo_db += -10*Math.log10(1+Math.pow(f/f_high, 2*orderH));
-        
         let tot_db = xo_db;
-        // Add EQ Filters
         if(!eqBypassed && dspState.eq_gn) {
             for(let b=0; b<7; b++) {
               let g = dspState.eq_gn[ch][b]; if(g === 0) continue;
-              let fc = dspState.eqf[ch][b], q = dspState.eqq[ch][b];
-              tot_db += g * Math.exp(-Math.pow(Math.log10(f/fc) * q * 2.8, 2));
+              tot_db += g * Math.exp(-Math.pow(Math.log10(f/dspState.eqf[ch][b]) * dspState.eqq[ch][b] * 2.8, 2));
             }
         }
-        let yXO = zeroY - (xo_db * (h/45));
-        let yTot = zeroY - (tot_db * (h/45));
-        
-        if(first) { 
-            xoPath.moveTo(x,yXO); combinedPath.moveTo(x,yTot); 
-            fillPath.moveTo(x,zeroY); fillPath.lineTo(x,yTot); 
-            first=false; 
-        } else { 
-            xoPath.lineTo(x,yXO); combinedPath.lineTo(x,yTot); fillPath.lineTo(x,yTot); 
-        }
+        let yXO = zeroY - (xo_db * (h/45)), yTot = zeroY - (tot_db * (h/45));
+        if(first) { xoPath.moveTo(x,yXO); combinedPath.moveTo(x,yTot); fillPath.moveTo(x,zeroY); fillPath.lineTo(x,yTot); first=false; } 
+        else { xoPath.lineTo(x,yXO); combinedPath.lineTo(x,yTot); fillPath.lineTo(x,yTot); }
         if(x >= w-2) fillPath.lineTo(x,zeroY);
       }
       
-      // Draw Fill
       ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill(fillPath); ctx.globalAlpha = 1.0;
-      
-      // Draw Crossover Line (Dashed)
-      ctx.strokeStyle = color; ctx.globalAlpha = 0.4; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
-      ctx.stroke(xoPath);
-      ctx.setLineDash([]); ctx.globalAlpha = 1.0;
-      
-      // Draw Combined Line (Solid)
-      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(combinedPath);
+      ctx.strokeStyle = color; ctx.globalAlpha = 0.4; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]); ctx.stroke(xoPath);
+      ctx.setLineDash([]); ctx.globalAlpha = 1.0; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.stroke(combinedPath);
 
-      // Draw Anchor Dots
       if(!eqBypassed && dspState.eq_gn) {
           for(let b=0; b<7; b++) {
-              let cx = ((Math.log10(dspState.eqf[ch][b]) - logMin) / (logMax - logMin)) * w;
-              let cy = zeroY - (dspState.eq_gn[ch][b] * h/45); // Dots stay relative to 0dB for clear dragging
+              let cx = ((Math.log10(dspState.eqf[ch][b]) - logMin) / (logMax - logMin)) * w, cy = zeroY - (dspState.eq_gn[ch][b] * h/45);
               let isActive = (draggingBand.ch === ch && draggingBand.band === b && draggingBand.type === 'eq');
-              
-              ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1;
-              ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
-              ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)';
-              ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
-              
+              ctx.strokeStyle = isActive ? color : 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, zeroY); ctx.lineTo(cx, cy); ctx.stroke();
+              ctx.fillStyle = isActive ? color : 'rgba(255,255,255,0.2)'; ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI*2); ctx.fill();
               ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, Math.PI*2); ctx.fill();
-              ctx.fillStyle = isActive ? color : '#fff';
-              ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-              ctx.fillText((b+1).toString(), cx, cy);
+              ctx.fillStyle = isActive ? color : '#fff'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText((b+1).toString(), cx, cy);
           }
       }
       attachDragListeners(cvs, ch, 'eq');
     }
 
-    function drawVisibleGraphs() {
-        for(let i=0; i<4; i++) {
-            if(document.getElementById(`t-out${i+1}`).classList.contains('active')) {
-                drawGraph(i);
-            }
-        }
-    }
+    function drawVisibleGraphs() { for(let i=0; i<4; i++) { if(document.getElementById(`t-out${i+1}`).classList.contains('active')) { drawGraph(i); } } }
 
     /* --- UI BUILDER --- */
+    const getWidgetHead = (title, rstParam) => `
+        <div class="widget-header">
+            <span>${title}</span>
+            <div class="widget-actions">
+                ${rstParam ? `<button class="btn btn-icon btn-danger" onclick="${rstParam}">RST</button>` : ''}
+                <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
+            </div>
+        </div>
+    `;
+
     function buildUI() {
       ['A','B'].forEach((n,i) => document.getElementById(`tab-in${n}`).innerText = dspState.in_n[i]);
       for(let i=1; i<=4; i++) document.getElementById(`tab-out${i}`).innerText = dspState.out_n[i-1];
@@ -1021,9 +895,7 @@
       // Meters
       let mHtml = '';
       [0,1,2,3,4,5].forEach((i) => {
-        let isOut = i>=2;
-        let name = isOut ? dspState.out_n[i-2] : dspState.in_n[i];
-        let mute = isOut ? dspState.out_mute[i-2] : dspState.in_mute[i];
+        let isOut = i>=2, name = isOut ? dspState.out_n[i-2] : dspState.in_n[i], mute = isOut ? dspState.out_mute[i-2] : dspState.in_mute[i];
         mHtml += `
           <div class="vu-channel">
             <div class="vu-title">${name}</div>
@@ -1046,7 +918,10 @@
         let deqHtml = '';
         for(let b=0; b<3; b++) {
             deqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid #222;">
-                <div style="color:var(--accent-cyan); font-weight:800; font-size:9px; margin-bottom:5px;">BAND ${b+1}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="color:var(--accent-cyan); font-weight:800; font-size:9px;">BAND ${b+1}</span>
+                    <button class="btn btn-icon btn-danger" onclick="revertBand('deq', ${i}, ${b})">RST</button>
+                </div>
                 ${createFader('FREQ', 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}
                 ${createFader('DEPTH', 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}
                 ${createFader('Q', 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}
@@ -1065,34 +940,30 @@
         }
         afsBadges += '</div>';
 
-        let copyOpts = `<option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option>`;
-        let copyHtml = `
-          <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
-            <span style="font-size:9px; color:#888;">COPY FROM:</span>
-            <select id="copy_src_in_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;">${copyOpts}</select>
-            <button class="btn btn-small" onclick="copyChannel('in', ${i})">GO</button>
-          </div>
-        `;
-
         document.getElementById(`t-in${n}`).innerHTML = `
           <div class="dashboard-header">
             <div class="dashboard-title">${dspState.in_n[i]}</div>
             <div class="dashboard-actions">
-              ${copyHtml}
+              <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
+                <span style="font-size:9px; color:#888;">COPY FROM:</span>
+                <select id="copy_src_in_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;"><option value="">SELECT...</option><option value="${i===0?1:0}">IN ${i===0?'B':'A'}</option></select>
+                <button class="btn btn-small" onclick="copyChannel('in', ${i})">GO</button>
+              </div>
+              <button class="btn btn-primary" onclick="revertTab('in', ${i})">RESET CH</button>
               <button class="btn btn-danger ${dspState.in_mute[i]?'active':''}" id="btn-mute-in-${i}" onclick="toggleMute('in',${i})">${dspState.in_mute[i]?'MUTED':'MUTE'}</button>
             </div>
           </div>
           <div class="channel-strip">
             <div class="strip-col">
               <div class="widget">
-                <div class="widget-header">CONFIG</div>
+                ${getWidgetHead('CONFIG', `revertBlock(${i}, 'in_gain')`)}
                 <div class="widget-body">
                     ${createFader('MASTER GAIN', 'in', i, 'gn', -12, 24, i===0?dspState.vA:dspState.vB, 'dB')}
                     ${createFader('DELAY', 'idl', i, '', 0, 200, dspState.idl[i]||0, 'ms', '', '0.1')}
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">NOISE GATE</div>
+                ${getWidgetHead('NOISE GATE', `revertBlock(${i}, 'gate')`)}
                 <div class="widget-body">
                     ${createFader('THRESH', 'gate', i, 'thr', -90, 0, dspState.gth[i], 'dB')}
                     <div class="ctrl-row">
@@ -1102,7 +973,7 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">BBE SONIC MAXIMIZER</div>
+                ${getWidgetHead('BBE SONIC MAXIMIZER', `revertBlock(${i}, 'bbe')`)}
                 <div class="widget-body">
                     ${createSelect('ENABLE', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
                     <div class="ctrl-row">
@@ -1112,7 +983,7 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">AFS (FEEDBACK SUPPRESSOR)</div>
+                ${getWidgetHead('AFS (FEEDBACK SUPPRESSOR)', `revertBlock(${i}, 'afs')`)}
                 <div class="widget-body">
                     ${createSelect('ENABLE', 'afs', i, 'e', ['BYPASS', 'ACTIVE'], dspState.afs_e[i])}
                     ${createFader('SENSITIVITY', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
@@ -1126,7 +997,11 @@
               <div class="widget" id="wid-deq-${i}" class="${dspState.deq_e[i]===0?'bypassed':''}">
                 <div class="widget-header">
                     <span>DYNAMIC EQ</span>
-                    <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
+                    <div class="widget-actions">
+                        <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'deq')">RST</button>
+                        <button class="btn btn-small ${dspState.deq_e[i]===0?'btn-danger':''}" id="btn-byp-deq-${i}" onclick="toggleBypass('deq',${i})">${dspState.deq_e[i]===0?'BYPASSED':'ACTIVE'}</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
+                    </div>
                 </div>
                 <div class="widget-body">
                     <div class="graph-container graph-medium"><canvas id="cvs-deq-${i}"></canvas></div>
@@ -1134,7 +1009,7 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">INPUT COMPRESSOR</div>
+                ${getWidgetHead('INPUT COMPRESSOR', `revertBlock(${i}, 'incomp')`)}
                 <div class="widget-body">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-in-${i}"></canvas></div>
@@ -1164,7 +1039,10 @@
         let eqHtml = '';
         for(let b=0; b<7; b++) {
             eqHtml += `<div class="ctrl-col" style="background:rgba(0,0,0,0.2); padding:8px; border-radius:4px; border:1px solid #222;">
-                <div style="color:var(--accent-cyan); font-weight:800; font-size:9px; margin-bottom:5px;">B${b+1}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="color:var(--accent-cyan); font-weight:800; font-size:9px;">B${b+1}</span>
+                    <button class="btn btn-icon btn-danger" onclick="revertBand('eq', ${i}, ${b})">RST</button>
+                </div>
                 ${createFader('FREQ', 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}
                 ${createFader('GAIN', 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}
                 ${createFader('Q', 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}
@@ -1172,9 +1050,7 @@
         }
 
         let copyOpts = `<option value="">SELECT...</option>` + [0,1,2,3].filter(c=>c!==i).map(c=>`<option value="${c}">OUT ${c+1}</option>`).join('');
-
         let phBtnStyle = dspState.ph[i] === 1 ? 'background:var(--accent-orange); color:#000;' : '';
-        let phBtnText = dspState.ph[i] === 1 ? 'POLARITY: INV 180°' : 'POLARITY: NORM 0°';
 
         document.getElementById(`t-out${i+1}`).innerHTML = `
           <div class="dashboard-header">
@@ -1185,21 +1061,22 @@
                 <select id="copy_src_out_${i}" style="background:transparent; color:#fff; border:none; outline:none; font-size:10px;">${copyOpts}</select>
                 <button class="btn btn-small" onclick="copyChannel('out', ${i})">GO</button>
               </div>
+              <button class="btn btn-primary" onclick="revertTab('out', ${i})">RESET CH</button>
               <button class="btn btn-danger ${dspState.out_mute[i]?'active':''}" id="btn-mute-out-${i}" onclick="toggleMute('out',${i})">${dspState.out_mute[i]?'MUTED':'MUTE'}</button>
             </div>
           </div>
           <div class="channel-strip">
             <div class="strip-col">
               <div class="widget">
-                <div class="widget-header">ROUTING & ALIGNMENT</div>
+                ${getWidgetHead('ROUTING & ALIGNMENT', `revertBlock(${i}, 'rt')`)}
                 <div class="widget-body">
                     ${createSelect('SOURCE', 'rt', i, '', ['OFF', 'IN A', 'IN B', 'MIX'], dspState.rt[i])}
-                    <button id="btn-ph-${i}" class="btn" style="${phBtnStyle}" onclick="togglePolarity(${i})">${phBtnText}</button>
+                    <button id="btn-ph-${i}" class="btn" style="${phBtnStyle}" onclick="togglePolarity(${i})">${dspState.ph[i]===1?'POLARITY: INV 180°':'POLARITY: NORM 0°'}</button>
                     ${createFader('DELAY', 'dl', i, '', 0, 200, dspState.dl[i], 'ms', '', '0.1')}
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">ALL-PASS FILTER</div>
+                ${getWidgetHead('ALL-PASS FILTER', `revertBlock(${i}, 'apf')`)}
                 <div class="widget-body">
                     ${createSelect('ENABLE', 'apf', i, 'e', ['BYPASS', 'ACTIVE'], dspState.apfe[i])}
                     <div class="ctrl-row">
@@ -1209,7 +1086,7 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">CROSSOVER</div>
+                ${getWidgetHead('CROSSOVER', `revertBlock(${i}, 'xo')`)}
                 <div class="widget-body">
                     ${createFader('OUT GAIN', 'xo', i, 'g', -12, 6, dspState.xo_gn[i], 'dB')}
                     ${createSelect('HPF TYPE', 'xo', i, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[i])}
@@ -1220,7 +1097,7 @@
                 </div>
               </div>
               <div class="widget">
-                <div class="widget-header">COMPRESSOR</div>
+                ${getWidgetHead('COMPRESSOR', `revertBlock(${i}, 'comp')`)}
                 <div class="widget-body">
                     <div class="comp-layout">
                         <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-out-${i}"></canvas></div>
@@ -1246,7 +1123,11 @@
               <div class="widget" id="wid-eq-${i}" class="${dspState.eqb[i]===1?'bypassed':''}">
                 <div class="widget-header">
                     <span>EQ & CROSSOVER PREVIEW</span>
-                    <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'EQ BYPASSED':'EQ ACTIVE'}</button>
+                    <div class="widget-actions">
+                        <button class="btn btn-icon btn-danger" onclick="revertBlock(${i}, 'eq')">RST</button>
+                        <button class="btn btn-small ${dspState.eqb[i]===1?'btn-danger':''}" id="btn-byp-eq-${i}" onclick="toggleBypass('eq',${i})">${dspState.eqb[i]===1?'EQ BYPASSED':'EQ ACTIVE'}</button>
+                        <button class="btn btn-icon" onclick="toggleWidget(this)">_</button>
+                    </div>
                 </div>
                 <div class="widget-body">
                     <div class="graph-container graph-large"><canvas id="cvs-${i}"></canvas></div>
@@ -1266,7 +1147,7 @@
         <div class="channel-strip">
             <div class="strip-col">
                 <div class="widget">
-                    <div class="widget-header">PRESET MANAGEMENT</div>
+                    ${getWidgetHead('PRESET MANAGEMENT')}
                     <div class="widget-body">
                         <select id="sys-preset-slot" class="pro-sel">
                             ${[1,2,3,4,5,6,7,8].map(s => `<option value="${s}">SLOT ${s}${s>=6?' (FACTORY)':''}</option>`).join('')}
@@ -1279,7 +1160,7 @@
                     </div>
                 </div>
                 <div class="widget">
-                    <div class="widget-header">FIRMWARE UPDATE (OTA)</div>
+                    ${getWidgetHead('FIRMWARE UPDATE (OTA)')}
                     <div class="widget-body">
                         <input type="text" id="ota-ssid" class="pro-in" placeholder="WiFi SSID" style="margin-bottom:6px;">
                         <input type="password" id="ota-pass" class="pro-in" placeholder="WiFi Password" style="margin-bottom:6px;">
@@ -1293,7 +1174,7 @@
             </div>
             <div class="strip-col">
                 <div class="widget">
-                    <div class="widget-header">TONE GENERATOR</div>
+                    ${getWidgetHead('TONE GENERATOR')}
                     <div class="widget-body">
                         <div class="ctrl-row">
                             <div class="ctrl-col">
@@ -1308,7 +1189,7 @@
                     </div>
                 </div>
                 <div class="widget">
-                    <div class="widget-header">GLOBAL RESET</div>
+                    ${getWidgetHead('GLOBAL RESET')}
                     <div class="widget-body">
                         <button class="btn btn-danger" style="padding:15px; font-size:12px;" onclick="doFactoryReset()">FACTORY RESET ALL CHANNELS</button>
                     </div>
