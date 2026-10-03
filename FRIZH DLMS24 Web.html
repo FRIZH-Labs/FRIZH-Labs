@@ -4,67 +4,27 @@
   <title>FRIZH DLMS 24</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; }
+    body { background: #121212; color: #ddd; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; }
     
-    /* Center the app on laptops and restrict maximum stretch */
-    .app-container { width: 100%; max-width: 1400px; display: flex; flex-direction: column; }
-
     /* App Header & BLE Icon */
     .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #333; margin-bottom: 15px; }
-    .app-title { color: #00ADB5; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
+    .app-title { color: #00ADB5; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
     #ble-btn { cursor: pointer; color: #555; transition: all 0.3s ease; padding: 5px; }
     #ble-btn.connected { color: #00ADB5; filter: drop-shadow(0 0 8px rgba(0,173,181,0.6)); }
     #ble-btn:hover { color: #fff; }
 
     .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { flex: 1; padding: 12px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 80px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
+    .tab { flex: 1; padding: 10px; background: #222; text-align: center; cursor: pointer; border-radius: 5px; font-weight: bold; min-width: 60px; transition: 0.2s; border: 1px solid transparent; font-size: 13px; white-space: nowrap; }
     .tab.active { background: #00ADB5; color: #000; box-shadow: 0 0 10px rgba(0,173,181,0.3); }
     
-    .panel { display: none; background: transparent; padding: 0; border-radius: 5px; }
+    .panel { display: none; background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; }
     .panel.active { display: block; animation: fadeIn 0.3s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Laptop Responsive Grids */
-    .desktop-grid { display: grid; gap: 15px; align-items: start; margin-top: 15px; }
-    
-    /* Advanced 3-Column Layout for Desktop */
-    @media (min-width: 1100px) {
-        .desktop-grid { grid-template-columns: repeat(3, 1fr); }
-        .span-2 { grid-column: span 2; }
-        .span-full { grid-column: 1 / -1; }
-    }
-    @media (max-width: 1099px) and (min-width: 768px) {
-        .desktop-grid { grid-template-columns: repeat(2, 1fr); }
-        .span-2 { grid-column: 1 / -1; }
-        .span-full { grid-column: 1 / -1; }
-    }
-    @media (max-width: 767px) {
-        .desktop-grid { grid-template-columns: 1fr; }
-        .span-2 { grid-column: 1 / -1; }
-        .span-full { grid-column: 1 / -1; }
-    }
-
-    /* RTA Specific Layout */
-    .rta-container { display: flex; flex-direction: row; gap: 10px; align-items: stretch; margin-top: 5px; }
-    .rta-scale { display: flex; flex-direction: column; position: relative; padding-top: 54px; width: 40px; align-items: center; }
-    @media (max-width: 767px) {
-        .rta-container { flex-direction: column; }
-        .rta-scale { display: none; }
-    }
-    
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
     .control-group { background: #222; padding: 10px; border-radius: 5px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
     label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    /* Compact EQ specific overrides to reduce height */
-    .compact-eq { display: flex; flex-direction: column; gap: 4px; }
-    .compact-eq-row { display: flex; gap: 12px; background: #111; padding: 6px 12px; border-radius: 4px; border: 1px solid #222; align-items: center; }
-    .compact-eq-row .control-group { padding: 0; background: transparent; box-shadow: none; margin: 0; border: none; }
-    .compact-eq-row label { margin-bottom: 2px; font-size: 10px; color: #999; }
-    .compact-eq-row .slider-wrap { margin: 0; }
-    .compact-eq-row .btn-fine { height: 22px; width: 22px; font-size: 14px; padding: 0; line-height: 1; border-radius: 2px; }
-    .compact-eq-row input[type=range] { height: 14px; }
     
     /* Sliders & Fine Tuning */
     .slider-wrap { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
@@ -73,7 +33,7 @@
     .btn-fine:hover { background: #00ADB5; color: #000; border-color: #00ADB5; }
     .btn-fine:active { transform: scale(0.95); }
     
-    select { width: 100%; padding: 6px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
+    select { width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px; cursor: pointer; outline: none; }
     select:focus { border-color: #00ADB5; }
     .val-display { float: right; color: #00ADB5; font-weight: bold; font-family: monospace; font-size: 12px; }
     
@@ -82,21 +42,20 @@
     .txt-input:focus { border-color: #00ADB5; }
 
     /* Vertical VU Meter Styles */
-    .meters-bg { background: #1a1a1a; padding: 20px; border-radius: 5px; border: 1px solid #333; }
-    .pro-meters-grid { display: flex; justify-content: center; gap: 15px; padding: 10px 0; height: 350px; overflow-x: auto; }
+    .pro-meters-grid { display: flex; justify-content: center; gap: 12px; padding: 10px 0; height: 320px; overflow-x: auto; }
     .meter-unit { display: flex; align-items: flex-end; gap: 2px; }
     .meter-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
-    .meter-title { font-weight: 800; color: #fff; font-size: 12px; letter-spacing: 1px; margin-bottom: 12px; opacity: 0.7; }
+    .meter-title { font-weight: 800; color: #fff; font-size: 11px; letter-spacing: 1px; margin-bottom: 8px; opacity: 0.7; }
     
-    .pro-meter-container { width: 35px; height: 220px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
+    .pro-meter-container { width: 30px; height: 180px; background: #000; border-radius: 2px; position: relative; overflow: hidden; border: 1px solid #333; }
     .pro-meter-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #004400 0%, #00cc00 60%, #e6e600 80%, #ff0000 100%); transition: height 0.08s ease-out; }
     .pro-meter-marks { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(to top, transparent, transparent 3px, #0a0a0a 3px, #0a0a0a 4px); pointer-events: none; }
     
     /* DB Scale */
     .scale-wrapper { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; height: 100%; padding-right: 5px; }
     .meter-row { display: flex; align-items: flex-start; gap: 2px; }
-    .db-scale-container { position: relative; height: 220px; width: 24px; }
-    .db-scale-container span { position: absolute; right: 2px; font-size: 10px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
+    .db-scale-container { position: relative; height: 180px; width: 24px; }
+    .db-scale-container span { position: absolute; right: 2px; font-size: 9px; font-weight: bold; transform: translateY(-50%); font-family: monospace; line-height: 1; }
     .db-val-0   { top: 0%; color: #ff5555; }
     .db-val-m10 { top: 16.6%; color: #ffcc00; }
     .db-val-m20 { top: 33.3%; color: #44ff44; }
@@ -105,44 +64,39 @@
 
     .meter-indicators { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; width: 100%; align-items: center; }
     
-    .led { width: 38px; text-align: center; padding: 4px 0; border-radius: 3px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
+    .led { width: 32px; text-align: center; padding: 3px 0; border-radius: 3px; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; color: #444; background: #222; border: 1px solid #111; opacity: 0.6; transition: all 0.1s; box-sizing: border-box; }
     .led.active { opacity: 1; color: #fff; }
     .led-mute.active { background: #e60000; border-color: #ff3333; box-shadow: 0 0 8px #e60000; }
     .led-clip.active { background: #ff0000; border-color: #ff6666; box-shadow: 0 0 10px #ff0000; color: #fff; }
     .led-comp.active { background: #ffaa00; border-color: #ffcc00; box-shadow: 0 0 8px #ffaa00; color: #000; }
-    .led-placeholder { height: 19px; width: 38px; } 
+    .led-placeholder { height: 16px; width: 32px; } 
 
     @media (min-width: 768px) {
-        .pro-meters-grid { height: 480px; gap: 30px; }
-        .pro-meter-container { width: 50px; height: 320px; }
+        .pro-meters-grid { height: 480px; gap: 20px; }
+        .pro-meter-container { width: 45px; height: 320px; }
         .db-scale-container { height: 320px; width: 35px; }
         .db-scale-container span { font-size: 13px; right: 5px; }
         .meter-title { font-size: 14px; margin-bottom: 12px; }
-        .led { width: 50px; padding: 6px 0; font-size: 11px; }
-        .led-placeholder { height: 26px; width: 50px; }
+        .led { width: 45px; padding: 5px 0; font-size: 10px; }
+        .led-placeholder { height: 22px; width: 45px; }
     }
 
-    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
+    canvas { background: #000; width: 100%; border-radius: 5px; border: 1px solid #444; margin: 10px 0; display: block; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); }
     
-    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; float: right; transition: 0.2s; font-weight: bold; }
+    .btn-revert { background: #444; color: #fff; border: 1px solid #666; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 10px; float: right; transition: 0.2s; }
     .btn-revert:hover { background: #555; }
-    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; transition: 0.2s; }
+    .btn-mute { background: #333; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; width: 100%; transition: 0.2s; }
     .btn-mute:hover { background: #444; }
     .btn-mute.active { background: #f55; color: #fff; border-color: #f00; box-shadow: 0 0 8px rgba(255,0,0,0.6); }
     .btn-bypass { background: #00ADB5; color: #000; border: none; padding: 8px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s; }
     .btn-bypass.active { background: #f55; color: #fff; box-shadow: 0 0 8px rgba(255,0,0,0.5); }
-    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; background: #1a1a1a; padding: 12px; border-radius: 5px; border: 1px solid #333; box-sizing: border-box; }
+    .btn-row { display: flex; gap: 10px; margin-bottom: 10px; width: 100%; align-items: center; justify-content: space-between; }
     
-    /* Modular Grid DSP Sections */
-    .dsp-module { display: flex; flex-direction: column; background: #1a1a1a; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-    .section-header { background: #2a2a2a; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.9em; font-weight: bold; border-bottom: 1px solid #333; }
-    .edit-toggle-wrap { display: flex; align-items: center; gap: 10px; font-size: 0.85em; color: #aaa; }
-    .edit-toggle-wrap input { width: 16px; height: 16px; cursor: pointer; accent-color: #00ADB5; margin: 0; }
-    .btn-rst { background: #522; color: #fff; border: 1px solid #f55; border-radius: 3px; padding: 3px 8px; font-weight: bold; font-size: 10px; cursor: pointer; transition: 0.2s; }
-    .btn-rst:hover { background: #f55; }
-    
-    .dsp-section { padding: 15px; transition: all 0.3s ease; overflow: hidden; }
-    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; border: none; }
+    .section-header { background: #2a2a2a; padding: 10px 12px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px 4px 0 0; color: #00ADB5; font-size: 0.85em; font-weight: bold; border: 1px solid #333; border-bottom: none; }
+    .edit-toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #aaa; }
+    .edit-toggle-wrap input { width: 14px; height: 14px; cursor: pointer; accent-color: #00ADB5; }
+    .dsp-section { background: #1a1a1a; padding: 12px; border: 1px solid #333; border-top: 1px solid #222; border-radius: 0 0 4px 4px; transition: opacity 0.2s; }
+    .dsp-section.locked { opacity: 0.4; pointer-events: none; filter: grayscale(50%); height: 0; padding: 0; overflow: hidden; border: none; }
     .dsp-section.bypassed { opacity: 0.5; border: 1px solid #f55; }
     
     /* BLE Overlays & Dialogs */
@@ -166,17 +120,24 @@
     .btn-cancel:hover { background:#444; }
 
     /* Channel Header */
-    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: bold; color: #fff; margin: 5px 0 0 0; }
-    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 18px; padding: 5px; transition: 0.2s; }
+    .channel-header { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: bold; color: #fff; margin-bottom: 15px; }
+    .btn-icon { background: none; border: none; color: #888; cursor: pointer; font-size: 16px; padding: 5px; transition: 0.2s; }
     .btn-icon:hover { color: #00ADB5; }
+    
+    /* AFS Detection Badges */
+    .afs-badges { display: flex; gap: 8px; justify-content: space-around; margin: 10px 0; background: #111; padding: 10px; border-radius: 4px; border: 1px solid #222; }
+    .afs-badge { display: flex; flex-direction: column; align-items: center; }
+    .afs-badge-lbl { font-size: 9px; color: #666; font-weight: bold; }
+    .afs-badge-val { font-size: 14px; font-weight: bold; font-family: monospace; color: #f55; margin-top: 4px; }
+    .afs-badge-val.empty { color: #555; }
   </style>
 </head>
 <body>
-  
+
   <div id="connect-overlay">
-    <div style="font-size: 32px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
+    <div style="font-size: 28px; font-weight: bold; color: #00ADB5; letter-spacing: 2px; margin-bottom: 30px;">FRIZH DLMS 24</div>
     <button class="btn-connect" onclick="connectBLE()">SCAN & CONNECT</button>
-    <p style="color:#888; margin-top:20px; text-align:center; font-size: 14px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
+    <p style="color:#888; margin-top:20px; text-align:center; font-size: 13px; line-height: 1.6;">Ensure Bluetooth is enabled on your device.<br>Requires Google Chrome, Edge, or a WebBLE supported browser.</p>
   </div>
 
   <div id="ble-dialog-overlay">
@@ -191,65 +152,43 @@
     </div>
   </div>
 
-  <div class="app-container">
-    <div class="app-header">
-      <div class="app-title">FRIZH DLMS 24</div>
-      <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
-        <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
-        </svg>
-      </div>
+  <div class="app-header">
+    <div class="app-title">FRIZH DLMS 24</div>
+    <div id="ble-btn" onclick="handleBleIconClick()" title="Bluetooth Options">
+      <svg viewBox="0 0 24 24" width="26" height="26" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"></polyline>
+      </svg>
     </div>
-    
-    <div class="tabs" id="tabs">
-      <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
-      <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
-      <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
-      <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
-      <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
-      <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
-      <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
-      <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
-      <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
-    </div>
-
-    <div id="t-meters" class="panel active">
-        <div class="meters-bg" id="meter-grid"></div>
-    </div>
-    
-    <!-- UPDATED RTA TAB -->
-    <div id="t-rta" class="panel">
-       <div class="rta-container">
-           <div class="dsp-module" style="flex:1; min-width:300px;">
-               <div class="section-header" style="border-radius: 4px 4px 0 0;">INPUT A SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-A" width="1000" height="300" style="margin:0; width:100%; height:300px;"></canvas></div>
-           </div>
-           
-           <div class="rta-scale">
-               <div class="db-scale-container" style="height: 260px; width: 100%;">
-                   <span class="db-val-0" style="top:0%; right: 10px;">0</span>
-                   <span class="db-val-m10" style="top:16.66%; right: 10px;">-10</span>
-                   <span class="db-val-m20" style="top:33.33%; right: 10px;">-20</span>
-                   <span class="db-val-m40" style="top:66.66%; right: 10px;">-40</span>
-                   <span class="db-val-m60" style="top:100%; right: 10px;">-60</span>
-               </div>
-           </div>
-
-           <div class="dsp-module" style="flex:1; min-width:300px;">
-               <div class="section-header" style="border-radius: 4px 4px 0 0; color: orange;">INPUT B SPECTRUM</div>
-               <div class="dsp-section" style="padding: 15px;"><canvas id="cvs-rta-B" width="1000" height="300" style="margin:0; width:100%; height:300px;"></canvas></div>
-           </div>
-       </div>
-    </div>
-    
-    <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
-    <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
-    <div id="t-out1" class="panel"></div>
-    <div id="t-out2" class="panel"></div>
-    <div id="t-out3" class="panel"></div>
-    <div id="t-out4" class="panel"></div>
-    <div id="t-sys" class="panel"></div>
   </div>
+  
+  <div class="tabs" id="tabs">
+    <div class="tab active" id="tab-meters" onclick="switchTab('t-meters')">MONITOR</div>
+    <div class="tab" id="tab-rta" onclick="switchTab('t-rta')">RTA</div>
+    <div class="tab" id="tab-inA" onclick="switchTab('t-inA')">IN A</div>
+    <div class="tab" id="tab-inB" onclick="switchTab('t-inB')">IN B</div>
+    <div class="tab" id="tab-out1" onclick="switchTab('t-out1')">OUT 1</div>
+    <div class="tab" id="tab-out2" onclick="switchTab('t-out2')">OUT 2</div>
+    <div class="tab" id="tab-out3" onclick="switchTab('t-out3')">OUT 3</div>
+    <div class="tab" id="tab-out4" onclick="switchTab('t-out4')">OUT 4</div>
+    <div class="tab" id="tab-sys" onclick="switchTab('t-sys')" style="color: #ffaa00;">SYSTEM</div>
+  </div>
+
+  <div id="t-meters" class="panel active"><div id="meter-grid"></div></div>
+  
+  <div id="t-rta" class="panel">
+     <div class="section-header" style="border-radius: 4px;">INPUT A SPECTRUM</div>
+     <canvas id="cvs-rta-A" width="400" height="140"></canvas>
+     <div class="section-header" style="margin-top:20px; border-radius: 4px;">INPUT B SPECTRUM</div>
+     <canvas id="cvs-rta-B" width="400" height="140"></canvas>
+  </div>
+  
+  <div id="t-inA" class="panel"><div id="ui-inA"></div></div>
+  <div id="t-inB" class="panel"><div id="ui-inB"></div></div>
+  <div id="t-out1" class="panel"></div>
+  <div id="t-out2" class="panel"></div>
+  <div id="t-out3" class="panel"></div>
+  <div id="t-out4" class="panel"></div>
+  <div id="t-sys" class="panel"></div>
 
   <script>
     let dspState = {};
@@ -430,6 +369,17 @@
               if(!dspState.icrel) dspState.icrel = [100,100];
               if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
               if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
+              
+              if(!dspState.afs_e) dspState.afs_e = [0,0];
+              if(!dspState.afs_s) dspState.afs_s = [3,3];
+              if(!dspState.afs_f) dspState.afs_f = [[0,0,0,0], [0,0,0,0]];
+              
+              if(!dspState.deq_e) dspState.deq_e = [0,0];
+              if(!dspState.deq_f) dspState.deq_f = [[150,1000,5000], [150,1000,5000]];
+              if(!dspState.deq_q) dspState.deq_q = [[1.4,1.4,1.4], [1.4,1.4,1.4]];
+              if(!dspState.deq_t) dspState.deq_t = [[-20,-20,-20], [-20,-20,-20]];
+              if(!dspState.deq_r) dspState.deq_r = [[4,4,4], [4,4,4]];
+              if(!dspState.deq_d) dspState.deq_d = [[-12,-12,-12], [-12,-12,-12]];
 
               initialState = JSON.stringify(dspState);
               buildUI();
@@ -455,6 +405,12 @@
     function toggleEqBypass(ch) {
       dspState.eqb[ch] = dspState.eqb[ch] === 1 ? 0 : 1;
       sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=${dspState.eqb[ch]}`);
+      buildUI(); 
+    }
+    
+    function toggleDeqBypass(ch) {
+      dspState.deq_e[ch] = dspState.deq_e[ch] === 1 ? 0 : 1;
+      sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=${dspState.deq_e[ch]}`);
       buildUI(); 
     }
 
@@ -486,6 +442,16 @@
                 name = name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
                 sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name}`);
             }
+        }
+    }
+    
+    function doFactoryReset() {
+        if(confirm(`FACTORY RESET ALL CHANNELS?\n\nThis will instantly wipe all custom routing, EQs, Dynamic EQs, Crossovers, and Delays back to flat defaults.`)) {
+            sendBLE(`/api/preset?act=load&slot=8`); // Slot 9 on ESP32 is technically Factory Flat if configured
+            // Send discrete reset commands in case slot is corrupted
+            for(let i=0; i<2; i++) revertTab('in', i, true);
+            for(let i=0; i<4; i++) revertTab('out', i, true);
+            alert("Factory Reset Complete.");
         }
     }
 
@@ -547,13 +513,19 @@
         sendUpdate('tone', 0, 'm', mode);
     }
     
-    function copyChannel(targetCh) {
-        let src = document.getElementById(`copy_src_${targetCh}`).value;
+    function copyChannel(type, targetCh) {
+        let src = document.getElementById(`copy_src_${type}_${targetCh}`).value;
         if(src === "" || parseInt(src) === targetCh) return;
-        if(confirm(`Copy all settings from OUT ${parseInt(src)+1} to OUT ${targetCh+1}?`)) {
-            sendBLE(`/api/copy?src=${src}&dst=${targetCh}`);
+        if(confirm(`Copy all settings from ${type.toUpperCase()} ${parseInt(src)+1} to ${type.toUpperCase()} ${targetCh+1}?`)) {
+            sendBLE(`/api/copy?type=${type}&src=${src}&dst=${targetCh}`);
         }
-        document.getElementById(`copy_src_${targetCh}`).value = "";
+        document.getElementById(`copy_src_${type}_${targetCh}`).value = "";
+    }
+    
+    function clearAFS(ch) {
+        sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
+        dspState.afs_f[ch] = [0,0,0,0]; // Optimistic UI update
+        buildUI(); 
     }
 
     function switchTab(id) {
@@ -640,9 +612,18 @@
           if (p === 'thr' && realVal >= 1) displayVal = "OFF";
           if (p === 'rat' && realVal >= 21) displayVal = "LIMIT";
       }
+      
+      if (type === 'deq' && p === 'r') {
+          displayVal = realVal === 0 ? "STATIC" : realVal.toFixed(0) + ":1";
+          // Visually dim the threshold slider if Static is selected
+          let thrWrap = document.getElementById(`wrap_deq_t_${ch}_${b}`);
+          if (thrWrap) thrWrap.style.opacity = realVal === 0 ? '0.3' : '1';
+      }
+      if (type === 'deq' && p === 'd') displayVal = (realVal > 0 ? "+" : "") + realVal.toFixed(0) + "dB";
 
       el.closest('.control-group').querySelector('.val-display').innerText = displayVal;
       sendUpdate(type, ch, p, realVal, b);
+      
       if (type === 'xo' || type === 'eq') drawVisibleGraphs();
       if (type === 'comp' || type === 'incomp') {
           if(type === 'incomp') { dspState.ict[ch]=p=='thr'?realVal:dspState.ict[ch]; dspState.icr[ch]=p=='rat'?realVal:dspState.icr[ch]; dspState.icm[ch]=p=='mak'?realVal:dspState.icm[ch]; }
@@ -666,6 +647,11 @@
           if (param === 'rat' && parseInt(val) >= 21) displayVal = "LIMIT";
       }
       
+      if (type === 'deq') {
+          if (param === 'r') displayVal = parseInt(val) === 0 ? "STATIC" : parseInt(val) + ":1";
+          if (param === 'd') displayVal = (parseInt(val) > 0 ? "+" : "") + parseInt(val) + "dB";
+      }
+      
       let htmlVal = val, htmlMin = min, htmlMax = max, htmlStep = step;
       let clickAction = '', cursorStyle = '';
       if (isFreq) {
@@ -675,8 +661,10 @@
          cursorStyle = 'cursor:pointer; text-decoration:underline;';
       }
 
+      let opacityStyle = (type === 'deq' && param === 't' && dspState.deq_r[ch][band] === 0) ? 'opacity:0.3;' : '';
+
       return `
-        <div class="control-group">
+        <div class="control-group" id="wrap_${id}" style="${opacityStyle}">
           <label>${label} <span class="val-display" style="${cursorStyle}" ${clickAction}>${displayVal}</span></label>
           <div class="slider-wrap">
             <button class="btn-fine" onclick="fineTune('${id}', -1)">-</button>
@@ -730,22 +718,22 @@
         let indices = [0, 6, 12, 18, 24, 30];
         
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
-        ctx.font = '24px sans-serif';
+        ctx.font = '10px sans-serif';
         for(let i=0; i<labels.length; i++) {
             let x = (indices[i]/30.0)*w;
             ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
             let textX = x - (ctx.measureText(labels[i]).width / 2);
-            if(i===0) textX = 10;
-            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 10;
-            ctx.fillText(labels[i], textX, h-10);
+            if(i===0) textX = 4;
+            if(i===labels.length-1) textX = w - ctx.measureText(labels[i]).width - 4;
+            ctx.fillText(labels[i], textX, h-4);
         }
         
         ctx.beginPath(); ctx.moveTo(0, h*0.33); ctx.lineTo(w, h*0.33); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, h*0.66); ctx.lineTo(w, h*0.66); ctx.stroke();
         
-        let drawHeight = h - 40;
+        let drawHeight = h - 20;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 2;
         ctx.lineJoin = 'round';
         ctx.beginPath();
         for(let b=0; b<31; b++) {
@@ -819,7 +807,7 @@
         
         if(isOff) return;
         
-        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 4; ctx.lineJoin = 'round';
+        ctx.strokeStyle = isInput ? '#00ADB5' : 'orange'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
         ctx.beginPath();
         ctx.moveTo(dbToX(minDb), dbToY(minDb + mak));
         ctx.lineTo(dbToX(thr), dbToY(thr + mak));
@@ -828,7 +816,7 @@
         ctx.stroke();
         
         ctx.fillStyle = '#fff'; ctx.beginPath();
-        ctx.arc(dbToX(thr), dbToY(thr + mak), 8, 0, Math.PI*2); ctx.fill();
+        ctx.arc(dbToX(thr), dbToY(thr + mak), 4, 0, Math.PI*2); ctx.fill();
         
         let outDbNoMak = peakDb - mak;
         let inDb = outDbNoMak;
@@ -836,7 +824,7 @@
         
         if(peakDb > minDb + 1.0) {
             ctx.fillStyle = '#f55'; ctx.beginPath();
-            ctx.arc(dbToX(inDb), dbToY(peakDb), 8, 0, Math.PI*2); ctx.fill();
+            ctx.arc(dbToX(inDb), dbToY(peakDb), 4, 0, Math.PI*2); ctx.fill();
         }
     }
 
@@ -889,7 +877,7 @@
         let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
         
         ctx.strokeStyle = outColors[val];
-        ctx.lineWidth = 4; 
+        ctx.lineWidth = 2; 
         ctx.beginPath();
         for(let x=0; x<w; x+=2) {
           let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
@@ -911,13 +899,33 @@
       let w = cvs.width, h = cvs.height;
       
       ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle = '#222'; ctx.lineWidth = 1;
-      for(let i=1; i<4; i++) { ctx.beginPath(); ctx.moveTo(0, h*i/4); ctx.lineTo(w, h*i/4); ctx.stroke(); }
+      
+      // Draw Grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 0.5;
+      let logMin = Math.log10(20), logMax = Math.log10(20000);
+      let majorFreqs = [20, 100, 1000, 10000, 20000];
+      let minorFreqs = [30, 40, 50, 60, 70, 80, 90, 200, 300, 400, 500, 600, 700, 800, 900, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
+      
+      ctx.font = '10px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      for(let f of [...majorFreqs, ...minorFreqs]) {
+          let x = (Math.log10(f) - logMin) / (logMax - logMin) * w;
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+          if (majorFreqs.includes(f)) {
+              let lbl = f >= 1000 ? (f/1000)+'k' : f;
+              let tx = x - ctx.measureText(lbl).width/2;
+              if (f===20) tx = 2;
+              if (f===20000) tx = x - ctx.measureText(lbl).width - 2;
+              ctx.fillText(lbl, tx, h - 15);
+          }
+      }
+      
+      // Center Line
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1;
+      let zeroY = h * (15/45);
+      ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(w, zeroY); ctx.stroke();
 
       ctx.strokeStyle = '#00ADB5';
-      ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.beginPath();
-      
-      let logMin = Math.log10(20), logMax = Math.log10(20000);
+      ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; ctx.beginPath();
       
       let xo_t = parseInt(document.getElementById(`xo_t_${ch}`).value);
       let xo_th = parseInt(document.getElementById(`xo_th_${ch}`).value);
@@ -928,7 +936,7 @@
       let orderH = [2.0, 2.0, 4.0, 8.0, 2.0, 4.0, 8.0][xo_th] || 2.0;
       
       let eqBypassed = dspState.eqb && dspState.eqb[ch] === 1;
-      for(let x=0; x<w; x+=2) {
+      for(let x=0; x<w; x+=1.0) {
         let f = Math.pow(10, logMin + (x/w)*(logMax-logMin));
         let total_db = g_off;
         
@@ -948,24 +956,22 @@
             }
         }
         
-        let y = h/2 - (total_db * (h/48));
+        let y = zeroY - (total_db * (h/45));
         if(x==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       }
       ctx.stroke();
     }
 
-    const wrapSection = (title, content, id, rstAction = '', moduleClass = '', contentClass = '') => `
-      <div class="dsp-module ${moduleClass}">
-          <div class="section-header">
-            <span>${title}</span>
-            <div class="edit-toggle-wrap">
-              ${rstAction !== '' ? `<button class="btn-rst" onclick="${rstAction}">RST</button>` : ''}
-              <label style="margin:0; font-size:10px;">EDIT</label>
-              <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
-            </div>
-          </div>
-          <div id="${id}" class="dsp-section locked ${contentClass}">${content}</div>
-      </div>`;
+    const wrapSection = (title, content, id, rstAction = '', extraClass = '') => `
+      <div class="section-header">
+        <span>${title}</span>
+        <div class="edit-toggle-wrap">
+          ${rstAction !== '' ? `<button style="background:#522; color:#fff; border:1px solid #f55; border-radius:3px; padding:2px 8px; font-weight:bold; font-size:9px; cursor:pointer;" onclick="${rstAction}">RST</button>` : ''}
+          <label style="margin:0; font-size:10px;">EDIT</label>
+          <input type="checkbox" onchange="document.getElementById('${id}').classList.toggle('locked', !this.checked)">
+        </div>
+      </div>
+      <div id="${id}" class="dsp-section locked ${extraClass}">${content}</div>`;
 
     function buildUI() {
       // Update Tab Names
@@ -1020,18 +1026,55 @@
         let gainVal = i === 0 ? dspState.vA : dspState.vB;
 
         let gainContent = createSlider('Gain', 'in', i, 'gn', -12, 24, gainVal, 'dB');
-        let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
-        let gainDelayContent = `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}${delayContent}</div>`;
         
+        let afsBadges = '';
+        for(let n=0; n<4; n++) {
+            let f = dspState.afs_f[i][n];
+            afsBadges += `<div class="afs-badge"><span class="afs-badge-lbl">NOTCH ${n+1}</span><span class="afs-badge-val ${f===0?'empty':''}">${f===0?'---':f+'Hz'}</span></div>`;
+        }
+        
+        let afsContent = `
+          ${createSelect('Enable AFS', 'afs', i, 'e', ['OFF', 'ACTIVE'], dspState.afs_e[i])}
+          ${createSlider('Sensitivity', 'afs', i, 's', 1, 5, dspState.afs_s[i], '', '', '1')}
+          <div class="afs-badges">${afsBadges}</div>
+          <button class="btn-mute" style="background:#422; color:#f55; border-color:#f55;" onclick="clearAFS(${i})">CLEAR FEEDBACK FILTERS</button>
+        `;
+
+        let deqBypassed = dspState.deq_e[i] === 0;
+        let deqContent = `
+          <div style="margin-bottom:12px; text-align:right;">
+            <button class="btn-bypass ${!deqBypassed ? 'active' : ''}" onclick="toggleDeqBypass(${i})">
+              ${!deqBypassed ? 'DEQ ACTIVE' : 'DEQ BYPASSED'}
+            </button>
+          </div>
+          <div class="grid">`;
+          
+        for(let b=0; b<3; b++) {
+          deqContent += `
+            <div style="grid-column: 1 / -1; display:flex; flex-direction:column; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
+              <div style="color:#00ADB5; font-size:11px; font-weight:bold;">BAND ${b+1}</div>
+              <div style="display:flex; gap:8px;">
+                  <div style="flex:2">${createSlider(`Freq`, 'deq', i, 'f', 20, 20000, dspState.deq_f[i][b], 'Hz', b, '10')}</div>
+                  <div style="flex:1">${createSlider(`Gain/Depth`, 'deq', i, 'd', -24, 15, dspState.deq_d[i][b], 'dB', b)}</div>
+                  <div style="flex:1">${createSlider(`Q-Factor`, 'deq', i, 'q', 0.1, 10, dspState.deq_q[i][b], '', b, '0.1')}</div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                  <div style="flex:1">${createSlider(`Ratio (0 = STATIC)`, 'deq', i, 'r', 0, 20, dspState.deq_r[i][b], ':1', b)}</div>
+                  <div style="flex:1">${createSlider(`Threshold`, 'deq', i, 't', -60, 0, dspState.deq_t[i][b], 'dB', b)}</div>
+              </div>
+            </div>`;
+        }
+        deqContent += `</div>`;
+
         let compContent = `
-          <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-in-${i}" width="1000" height="300" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); width:100%; height:150px;"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
-                  <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
+          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-in-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(0,173,181,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
+                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
                       <div id="gr-bar-in-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
                   </div>
-                  <span id="gr-txt-in-${i}" style="font-size:10px; color:#fff; font-weight:bold;">0.0</span>
+                  <span id="gr-txt-in-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
               </div>
           </div>
           <div class="grid">
@@ -1046,6 +1089,7 @@
                           createSlider('Attack', 'gate', i, 'atk', 1, 100, dspState.gat[i], 'ms') +
                           createSlider('Release', 'gate', i, 'rel', 10, 1000, dspState.gre[i], 'ms');
                           
+        let delayContent = createSlider('Delay', 'idl', i, '', 0, 200, idlSafe, 'ms', '', '0.1');
 
         let bbeContent = `<div class="grid">
             ${createSelect('Enable', 'bbe', i, 'e', ['BYPASS', 'ACTIVE'], dspState.bbe_e[i])}
@@ -1053,19 +1097,34 @@
             ${createSlider('Process', 'bbe', i, 'p', 0, 100, dspState.bbe_p[i], '%')}
         </div>`;
 
+        let copyOptions = `<option value="">Select Channel...</option>`;
+        copyOptions += `<option value="${i===0?1:0}">IN ${i===0?'B':'A'} (${dspState.in_n[i===0?1:0]})</option>`;
+        
+        let inHeaderCopy = `
+            <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5; margin-bottom: 10px;">
+                <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
+                <div style="display:flex; gap:10px;">
+                    <select id="copy_src_in_${i}" style="flex:1;">${copyOptions}</select>
+                    <button class="btn-bypass" onclick="copyChannel('in', ${i})" style="padding: 4px 12px;">COPY</button>
+                </div>
+            </div>
+        `;
+
         let inMuteCls = dspState.in_mute[i] ? 'btn-mute active' : 'btn-mute';
         
         tab.innerHTML = `<div class="channel-header">${dspState.in_n[i]} <button class="btn-icon" onclick="renameChannel('in', ${i})">✏️</button></div>` +
+                         inHeaderCopy +
                          `<div class="btn-row">
                            <button id="btn-mute-in-${i}" class="${inMuteCls}" onclick="toggleMute('in', ${i})">MUTE ${dspState.in_n[i]}</button>
-                           <button class="btn-revert" onclick="revertTab('in', ${i})">RESET ALL</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('in', ${i})">RESET ALL</button>
                          </div>` + 
-                         `<div class="desktop-grid">` +
-                         wrapSection(`GAIN & DELAY`, gainDelayContent, `sec-in-gaindly-${name}`) +
+                         wrapSection(`GAIN`, `<div style="display:flex; flex-direction:column; gap:8px;">${gainContent}</div>`, `sec-in-gain-${name}`) +
+                         wrapSection(`AFS (FEEDBACK SUPPRESSOR)`, afsContent, `sec-in-afs-${name}`) +
+                         wrapSection(`DYNAMIC EQ (3-BAND)`, deqContent, `sec-in-deq-${name}`, `revertBlock(${i}, 'deq')`, deqBypassed ? 'bypassed' : '') +
+                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`) +
                          wrapSection(`NOISE GATE`, `<div style="display:flex; flex-direction:column; gap:8px;">${gateContent}</div>`, `sec-in-gate-${name}`) +
-                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`) +
-                         wrapSection(`INPUT COMPRESSOR`, compContent, `sec-in-comp-${name}`, `revertBlock(${i}, 'incomp')`, 'span-full') +
-                         `</div>`;
+                         wrapSection(`DELAY`, `<div style="display:flex; flex-direction:column; gap:8px;">${delayContent}</div>`, `sec-in-dly-${name}`) +
+                         wrapSection(`BBE SONIC MAXIMIZER`, bbeContent, `sec-in-bbe-${name}`);
       });
 
       // Outputs
@@ -1073,6 +1132,7 @@
         let tab = document.getElementById('t-out' + (i+1));
         if(!tab) continue;
         
+        // Copy Options Logic
         let copyOptions = `<option value="">Select Channel...</option>`;
         for(let c=0; c<4; c++) {
             if(c !== i) copyOptions += `<option value="${c}">OUT ${c+1} (${dspState.out_n[c]})</option>`;
@@ -1081,8 +1141,8 @@
             <div class="control-group" style="background:#2a2a2a; border: 1px solid #00ADB5;">
                 <label style="color:#00ADB5;">COPY SETTINGS FROM</label>
                 <div style="display:flex; gap:10px;">
-                    <select id="copy_src_${i}" style="flex:1;">${copyOptions}</select>
-                    <button class="btn-bypass" onclick="copyChannel(${i})" style="padding: 4px 12px;">COPY</button>
+                    <select id="copy_src_out_${i}" style="flex:1;">${copyOptions}</select>
+                    <button class="btn-bypass" onclick="copyChannel('out', ${i})" style="padding: 4px 12px;">COPY</button>
                 </div>
             </div>
         `;
@@ -1105,6 +1165,7 @@
           ${createSlider('APF Q', 'apf', i, 'q', 0.1, 10, dspState.apfq[i], '', '', '0.1')}
         </div>`;
 
+        // Generate Crossover Comparison Visualizer
         let compareSelects = '';
         for(let d=0; d<4; d++) {
           let defaultVal = (d === 0) ? (i + 1) : 0; 
@@ -1121,7 +1182,7 @@
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-bottom:10px;">
             ${compareSelects}
           </div>
-          <canvas id="cvs-xo-cmp-${i}" width="1000" height="300" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05); width:100%; height:150px; border-radius:4px;"></canvas>
+          <canvas id="cvs-xo-cmp-${i}" width="400" height="140" style="margin:0; box-shadow: inset 0 0 10px rgba(255,255,255,0.05);"></canvas>
         `;
 
         let xoContent = `<div class="grid">
@@ -1139,27 +1200,28 @@
               ${eqBypassed ? 'EQ BYPASSED' : 'EQ ACTIVE'}
             </button>
           </div>
-          <div class="compact-eq">`;
+          <canvas id="cvs-${i}" width="400" height="180"></canvas>
+          <div class="grid" style="margin-top:15px;">`;
           
         for(let b=0; b<7; b++) {
           eqContent += `
-            <div class="compact-eq-row">
-              <div style="flex:3">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
-              <div style="flex:2">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
-              <div style="flex:2">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
+            <div style="grid-column: 1 / -1; display:flex; gap:8px; background:#111; padding:8px; margin-bottom:4px; border-radius:4px; border:1px solid #222;">
+              <div style="flex:2">${createSlider(`B${b+1}`, 'eq', i, 'f', 20, 20000, dspState.eqf[i][b], 'Hz', b, '10')}</div>
+              <div style="flex:1">${createSlider(`G`, 'eq', i, 'g', -12, 12, dspState.eq_gn[i][b], 'dB', b)}</div>
+              <div style="flex:1">${createSlider(`Q`, 'eq', i, 'q', 0.1, 10, dspState.eqq[i][b], '', b, '0.1')}</div>
             </div>`;
         }
         eqContent += `</div>`;
 
         let compContent = `
-          <div style="display:flex; height:150px; gap:12px; margin-bottom:15px;">
-              <canvas id="cvs-comp-out-${i}" width="1000" height="300" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1); width:100%; height:150px;"></canvas>
-              <div style="display:flex; flex-direction:column; align-items:center; width:28px;">
-                  <span style="font-size:10px; color:#888; font-weight:bold;">GR</span>
+          <div style="display:flex; height:120px; gap:12px; margin-bottom:15px;">
+              <canvas id="cvs-comp-out-${i}" width="280" height="120" style="flex:1; background:#000; border:1px solid #333; border-radius:5px; margin:0; box-shadow: inset 0 0 10px rgba(255,165,0,0.1);"></canvas>
+              <div style="display:flex; flex-direction:column; align-items:center; width:24px;">
+                  <span style="font-size:9px; color:#888; font-weight:bold;">GR</span>
                   <div style="flex:1; width:100%; background:#000; border:1px solid #333; border-radius:3px; position:relative; overflow:hidden; margin:4px 0;">
                       <div id="gr-bar-out-${i}" style="position:absolute; top:0; left:0; width:100%; height:0%; background:linear-gradient(to bottom, orange, red); transition:height 0.05s;"></div>
                   </div>
-                  <span id="gr-txt-out-${i}" style="font-size:10px; color:#fff; font-weight:bold;">0.0</span>
+                  <span id="gr-txt-out-${i}" style="font-size:9px; color:#fff; font-weight:bold;">0.0</span>
               </div>
           </div>
           <div class="grid">
@@ -1175,19 +1237,13 @@
         tab.innerHTML = `<div class="channel-header">${dspState.out_n[i]} <button class="btn-icon" onclick="renameChannel('out', ${i})">✏️</button></div>` +
                          `<div class="btn-row">
                            <button id="btn-mute-out-${i}" class="${outMuteCls}" onclick="toggleMute('out', ${i})">MUTE ${dspState.out_n[i]}</button>
-                           <button class="btn-revert" onclick="revertTab('out', ${i})">RESET ALL</button>
+                           <button class="btn-revert" style="width:100%" onclick="revertTab('out', ${i})">RESET ALL</button>
                          </div>` +
-                        `<div class="desktop-grid">` + 
                         wrapSection("ROUTING, PHASE & COPY", routeContent, `sec-rt-${i}`) +
                         wrapSection("CROSSOVER ALIGNMENT VIEW", xoAlignmentContent, `sec-xo-cmp-${i}`) +
-                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`) +
-                        `<div class="span-full" style="background: #1a1a1a; padding: 15px; border-radius: 5px; border: 1px solid #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                            <div style="color:#00ADB5; font-size:12px; font-weight:bold; margin-bottom:10px; letter-spacing:1px; text-transform:uppercase;">RESPONSE PREVIEW</div>
-                            <canvas id="cvs-${i}" width="2000" height="400" style="width: 100%; height:200px; border-radius: 5px; border: 1px solid #444; box-shadow: inset 0 0 10px rgba(0,173,181,0.1); display: block; background: #000;"></canvas>
-                        </div>` +
-                        wrapSection("7-BAND PEQ", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, 'span-2', eqBypassed ? 'bypassed' : '') +
                         wrapSection("BAND-PASS CROSSOVER", xoContent, `sec-xo-${i}`, `revertBlock(${i}, 'xo')`) +
-                        `</div>`;
+                        wrapSection("7-BAND PEQ & RESPONSE", eqContent, `sec-eq-${i}`, `revertBlock(${i}, 'eq')`, eqBypassed ? 'bypassed' : '') +
+                        wrapSection("COMPRESSOR", compContent, `sec-comp-${i}`, `revertBlock(${i}, 'comp')`);
       }
 
       // --- SYSTEM TAB ---
@@ -1206,7 +1262,7 @@
                   <label>Select Preset Slot</label>
                   <select id="sys-preset-slot" onchange="updatePresetButtons()">${presetOptions}</select>
               </div>
-              <div class="btn-row" style="margin-top:10px; gap:8px; padding:0; border:none; background:transparent;">
+              <div class="btn-row" style="margin-top:10px; gap:8px;">
                   <button class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#4CAF50; color:#fff;" onclick="doPreset('load')">LOAD</button>
                   <button id="btn-preset-save" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#FF9800; color:#fff;" onclick="doPreset('save')">SAVE</button>
                   <button id="btn-preset-ren" class="btn-connect" style="flex:1; padding:10px; font-size:11px; background:#9E9E9E; color:#fff;" onclick="doPreset('rename')">RENAME</button>
@@ -1224,6 +1280,10 @@
                   ${createSlider('Gain', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}
               </div>
           `, 'sec-sys-tone');
+          
+          let factoryHtml = wrapSection("GLOBAL RESET", `
+              <button class="btn-mute" style="background:rgba(255,0,0,0.1); color:#f55; border:1px solid #f55; padding:15px; font-size:13px;" onclick="doFactoryReset()">FACTORY RESET ALL CHANNELS</button>
+          `, 'sec-sys-fac');
 
           let otaHtml = wrapSection("FIRMWARE UPDATE (OTA)", `
               <div class="control-group" style="margin-bottom:10px;">
@@ -1244,7 +1304,7 @@
               <button class="btn-connect" style="width:100%; margin-top:10px; background:#00ADB5; color:#000;" onclick="triggerOTA()">START UPDATE</button>
           `, 'sec-sys-ota');
 
-          sysTab.innerHTML = `<div class="desktop-grid">` + presetHtml + toneHtml + otaHtml + `</div>`;
+          sysTab.innerHTML = presetHtml + toneHtml + factoryHtml + otaHtml;
           updatePresetButtons(); 
       }
       
@@ -1253,8 +1313,8 @@
       drawCompVisualizers();
     }
 
-    async function revertTab(type, ch) {
-      if(!confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch]} to default flat values?`)) return;
+    async function revertTab(type, ch, skipConfirm = false) {
+      if(!skipConfirm && !confirm(`Reset entire ${type.toUpperCase()} Channel ${type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch]} to default flat values?`)) return;
       if (type === 'in') {
           sendBLE(`/api/set?type=in&ch=${ch}&v=0`);
           sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-75`);
@@ -1264,6 +1324,10 @@
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`);
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`);
           sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`);
+          sendBLE(`/api/set?type=afs&ch=${ch}&p=e&v=0`);
+          sendBLE(`/api/set?type=afs&ch=${ch}&p=s&v=3`);
+          sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
+          revertBlock(ch, 'deq', true);
           revertBlock(ch, 'incomp', true);
       } else if (type === 'out') {
           sendBLE(`/api/set?type=rt&ch=${ch}&v=${(ch%2)+1}`);
@@ -1307,6 +1371,15 @@
         sendBLE(`/api/set?type=incomp&ch=${ch}&p=mak&v=0`);
         sendBLE(`/api/set?type=incomp&ch=${ch}&p=atk&v=10`);
         sendBLE(`/api/set?type=incomp&ch=${ch}&p=rel&v=100`);
+      } else if (block === 'deq') {
+        const defFreqs = [150, 1000, 5000];
+        for(let b=0; b<3; b++) {
+          sendBLE(`/api/set?type=deq&ch=${ch}&p=f&b=${b}&v=${defFreqs[b]}`);
+          sendBLE(`/api/set?type=deq&ch=${ch}&p=d&b=${b}&v=0`);
+          sendBLE(`/api/set?type=deq&ch=${ch}&p=q&b=${b}&v=1.4`);
+          sendBLE(`/api/set?type=deq&ch=${ch}&p=r&b=${b}&v=0`);
+          sendBLE(`/api/set?type=deq&ch=${ch}&p=t&b=${b}&v=-20`);
+        }
       }
 
       if (!skipConfirm) sendBLE('/api/dump');
