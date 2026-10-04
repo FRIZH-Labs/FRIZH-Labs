@@ -353,7 +353,10 @@
               if(dspState.vA === undefined) dspState.vA = 0;
               if(dspState.vB === undefined) dspState.vB = 0;
               if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
+              else dspState.in_n = dspState.in_n.map(n => decodeURIComponent((n || "").replace(/\+/g, '%20')));
+
               if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
+              else dspState.out_n = dspState.out_n.map(n => decodeURIComponent((n || "").replace(/\+/g, '%20')));
               
               if(!dspState.idl) dspState.idl = [0,0];
               if(!dspState.gth) dspState.gth = [-75,-75];
