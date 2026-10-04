@@ -1113,9 +1113,9 @@
               <div class="vu-track"><div id="mtr-${i}" class="vu-fill"></div></div>
             </div>
             <div class="vu-leds">
+              <div id="ind-clip-${i}" class="led clip">CLIP</div>
               <div id="ind-comp-${i}" class="led ${isOut?'comp':'comp'}">COMP</div>
               <div id="ind-mute-${i}" class="led clickable ${mute?'active clip':''}" onclick="toggleMute('${isOut?'out':'in'}',${isOut?i-2:i})">MUTE</div>
-              <div id="ind-clip-${i}" class="led clip">CLIP</div>
             </div>
           </div>
         `;
