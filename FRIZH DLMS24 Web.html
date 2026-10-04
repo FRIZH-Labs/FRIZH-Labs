@@ -1420,6 +1420,12 @@
                             <button class="btn btn-danger" style="flex:1;" onclick="doPreset('save')">SAVE</button>
                             <button class="btn" style="flex:1;" onclick="doPreset('rename')">RENAME</button>
                         </div>
+                        <div style="border-top:1px solid #333; margin:4px 0;"></div>
+                        <div class="ctrl-row">
+                            <button class="btn btn-primary" style="flex:1; background:rgba(0,173,181,0.05);" onclick="exportPreset()">EXPORT FILE</button>
+                            <button class="btn btn-primary" style="flex:1; background:rgba(0,173,181,0.05);" onclick="document.getElementById('import-file').click()">IMPORT FILE</button>
+                            <input type="file" id="import-file" style="display:none" accept=".json" onchange="importPreset(event)">
+                        </div>
                     </div>
                 </div>
                 <div class="widget">
@@ -1469,6 +1475,56 @@
           drawCompVisualizers();
           drawGlobalCrossover();
       }, 50);
+    }
+    /* --- IMPORT / EXPORT PRESETS --- */
+    function exportPreset() {
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dspState, null, 2));
+        let dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "frizh_preset.json");
+        document.body.appendChild(dlAnchorElem);
+        dlAnchorElem.click();
+        document.body.removeChild(dlAnchorElem);
+    }
+
+    function importPreset(event) {
+        let file = event.target.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let s = JSON.parse(e.target.result);
+                if(confirm("Apply this preset file to the processor?")) {
+                    bleQueue = []; // Clear queue to prioritize import
+                    // Inputs
+                    if(s.vA !== undefined) sendBLE(`/api/set?type=in&ch=0&p=gn&v=${s.vA}`);
+                    if(s.vB !== undefined) sendBLE(`/api/set?type=in&ch=1&p=gn&v=${s.vB}`);
+                    for(let i=0; i<2; i++) {
+                        if(s.idl) sendBLE(`/api/set?type=idl&ch=${i}&v=${s.idl[i]}`);
+                        if(s.gth) { sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=${s.gth[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=${s.gat[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=${s.gre[i]}`); }
+                        if(s.ict) { sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=${s.ict[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=${s.icr[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=${s.icm[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=${s.ica[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=${s.icrel[i]}`); }
+                        if(s.bbe_e) { sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=${s.bbe_e[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=${s.bbe_l[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=${s.bbe_p[i]}`); }
+                        if(s.afs_e) { sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=${s.afs_e[i]}`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=${s.afs_s[i]}`); }
+                        if(s.deq_e) { sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=${s.deq_e[i]}`); for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${s.deq_f[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=${s.deq_d[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=${s.deq_q[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=${s.deq_r[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=${s.deq_t[i][b]}`); } }
+                    }
+                    // Outputs
+                    for(let i=0; i<4; i++) {
+                        if(s.rt) sendBLE(`/api/set?type=rt&ch=${i}&v=${s.rt[i]}`);
+                        if(s.ph) sendBLE(`/api/set?type=ph&ch=${i}&v=${s.ph[i]}`);
+                        if(s.dl) sendBLE(`/api/set?type=dl&ch=${i}&v=${s.dl[i]}`);
+                        if(s.xt) { sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=${s.xt[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=${s.xth[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=${s.xfl[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=${s.xfh[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=${s.xo_gn[i]}`); }
+                        if(s.apfe) { sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=${s.apfe[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=${s.apff[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=${s.apfq[i]}`); }
+                        if(s.eqb) { sendBLE(`/api/set?type=eqb&ch=${i}&p=v&v=${s.eqb[i]}`); for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${s.eqf[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=${s.eq_gn[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=${s.eqq[i][b]}`); } }
+                        if(s.ct) { sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=${s.ct[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=${s.cr[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=${s.cm[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=${s.ca[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=${s.crel[i]}`); }
+                    }
+                    setTimeout(() => sendBLE('/api/dump'), 2500); // Reload UI after bulk apply
+                }
+            } catch(err) {
+                alert("Invalid Preset JSON file.");
+            }
+            event.target.value = ''; // Reset input
+        };
+        reader.readAsText(file);
     }
 
   </script>
