@@ -192,6 +192,7 @@
     let initialState = null;
     let timers = {};
     let draggingBand = { ch: -1, band: -1, type: '' }; 
+    let isUiBuilt = false; // Prevents the UI from resetting while dragging
     
     // Live Audio State
     let livePeaks = [0,0,0,0,0,0];
@@ -262,6 +263,14 @@
         document.getElementById('ble-btn').classList.add('connected');
         closeBleDialog(); 
         sendBLE('/api/dump');
+
+        // NEW: Background Poller to catch dynamic hardware AFS updates
+        setInterval(() => {
+            if (bleDevice && bleDevice.gatt.connected && !isWriting) {
+                sendBLE('/api/dump');
+            }
+        }, 3000);
+
       } catch(e) { 
         console.error("BLE Error:", e);
         if (e.name !== 'NotFoundError') alert("Bluetooth Connection Failed.");
@@ -406,7 +415,22 @@
               if(!dspState.out_mute) dspState.out_mute = [false, false, false, false];
 
               initialState = JSON.stringify(dspState);
-              buildUI();
+              if(!isUiBuilt) {
+                  buildUI();
+                  isUiBuilt = true;
+              } else {
+                  // Only softly update the dynamic AFS badges to prevent UI reload lag/interruption
+                  for(let i=0; i<2; i++) {
+                      for(let n=0; n<4; n++) {
+                          let el = document.getElementById(`afs-badge-${i}-${n}`);
+                          if(el) {
+                              let f = dspState.afs_f[i][n];
+                              el.innerText = f === 0 ? '---' : f + 'Hz';
+                              el.style.color = f === 0 ? '#555' : 'var(--accent-red)';
+                          }
+                      }
+                  }
+              }
           } catch(e) { console.log("JSON Parse err", e); }
           jsonBuffer = "";
         }
@@ -1091,28 +1115,32 @@
 
       document.getElementById('t-monitor').innerHTML = `
         <div class="dashboard-header"><div class="dashboard-title">MONITOR & RTA</div></div>
-        <div class="channel-strip monitor-col-left" style="grid-template-columns: 1fr 1fr;">
-            <div class="strip-col">
+        <div class="channel-strip monitor-col-left" style="grid-template-columns: 1fr 1fr; height: calc(100% - 40px);">
+            <div class="strip-col" style="height: 100%;">
                 <div class="widget">
                     <div class="widget-header"><span>SYSTEM METERS</span></div>
                     <div class="widget-body"><div class="monitor-grid" style="min-height: 200px;">${mHtml}</div></div>
                 </div>
-                <div class="widget">
+                <div class="widget" style="flex:1; display:flex; flex-direction:column;">
                     <div class="widget-header"><span>GLOBAL CROSSOVER PREVIEW</span></div>
-                    <div class="widget-body">
+                    <div class="widget-body" style="flex:1; display:flex; flex-direction:column;">
                         <div style="display:flex; gap:5px;">${globXoHtml}</div>
-                        <div class="graph-container" style="height: 120px;"><canvas id="cvs-global-xo"></canvas></div>
+                        <div class="graph-container" style="flex:1; min-height:100px;"><canvas id="cvs-global-xo"></canvas></div>
                     </div>
                 </div>
             </div>
-            <div class="strip-col">
-                <div class="widget">
+            <div class="strip-col" style="height: 100%;">
+                <div class="widget" style="flex:1; display:flex; flex-direction:column;">
                     <div class="widget-header"><span>RTA SPECTRUM IN A</span></div>
-                    <div class="widget-body"><div class="graph-container" style="height: 120px;"><canvas id="cvs-rta-A"></canvas></div></div>
+                    <div class="widget-body" style="flex:1; display:flex; flex-direction:column;">
+                        <div class="graph-container" style="flex:1; min-height:100px;"><canvas id="cvs-rta-A"></canvas></div>
+                    </div>
                 </div>
-                <div class="widget">
+                <div class="widget" style="flex:1; display:flex; flex-direction:column;">
                     <div class="widget-header" style="color:var(--accent-orange);"><span>RTA SPECTRUM IN B</span></div>
-                    <div class="widget-body"><div class="graph-container" style="height: 120px;"><canvas id="cvs-rta-B"></canvas></div></div>
+                    <div class="widget-body" style="flex:1; display:flex; flex-direction:column;">
+                        <div class="graph-container" style="flex:1; min-height:100px;"><canvas id="cvs-rta-B"></canvas></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1140,7 +1168,7 @@
             let f = dspState.afs_f[i][n];
             afsBadges += `<div style="flex:1; background:#111; border:1px solid #333; text-align:center; padding:4px; border-radius:3px;">
                 <div style="font-size:8px; color:#666;">NOTCH ${n+1}</div>
-                <div style="font-size:10px; color:${f===0?'#555':`var(--accent-red)`}; font-weight:bold;">${f===0?'---':f+'Hz'}</div>
+                <div id="afs-badge-${i}-${n}" style="font-size:10px; color:${f===0?'#555':`var(--accent-red)`}; font-weight:bold;">${f===0?'---':f+'Hz'}</div>
             </div>`;
         }
         afsBadges += '</div>';
