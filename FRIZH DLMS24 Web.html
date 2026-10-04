@@ -681,6 +681,12 @@
                 sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=3`); sendBLE(`/api/set?type=afs&ch=${i}&p=clr&v=1`);
                 sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=100`);
                 sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=0`); const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=-20`); }
+                
+                // FORCE Local State Reset for UI
+                dspState.vA = 0; dspState.vB = 0; dspState.in_n[i] = i===0?"INPUT A":"INPUT B";
+                dspState.in_mute[i] = false; dspState.idl[i] = 0; 
+                dspState.gth[i] = -75; dspState.gat[i] = 10; dspState.gre[i] = 200;
+                dspState.bbe_e[i] = 0; dspState.bbe_l[i] = 50; dspState.bbe_p[i] = 50;
             }
             for(let i=0; i<4; i++) {
                 sendBLE(`/api/name?type=out&ch=${i}&n=OUTPUT_${i+1}`); sendBLE(`/api/mute?type=out&ch=${i}&v=0`);
@@ -691,7 +697,12 @@
                 sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=100`);
             }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
-            setTimeout(() => sendBLE('/api/dump'), 3000); // 3 sec accommodates the 100+ queued items at 30ms spacing
+            
+            // Rebuild the UI instantly using the local defaults to eliminate visual lag
+            buildUI();
+            
+            // Allow the BLE queue to complete before polling the hardware
+            setTimeout(() => sendBLE('/api/dump'), 3000); 
         }
     }
 
@@ -713,6 +724,11 @@
                 let s = JSON.parse(e.target.result);
                 if(confirm("Apply this preset file to the processor?")) {
                     bleQueue = []; 
+                    
+                    // Merge local states instantly to fix UI rendering
+                    Object.assign(dspState, s);
+                    
+                    // Inputs
                     if(s.vA !== undefined) sendBLE(`/api/set?type=in&ch=0&p=gn&v=${s.vA}`);
                     if(s.vB !== undefined) sendBLE(`/api/set?type=in&ch=1&p=gn&v=${s.vB}`);
                     if(s.in_n) { sendBLE(`/api/name?type=in&ch=0&n=${s.in_n[0].replace(/ /g, '_')}`); sendBLE(`/api/name?type=in&ch=1&n=${s.in_n[1].replace(/ /g, '_')}`); }
@@ -727,6 +743,7 @@
                         if(s.afs_e) { sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=${s.afs_e[i]}`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=${s.afs_s[i]}`); }
                         if(s.deq_e) { sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=${s.deq_e[i]}`); for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${s.deq_f[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=${s.deq_d[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=${s.deq_q[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=${s.deq_r[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=${s.deq_t[i][b]}`); } }
                     }
+                    // Outputs
                     for(let i=0; i<4; i++) {
                         if(s.out_mute !== undefined) sendBLE(`/api/mute?type=out&ch=${i}&v=${s.out_mute[i]?1:0}`);
                         if(s.rt) sendBLE(`/api/set?type=rt&ch=${i}&v=${s.rt[i]}`);
@@ -738,6 +755,10 @@
                         if(s.ct) { sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=${s.ct[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=${s.cr[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=${s.cm[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=${s.ca[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=${s.crel[i]}`); }
                     }
                     if(s.tm !== undefined) { sendBLE(`/api/set?type=tone&ch=0&p=m&v=${s.tm}`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=${s.tr}`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=${s.tf}`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=${s.tg}`); }
+                    
+                    // Rebuild the UI instantly using the imported data
+                    buildUI();
+                    
                     setTimeout(() => sendBLE('/api/dump'), 3500); 
                 }
             } catch(err) { alert("Invalid Preset JSON file."); }
@@ -745,7 +766,6 @@
         };
         reader.readAsText(file);
     }
-
     /* --- BASIC TOGGLES --- */
     function toggleMute(type, ch) {
       let isMuted = (type === 'in') ? (dspState.in_mute[ch] = !dspState.in_mute[ch]) : (dspState.out_mute[ch] = !dspState.out_mute[ch]);
