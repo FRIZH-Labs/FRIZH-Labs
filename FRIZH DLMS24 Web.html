@@ -645,11 +645,25 @@
       if(!confirm(`Reset ENTIRE ${type.toUpperCase()} Channel to defaults?`)) return;
       if (type === 'in') { revertBlock(ch, 'in_gain', true); revertBlock(ch, 'gate', true); revertBlock(ch, 'bbe', true); revertBlock(ch, 'afs', true); revertBlock(ch, 'incomp', true); revertBlock(ch, 'deq', true); } 
       else if (type === 'out') { revertBlock(ch, 'rt', true); revertBlock(ch, 'apf', true); revertBlock(ch, 'xo', true); revertBlock(ch, 'eq', true); revertBlock(ch, 'comp', true); }
-      setTimeout(() => sendBLE('/api/dump'), 800);
+      
+      // FIX: Queue the dump so it strictly waits for the reset commands to finish
+      sendBLE('/api/dump');
+    }
+
+    function renameChannel(type, ch) {
+        let current = type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch];
+        let n = prompt(`Enter new name for ${type.toUpperCase()} ${ch+1} (Max 8 chars):`, current);
+        if (n !== null) {
+            n = n.substring(0,8).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+            sendBLE(`/api/name?type=${type}&ch=${ch}&n=${encodeURIComponent(n)}`);
+            if (type === 'in') dspState.in_n[ch] = n; else dspState.out_n[ch] = n;
+            buildUI();
+        }
     }
 
     function doFactoryReset() {
         if(confirm(`FACTORY RESET ALL CHANNELS?\nThis will completely flatten the processor.`)) {
+            bleQueue = []; // Clear queue to prioritize reset
             for(let i=0; i<2; i++) {
                 sendBLE(`/api/set?type=in&ch=${i}&p=gn&v=0`); sendBLE(`/api/set?type=idl&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=200`);
@@ -666,7 +680,9 @@
                 sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=100`);
             }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
-            setTimeout(() => sendBLE('/api/dump'), 1500);
+            
+            // FIX: Append dump to the queue directly. No timer needed!
+            sendBLE('/api/dump'); 
         }
     }
 
@@ -1184,7 +1200,7 @@
 
         document.getElementById(`t-in${n}`).innerHTML = `
           <div class="dashboard-header">
-            <div class="dashboard-title">${dspState.in_n[i]}</div>
+            <div class="dashboard-title">${dspState.in_n[i]} <span style="cursor:pointer; opacity:0.5; font-size:14px; margin-left:8px;" onclick="renameChannel('in', ${i})" title="Rename Channel">✏️</span></div>
             <div class="dashboard-actions">
               ${copyHtml}
               <button class="btn btn-primary" onclick="revertTab('in', ${i})">RESET CH</button>
@@ -1292,7 +1308,7 @@
 
         document.getElementById(`t-out${i+1}`).innerHTML = `
           <div class="dashboard-header">
-            <div class="dashboard-title">${dspState.out_n[i]}</div>
+            <div class="dashboard-title">${dspState.out_n[i]} <span style="cursor:pointer; opacity:0.5; font-size:14px; margin-left:8px;" onclick="renameChannel('out', ${i})" title="Rename Channel">✏️</span></div>
             <div class="dashboard-actions">
               <div style="display:flex; align-items:center; gap:5px; background:#111; padding:2px 6px; border-radius:4px; border:1px solid #333;">
                 <span style="font-size:9px; color:#888;">COPY FROM:</span>
