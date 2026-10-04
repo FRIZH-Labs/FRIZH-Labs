@@ -353,10 +353,10 @@
               if(dspState.vA === undefined) dspState.vA = 0;
               if(dspState.vB === undefined) dspState.vB = 0;
               if(!dspState.in_n) dspState.in_n = ["INPUT A", "INPUT B"];
-              else dspState.in_n = dspState.in_n.map(n => decodeURIComponent((n || "").replace(/\+/g, '%20')));
+              else dspState.in_n = dspState.in_n.map(n => (n || "").replace(/_/g, ' ').replace(/%20/g, ' '));
 
               if(!dspState.out_n) dspState.out_n = ["OUTPUT 1", "OUTPUT 2", "OUTPUT 3", "OUTPUT 4"];
-              else dspState.out_n = dspState.out_n.map(n => decodeURIComponent((n || "").replace(/\+/g, '%20')));
+              else dspState.out_n = dspState.out_n.map(n => (n || "").replace(/_/g, ' ').replace(/%20/g, ' '));
               
               if(!dspState.idl) dspState.idl = [0,0];
               if(!dspState.gth) dspState.gth = [-75,-75];
@@ -657,8 +657,14 @@
         let current = type === 'in' ? dspState.in_n[ch] : dspState.out_n[ch];
         let n = prompt(`Enter new name for ${type.toUpperCase()} ${ch+1} (Max 8 chars):`, current);
         if (n !== null) {
+            // Strip out weird symbols, keep letters, numbers, and spaces
             n = n.substring(0,8).toUpperCase().replace(/[^A-Z0-9 ]/g, '');
-            sendBLE(`/api/name?type=${type}&ch=${ch}&n=${encodeURIComponent(n)}`);
+            
+            // Swap space for underscore to bypass the hardware 8-character limit expansion
+            let safeName = n.replace(/ /g, '_');
+            
+            sendBLE(`/api/name?type=${type}&ch=${ch}&n=${safeName}`);
+            
             if (type === 'in') dspState.in_n[ch] = n; else dspState.out_n[ch] = n;
             buildUI();
         }
