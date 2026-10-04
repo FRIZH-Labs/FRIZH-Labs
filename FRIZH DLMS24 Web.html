@@ -285,7 +285,7 @@
         await rxChar.writeValueWithoutResponse(new TextEncoder().encode(cmd));
       } catch(e) { console.log("BLE Write Error", e); }
       isWriting = false;
-      setTimeout(processBleQueue, 15);
+      setTimeout(processBleQueue, 50); // 50ms prevents ESP32 BLE Buffer Overflows
     }
     function sendBLE(cmd) { bleQueue.push(cmd); processBleQueue(); }
 
@@ -672,8 +672,9 @@
 
     function doFactoryReset() {
         if(confirm(`FACTORY RESET ALL CHANNELS?\nThis will completely flatten the processor.`)) {
-            bleQueue = []; // Clear queue to prioritize reset
+            bleQueue = []; 
             for(let i=0; i<2; i++) {
+                sendBLE(`/api/name?type=in&ch=${i}&n=INPUT_${i===0?'A':'B'}`); sendBLE(`/api/mute?type=in&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=in&ch=${i}&p=gn&v=0`); sendBLE(`/api/set?type=idl&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=-75`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=200`);
                 sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=50`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=50`);
@@ -682,6 +683,7 @@
                 sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=0`); const d = [150,1000,5000]; for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${d[b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=1.4`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=0`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=-20`); }
             }
             for(let i=0; i<4; i++) {
+                sendBLE(`/api/name?type=out&ch=${i}&n=OUTPUT_${i+1}`); sendBLE(`/api/mute?type=out&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=rt&ch=${i}&v=${(i%2)+1}`); sendBLE(`/api/set?type=ph&ch=${i}&v=0`); sendBLE(`/api/set?type=dl&ch=${i}&v=0`);
                 sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=1000`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=0.7`);
                 sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=0`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=80`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=5000`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=0`);
@@ -689,10 +691,59 @@
                 sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=0`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=10`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=100`);
             }
             sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
-            
-            // FIX: Append dump to the queue directly. No timer needed!
-            sendBLE('/api/dump'); 
+            setTimeout(() => sendBLE('/api/dump'), 3000); // 3 sec accommodates the 100+ queued items at 30ms spacing
         }
+    }
+
+    /* --- IMPORT / EXPORT PRESETS --- */
+    function exportPreset() {
+        let exportData = Object.assign({}, dspState);
+        delete exportData.peaks; delete exportData.comp_act; delete exportData.in_comp_act; // Strip live data
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+        let dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr); dlAnchorElem.setAttribute("download", "frizh_preset.json");
+        document.body.appendChild(dlAnchorElem); dlAnchorElem.click(); document.body.removeChild(dlAnchorElem);
+    }
+
+    function importPreset(event) {
+        let file = event.target.files[0]; if (!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let s = JSON.parse(e.target.result);
+                if(confirm("Apply this preset file to the processor?")) {
+                    bleQueue = []; 
+                    if(s.vA !== undefined) sendBLE(`/api/set?type=in&ch=0&p=gn&v=${s.vA}`);
+                    if(s.vB !== undefined) sendBLE(`/api/set?type=in&ch=1&p=gn&v=${s.vB}`);
+                    if(s.in_n) { sendBLE(`/api/name?type=in&ch=0&n=${s.in_n[0].replace(/ /g, '_')}`); sendBLE(`/api/name?type=in&ch=1&n=${s.in_n[1].replace(/ /g, '_')}`); }
+                    if(s.out_n) { for(let i=0; i<4; i++) sendBLE(`/api/name?type=out&ch=${i}&n=${s.out_n[i].replace(/ /g, '_')}`); }
+                    
+                    for(let i=0; i<2; i++) {
+                        if(s.in_mute !== undefined) sendBLE(`/api/mute?type=in&ch=${i}&v=${s.in_mute[i]?1:0}`);
+                        if(s.idl) sendBLE(`/api/set?type=idl&ch=${i}&v=${s.idl[i]}`);
+                        if(s.gth) { sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=${s.gth[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=${s.gat[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=${s.gre[i]}`); }
+                        if(s.ict) { sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=${s.ict[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=${s.icr[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=${s.icm[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=${s.ica[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=${s.icrel[i]}`); }
+                        if(s.bbe_e) { sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=${s.bbe_e[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=${s.bbe_l[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=${s.bbe_p[i]}`); }
+                        if(s.afs_e) { sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=${s.afs_e[i]}`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=${s.afs_s[i]}`); }
+                        if(s.deq_e) { sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=${s.deq_e[i]}`); for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${s.deq_f[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=${s.deq_d[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=${s.deq_q[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=${s.deq_r[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=${s.deq_t[i][b]}`); } }
+                    }
+                    for(let i=0; i<4; i++) {
+                        if(s.out_mute !== undefined) sendBLE(`/api/mute?type=out&ch=${i}&v=${s.out_mute[i]?1:0}`);
+                        if(s.rt) sendBLE(`/api/set?type=rt&ch=${i}&v=${s.rt[i]}`);
+                        if(s.ph) sendBLE(`/api/set?type=ph&ch=${i}&v=${s.ph[i]}`);
+                        if(s.dl) sendBLE(`/api/set?type=dl&ch=${i}&v=${s.dl[i]}`);
+                        if(s.xt) { sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=${s.xt[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=${s.xth[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=${s.xfl[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=${s.xfh[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=${s.xo_gn[i]}`); }
+                        if(s.apfe) { sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=${s.apfe[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=${s.apff[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=${s.apfq[i]}`); }
+                        if(s.eqb) { sendBLE(`/api/set?type=eqb&ch=${i}&p=v&v=${s.eqb[i]}`); for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${s.eqf[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=${s.eq_gn[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=${s.eqq[i][b]}`); } }
+                        if(s.ct) { sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=${s.ct[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=${s.cr[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=${s.cm[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=${s.ca[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=${s.crel[i]}`); }
+                    }
+                    if(s.tm !== undefined) { sendBLE(`/api/set?type=tone&ch=0&p=m&v=${s.tm}`); sendBLE(`/api/set?type=tone&ch=0&p=r&v=${s.tr}`); sendBLE(`/api/set?type=tone&ch=0&p=f&v=${s.tf}`); sendBLE(`/api/set?type=tone&ch=0&p=g&v=${s.tg}`); }
+                    setTimeout(() => sendBLE('/api/dump'), 3500); 
+                }
+            } catch(err) { alert("Invalid Preset JSON file."); }
+            event.target.value = ''; 
+        };
+        reader.readAsText(file);
     }
 
     /* --- BASIC TOGGLES --- */
@@ -760,7 +811,7 @@
     function triggerOTA() {
         let ssid = document.getElementById('ota-ssid').value, pass = document.getElementById('ota-pass').value, ver = document.getElementById('ota-version').value;
         if(!ssid || !ver || ver.includes('Fetching')) return alert("Please enter WiFi SSID and select a firmware version.");
-        if(confirm("Start OTA Update? Device will reboot after.")) sendBLE(`/api/ota?s=${encodeURIComponent(ssid)}&p=${encodeURIComponent(pass)}&v=${encodeURIComponent(ver)}`);
+        if(confirm("Start OTA Update? Device will reboot after.")) sendBLE(`/api/ota?s=${ssid}&p=${pass}&v=${ver}`);
     }
 
     function doPreset(act) {
@@ -768,11 +819,17 @@
         let isProtected = slot >= 6;
         if (act === 'load' || act === 'save') {
             if(act === 'save' && isProtected) return alert("Slots 6-8 are factory protected.");
-            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot${slot}?`)) sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+            if(confirm(`Are you sure you want to ${act.toUpperCase()} Slot ${slot}?`)) {
+                sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+                if(act === 'load') setTimeout(() => sendBLE('/api/dump'), 1000); // Ask hardware for new settings
+            }
         } else if (act === 'rename') {
             if(isProtected) return alert("Slots 6-8 are factory protected.");
             let name = prompt(`Enter new name for Slot ${slot} (Max 5 chars):`);
-            if(name !== null) sendBLE(`/api/preset?act=rename&slot=${slot}&name=${name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '')}`);
+            if(name !== null) {
+                let safeName = name.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g, '').replace(/ /g, '_');
+                sendBLE(`/api/preset?act=rename&slot=${slot}&name=${safeName}`);
+            }
         }
     }
 
@@ -1476,56 +1533,7 @@
           drawGlobalCrossover();
       }, 50);
     }
-    /* --- IMPORT / EXPORT PRESETS --- */
-    function exportPreset() {
-        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dspState, null, 2));
-        let dlAnchorElem = document.createElement('a');
-        dlAnchorElem.setAttribute("href", dataStr);
-        dlAnchorElem.setAttribute("download", "frizh_preset.json");
-        document.body.appendChild(dlAnchorElem);
-        dlAnchorElem.click();
-        document.body.removeChild(dlAnchorElem);
-    }
-
-    function importPreset(event) {
-        let file = event.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                let s = JSON.parse(e.target.result);
-                if(confirm("Apply this preset file to the processor?")) {
-                    bleQueue = []; // Clear queue to prioritize import
-                    // Inputs
-                    if(s.vA !== undefined) sendBLE(`/api/set?type=in&ch=0&p=gn&v=${s.vA}`);
-                    if(s.vB !== undefined) sendBLE(`/api/set?type=in&ch=1&p=gn&v=${s.vB}`);
-                    for(let i=0; i<2; i++) {
-                        if(s.idl) sendBLE(`/api/set?type=idl&ch=${i}&v=${s.idl[i]}`);
-                        if(s.gth) { sendBLE(`/api/set?type=gate&ch=${i}&p=thr&v=${s.gth[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=atk&v=${s.gat[i]}`); sendBLE(`/api/set?type=gate&ch=${i}&p=rel&v=${s.gre[i]}`); }
-                        if(s.ict) { sendBLE(`/api/set?type=incomp&ch=${i}&p=thr&v=${s.ict[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rat&v=${s.icr[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=mak&v=${s.icm[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=atk&v=${s.ica[i]}`); sendBLE(`/api/set?type=incomp&ch=${i}&p=rel&v=${s.icrel[i]}`); }
-                        if(s.bbe_e) { sendBLE(`/api/set?type=bbe&ch=${i}&p=e&v=${s.bbe_e[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=l&v=${s.bbe_l[i]}`); sendBLE(`/api/set?type=bbe&ch=${i}&p=p&v=${s.bbe_p[i]}`); }
-                        if(s.afs_e) { sendBLE(`/api/set?type=afs&ch=${i}&p=e&v=${s.afs_e[i]}`); sendBLE(`/api/set?type=afs&ch=${i}&p=s&v=${s.afs_s[i]}`); }
-                        if(s.deq_e) { sendBLE(`/api/set?type=deq&ch=${i}&p=e&v=${s.deq_e[i]}`); for(let b=0; b<3; b++) { sendBLE(`/api/set?type=deq&ch=${i}&p=f&b=${b}&v=${s.deq_f[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=d&b=${b}&v=${s.deq_d[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=q&b=${b}&v=${s.deq_q[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=r&b=${b}&v=${s.deq_r[i][b]}`); sendBLE(`/api/set?type=deq&ch=${i}&p=t&b=${b}&v=${s.deq_t[i][b]}`); } }
-                    }
-                    // Outputs
-                    for(let i=0; i<4; i++) {
-                        if(s.rt) sendBLE(`/api/set?type=rt&ch=${i}&v=${s.rt[i]}`);
-                        if(s.ph) sendBLE(`/api/set?type=ph&ch=${i}&v=${s.ph[i]}`);
-                        if(s.dl) sendBLE(`/api/set?type=dl&ch=${i}&v=${s.dl[i]}`);
-                        if(s.xt) { sendBLE(`/api/set?type=xo&ch=${i}&p=t&v=${s.xt[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=th&v=${s.xth[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fl&v=${s.xfl[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=fh&v=${s.xfh[i]}`); sendBLE(`/api/set?type=xo&ch=${i}&p=g&v=${s.xo_gn[i]}`); }
-                        if(s.apfe) { sendBLE(`/api/set?type=apf&ch=${i}&p=e&v=${s.apfe[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=f&v=${s.apff[i]}`); sendBLE(`/api/set?type=apf&ch=${i}&p=q&v=${s.apfq[i]}`); }
-                        if(s.eqb) { sendBLE(`/api/set?type=eqb&ch=${i}&p=v&v=${s.eqb[i]}`); for(let b=0; b<7; b++) { sendBLE(`/api/set?type=eq&ch=${i}&p=f&b=${b}&v=${s.eqf[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=g&b=${b}&v=${s.eq_gn[i][b]}`); sendBLE(`/api/set?type=eq&ch=${i}&p=q&b=${b}&v=${s.eqq[i][b]}`); } }
-                        if(s.ct) { sendBLE(`/api/set?type=comp&ch=${i}&p=thr&v=${s.ct[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rat&v=${s.cr[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=mak&v=${s.cm[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=atk&v=${s.ca[i]}`); sendBLE(`/api/set?type=comp&ch=${i}&p=rel&v=${s.crel[i]}`); }
-                    }
-                    setTimeout(() => sendBLE('/api/dump'), 2500); // Reload UI after bulk apply
-                }
-            } catch(err) {
-                alert("Invalid Preset JSON file.");
-            }
-            event.target.value = ''; // Reset input
-        };
-        reader.readAsText(file);
-    }
+    
 
   </script>
 </body>
