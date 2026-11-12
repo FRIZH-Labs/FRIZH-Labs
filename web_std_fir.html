@@ -1189,7 +1189,7 @@
             for (let k = 1; k <= halfN; k++) {
               let f = (k * 48000.0) / N;
               magLin[k] = Math.pow(10.0, previewFirMagDb[ch][k] / 20.0);
-              if (wizardInversePhase && f >= fLow && f <= maxGroupDelay + fHigh) {
+              if (wizardInversePhase && f >= fLow && f <= fHigh) {
                 let m = interpolateMeas(wizardMeasurement, f);
                 phaseRad[k] = -(m.p * Math.PI / 180.0) * m.c;
               }
