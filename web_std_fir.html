@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FRIZH DLMS 24 PRO - FIR V1.5</title>
+  <title>FRIZH DLMS 24 PRO - FIR V1.6</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <style>
     :root {
@@ -68,6 +68,7 @@
     .widget { background: var(--bg-section); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; }
     .widget-header { padding: 7px 10px; background: rgba(0,0,0,0.25); border-bottom: 1px solid var(--border-color); font-size: 10px; font-weight: 800; color: var(--accent-cyan); display: flex; justify-content: space-between; align-items: center; letter-spacing: 0.6px; border-radius: 6px 6px 0 0; }
     .widget-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .widget-body.collapsed { display: none !important; }
     .widget.bypassed { opacity: 0.5; border-color: var(--accent-red); }
     .widget-actions { display: flex; gap: 6px; align-items: center; }
 
@@ -105,17 +106,21 @@
     select.pro-sel { background: #111; color: #fff; border: 1px solid #333; padding: 5px 8px; border-radius: 4px; font-size: 10px; outline: none; cursor: pointer; font-weight: bold; }
     input.pro-in { background: #111; color: #fff; border: 1px solid #333; padding: 6px 8px; border-radius: 4px; font-size: 11px; width: 100%; outline: none; }
 
-    /* GRAPHS */
+    /* GRAPHS (With balanced RTA height!) */
     .graph-container { background: #000; border: 1px solid #2e303a; border-radius: 6px; position: relative; width: 100%; overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; touch-action: none; }
-    .graph-xl { height: 220px; }
-    .graph-large { height: 185px; }
+    .graph-rta { height: 250px; max-height: 52vh; }
+    .graph-xl { height: 210px; }
+    .graph-large { height: 180px; }
     .graph-medium { height: 155px; }
     .graph-lock-btn { position: absolute; top: 6px; right: 8px; background: rgba(15,16,20,0.88); border: 1px solid #444; color: #9ca3af; padding: 4px 8px; border-radius: 4px; font-size: 9px; font-weight: 800; cursor: pointer; z-index: 10; }
     .graph-lock-btn.unlocked { border-color: var(--accent-cyan); color: var(--accent-cyan); background: rgba(0,173,181,0.18); }
+    .graph-legend { position: absolute; top: 6px; left: 8px; display: flex; gap: 10px; pointer-events: none; z-index: 5; font-size: 9px; font-weight: bold; color: rgba(255,255,255,0.75); }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
     /* DUAL VU + TOP-DOWN GR METERS (MONITOR TAB) */
-    .monitor-grid { display: flex; justify-content: space-evenly; align-items: stretch; padding: 10px 6px 16px 6px; flex: 1; min-height: 260px; }
+    .monitor-grid { display: flex; justify-content: space-evenly; align-items: stretch; padding: 10px 6px 16px 6px; flex: 1; min-height: 250px; max-height: 62vh; }
     .vu-channel { display: flex; flex-direction: column; align-items: center; width: 54px; }
     .vu-title { font-weight: 900; font-size: 10px; margin-bottom: 5px; color: #fff; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
     .vu-top-leds { display: flex; gap: 3px; width: 48px; margin-bottom: 4px; }
@@ -164,7 +169,7 @@
   <!-- BLE CONNECTION OVERLAY -->
   <div id="connect-overlay" class="overlay">
     <div style="font-size: 28px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 3px; margin-bottom: 8px;">FRIZH DLMS 24</div>
-    <div style="font-size: 11px; color: var(--accent-orange); font-weight: bold; letter-spacing: 1.5px; margin-bottom: 26px;">256 / 512-TAP FIR ACOUSTIC CONSOLE</div>
+    <div style="font-size: 11px; color: var(--accent-orange); font-weight: bold; letter-spacing: 1.5px; margin-bottom: 26px;">256 / 512-TAP FIR ACOUSTIC CONSOLE (V1.6)</div>
     <button class="btn btn-primary" style="font-size: 13px; padding: 12px 28px;" onclick="connectBLE()">SCAN & CONNECT</button>
     <p style="color:var(--text-muted); margin-top:15px; font-size: 11px; text-align:center;">Requires Chrome / Edge / Bluefy with Web Bluetooth enabled.</p>
   </div>
@@ -182,7 +187,7 @@
   </div>
 
   <div class="app-wrapper">
-    <!-- MAIN SIDEBAR NAV (10 TABS Matching Flutter App) -->
+    <!-- MAIN SIDEBAR NAV (10 TABS Matching Flutter App V1.6) -->
     <nav class="sidebar">
       <div class="brand" onclick="window.open('https://frizh-labs.github.io/FRIZH-Labs/','_blank')">FRIZH<span>DLMS 24</span></div>
       <div class="nav-tabs" id="tabs">
@@ -304,17 +309,20 @@
     let jsonBuffer = "";
     let afsPollTimer = null;
 
-    window.addEventListener('resize', () => redrawActiveTabCanvases());
+    window.addEventListener('resize', () => requestAnimationFrame(redrawActiveTabCanvases));
 
     function getDpiCtx(cvs) {
       if(!cvs) return null;
       let dpr = window.devicePixelRatio || 1;
       let rect = cvs.getBoundingClientRect();
       if(rect.width === 0 || rect.height === 0) return null;
-      cvs.width = rect.width * dpr;
-      cvs.height = rect.height * dpr;
+      let tw = Math.round(rect.width * dpr), th = Math.round(rect.height * dpr);
+      if (cvs.width !== tw || cvs.height !== th) {
+        cvs.width = tw;
+        cvs.height = th;
+      }
       let ctx = cvs.getContext('2d', {alpha: false});
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       return { ctx, w: rect.width, h: rect.height };
     }
 
@@ -357,7 +365,6 @@
         closeBleDialog();
         sendBLE('/api/dump');
 
-        // Lightweight 1-packet /api/afs poller every 3 seconds (survives hours of activity!)
         if (afsPollTimer) clearInterval(afsPollTimer);
         afsPollTimer = setInterval(() => {
           if (bleDevice && bleDevice.gatt.connected && !isWriting && bleQueue.length === 0) {
@@ -397,6 +404,29 @@
       if (outNoMak > thr) simGr = (outNoMak - thr) * (1.0 - 1.0 / rat);
       if (act === 1 && simGr < 1.5) simGr = 1.5 + (Math.max(0, peakDb + 40) / 40.0 * Math.min(8, rat));
       return Math.max(0, Math.min(20, simGr));
+    }
+
+    function recomputeCustomFirCurveFromTaps(ch) {
+      let taps = activeCustomFirTaps[ch];
+      if (!taps || taps.length === 0) return;
+      let N = taps.length, halfN = N >> 1;
+      let bins = new Array(257).fill(0.0);
+      for (let k = 0; k <= halfN && k < 257; k++) {
+        let w = (2.0 * Math.PI * k) / N;
+        let re = 0.0, im = 0.0;
+        for (let n = 0; n < N; n++) {
+          let ang = w * n;
+          re += taps[n] * Math.cos(ang);
+          im -= taps[n] * Math.sin(ang);
+        }
+        let mag = Math.sqrt(re * re + im * im);
+        bins[k] = Math.max(-40.0, Math.min(20.0, 20.0 * Math.log10(mag + 1e-12)));
+      }
+      activeInjectedFirDb[ch] = bins;
+      previewFirMagDb[ch] = [...bins];
+      if (loadedFileNames[ch] === "No file loaded") {
+        loadedFileNames[ch] = `ESP32 Memory (${N}T)`;
+      }
     }
 
     function handleNotifications(event) {
@@ -458,6 +488,27 @@
             }
           }
         }
+      } else if (val.startsWith("F:")) {
+        // Format: F:ch,idx,total:v0,v1,v2...
+        try {
+          let body = val.substring(2);
+          let colon = body.indexOf(':');
+          if (colon !== -1) {
+            let meta = body.substring(0, colon).split(',');
+            let ch = parseInt(meta[0]), idx = parseInt(meta[1]), total = parseInt(meta[2]);
+            let vals = body.substring(colon + 1).split(',');
+            if (idx === 0 || activeCustomFirTaps[ch].length !== total) {
+              activeCustomFirTaps[ch] = new Array(total).fill(0.0);
+            }
+            for (let i = 0; i < vals.length && (idx + i) < total; i++) {
+              activeCustomFirTaps[ch][idx + i] = parseFloat(vals[i]) || 0.0;
+            }
+            if (idx + vals.length >= total) {
+              recomputeCustomFirCurveFromTaps(ch);
+              buildUI();
+            }
+          }
+        } catch(e) {}
       } else if (val.startsWith("J:{")) {
         jsonBuffer = val.substring(2);
         tryParseJsonBuffer();
@@ -476,9 +527,17 @@
           let parsed = JSON.parse(jsonBuffer);
           Object.assign(dspState, parsed);
           ensureDspStateDefaults();
+          let delayStep = 0;
           for (let i = 0; i < 4; i++) {
             let m = dspState.firm[i] || 0;
             if (!(firUiTab[i] === 2 && loadedMeasurements[i].length > 0)) firUiTab[i] = m;
+            if (m === 2 && activeCustomFirTaps[i].length === 0) {
+              let chIdx = i;
+              setTimeout(() => {
+                if (bleDevice && bleDevice.gatt.connected) sendBLE(`/api/getfir?ch=${chIdx}`);
+              }, 200 + delayStep * 450);
+              delayStep++;
+            }
           }
           buildUI();
           isUiBuilt = true;
@@ -486,7 +545,6 @@
         jsonBuffer = "";
       }
     }
-
     function ensureDspStateDefaults() {
       if(dspState.vA === undefined) dspState.vA = 0;
       if(dspState.vB === undefined) dspState.vB = 0;
@@ -624,6 +682,7 @@
       };
       reader.readAsText(file);
     }
+
     /* --- NAVIGATION & CONTEXTUAL SUB-TABS --- */
     function switchTab(id) {
       activeMainTab = id;
@@ -634,7 +693,7 @@
       let tabBtn = document.getElementById('tab-' + id.substring(2));
       if (tabBtn) tabBtn.classList.add('active');
       renderSubSidebar();
-      setTimeout(() => redrawActiveTabCanvases(), 30);
+      requestAnimationFrame(() => setTimeout(redrawActiveTabCanvases, 15));
     }
 
     function renderSubSidebar() {
@@ -665,7 +724,6 @@
       else outSubTab[ch] = idx;
       renderSubSidebar();
       buildUI();
-      setTimeout(() => redrawActiveTabCanvases(), 30);
     }
 
     function redrawActiveTabCanvases() {
@@ -855,7 +913,6 @@
       firUiTab[ch] = 2;
       isUploadingFir[ch] = false;
       buildUI();
-      setTimeout(() => redrawActiveTabCanvases(), 30);
       return true;
     }
 
@@ -902,6 +959,20 @@
       document.getElementById('fir-file-input').click();
     }
 
+    function clearLoadedMeasurement(ch) {
+      loadedMeasurements[ch] = [];
+      loadedFileNames[ch] = "No file loaded";
+      previewFirMagDb[ch] = new Array(257).fill(0);
+      activeInjectedFirDb[ch] = new Array(257).fill(0);
+      activeCustomFirTaps[ch] = [];
+      if (dspState.firm[ch] === 2) {
+        dspState.firm[ch] = 0;
+        firUiTab[ch] = 0;
+        sendBLE(`/api/set?type=fir&ch=${ch}&p=m&v=0`);
+      }
+      buildUI();
+    }
+
     function parseMeasurementFileText(content) {
       let meas = [], rawTaps = [];
       for (let line of content.split(/[\r\n]+/)) {
@@ -938,7 +1009,6 @@
           if (dspState.xth[ch] > 0) firMaxFreq[ch] = Math.max(firMinFreq[ch] + 50, Math.min(20000, dspState.xfh[ch]));
           computeFirPreview(ch);
           buildUI();
-          setTimeout(() => redrawActiveTabCanvases(), 30);
         } else if (rawTaps.length > 0) {
           let tLen = rawTaps.length > 256 ? 512 : 256;
           dspState.firt[ch] = (tLen === 512) ? 1 : 0;
@@ -946,6 +1016,8 @@
           loadedFileNames[ch] = `${file.name} (${tLen} Taps)`;
           firUiTab[ch] = 2;
           await uploadTapsToEsp32(ch, rawTaps, tLen);
+          recomputeCustomFirCurveFromTaps(ch);
+          buildUI();
         } else {
           alert("Unrecognized measurement or FIR file format.");
         }
@@ -1021,7 +1093,6 @@
       else if (idx === 5) wizardTargetGains = [6.0, 4.5, 1.0, -1.5, 0.0, 2.0, 1.0]; // CLUB / DJ
       else if (idx === 6) wizardTargetGains = [8.0, 5.5, -1.0, 0.0, 2.5, 2.0, 0.0]; // SUB MONSTER
       buildUI();
-      setTimeout(() => drawFrizhWizardGraph(), 20);
     }
 
     function getWizardTargetGainAt(f) {
@@ -1058,7 +1129,6 @@
           wizardMeasurement = meas;
           wizardFileName = file.name;
           buildUI();
-          setTimeout(() => drawFrizhWizardGraph(), 30);
         } else {
           alert("Invalid measurement file (need 20Hz-20kHz Freq/Mag data).");
         }
@@ -1215,9 +1285,7 @@
       }
       isWizardRunning = false;
       buildUI();
-      setTimeout(() => drawFrizhWizardGraph(), 30);
     }
-
     /* --- CANVAS GRAPH PAINTERS --- */
     function drawFreqGrid(ctx, w, h, zeroY) {
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
@@ -1297,7 +1365,7 @@
       }
     }
 
-    // 2. UNIFIED 6-CHANNEL RTA GRAPH
+    // 2. UNIFIED 6-CHANNEL RTA GRAPH (Proportioned height)
     function drawUnified6ChRTA() {
       let cvs = document.getElementById('cvs-rta-6ch');
       let ctxData = getDpiCtx(cvs); if (!ctxData) return;
@@ -1461,12 +1529,12 @@
         }
         drawEqGraph(ch, isInput);
       };
-      let onUp = () => { if (dragging) { dragging = false; buildUI(); setTimeout(() => drawEqGraph(ch, isInput), 20); } };
+      let onUp = () => { if (dragging) { dragging = false; buildUI(); } };
       cvs.addEventListener('mousedown', onDown); cvs.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
       cvs.addEventListener('touchstart', onDown, {passive:false}); cvs.addEventListener('touchmove', onMove, {passive:false}); window.addEventListener('touchend', onUp);
     }
 
-    // 4. AUTO-FIR DESIGNER PREVIEW GRAPH
+    // 4. AUTO-FIR DESIGNER PREVIEW GRAPH (Also draws active injected custom FIR even when no .TXT file is loaded!)
     function drawFirPreviewGraph(ch) {
       let cvs = document.getElementById(`cvs-fir-${ch}`);
       let ctxData = getDpiCtx(cvs); if (!ctxData) return;
@@ -1497,26 +1565,44 @@
       let xMin = ((Math.log10(firMinFreq[ch]) - logMin) / (logMax - logMin)) * w;
       let xMax = ((Math.log10(firMaxFreq[ch]) - logMin) / (logMax - logMin)) * w;
       ctx.fillStyle = 'rgba(0,173,181,0.08)'; ctx.fillRect(xMin, 0, xMax - xMin, h);
-      if (!loadedMeasurements[ch] || loadedMeasurements[ch].length === 0) return;
+      ctx.strokeStyle = 'rgba(0,173,181,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(xMin, 0); ctx.lineTo(xMin, h); ctx.moveTo(xMax, 0); ctx.lineTo(xMax, h); ctx.stroke();
 
-      let taps = getChannelTaps(ch), halfN = taps >> 1, avgDb = getPassbandAverageDb(ch);
+      let yBoost = dbToY(firMaxBoost[ch]), yCut = dbToY(firMaxCut[ch]);
+      ctx.strokeStyle = 'rgba(255,152,0,0.35)';
+      ctx.beginPath(); ctx.moveTo(xMin, yBoost); ctx.lineTo(xMax, yBoost); ctx.moveTo(xMin, yCut); ctx.lineTo(xMax, yCut); ctx.stroke();
+
+      let taps = getChannelTaps(ch), halfN = taps >> 1;
+      let hasMeas = loadedMeasurements[ch] && loadedMeasurements[ch].length > 0;
+      let hasCustomBins = activeInjectedFirDb[ch] && activeInjectedFirDb[ch].some(v => Math.abs(v) > 0.01);
+
+      if (!hasMeas && !hasCustomBins) return;
+
+      let avgDb = hasMeas ? getPassbandAverageDb(ch) : 0;
       let mPath = new Path2D(), fPath = new Path2D(), pPath = new Path2D();
       for (let x = 0; x <= w; x += 2) {
         let f = Math.pow(10, logMin + (x / w) * (logMax - logMin));
-        let relM = interpolateMeas(loadedMeasurements[ch], f).m - avgDb;
         let bf = Math.max(0, Math.min(halfN, (f * taps) / 48000.0));
         let b0 = Math.floor(bf), b1 = Math.min(halfN, Math.ceil(bf));
         let firDb = previewFirMagDb[ch][b0] + (bf - b0) * (previewFirMagDb[ch][b1] - previewFirMagDb[ch][b0]);
-        let ym = dbToY(relM), yf = dbToY(firDb), yp = dbToY(relM + firDb);
-        if (x === 0) { mPath.moveTo(x, ym); fPath.moveTo(x, yf); pPath.moveTo(x, yp); }
-        else { mPath.lineTo(x, ym); fPath.lineTo(x, yf); pPath.lineTo(x, yp); }
+        let yf = dbToY(firDb);
+
+        if (hasMeas) {
+          let relM = interpolateMeas(loadedMeasurements[ch], f).m - avgDb;
+          let ym = dbToY(relM), yp = dbToY(relM + firDb);
+          if (x === 0) { mPath.moveTo(x, ym); pPath.moveTo(x, yp); }
+          else { mPath.lineTo(x, ym); pPath.lineTo(x, yp); }
+        }
+        if (x === 0) fPath.moveTo(x, yf); else fPath.lineTo(x, yf);
       }
-      ctx.strokeStyle = '#ff5252'; ctx.lineWidth = 1.4; ctx.stroke(mPath);
+      if (hasMeas) {
+        ctx.strokeStyle = 'rgba(255,82,82,0.8)'; ctx.lineWidth = 1.4; ctx.stroke(mPath);
+        ctx.strokeStyle = 'rgba(105,240,174,0.88)'; ctx.lineWidth = 1.6; ctx.stroke(pPath);
+      }
       ctx.strokeStyle = '#00ADB5'; ctx.lineWidth = 2.0; ctx.stroke(fPath);
-      ctx.strokeStyle = '#69f0ae'; ctx.lineWidth = 1.6; ctx.stroke(pPath);
     }
 
-    // 5. FRIZH FIR 7-NODE DRAWABLE TARGET CURVE GRAPH
+    // 5. FRIZH FIR 7-NODE DRAWABLE TARGET CURVE GRAPH (With Selected Output Crossover Passband Windows!)
     function drawFrizhWizardGraph() {
       let cvs = document.getElementById('cvs-frizh-wiz');
       let ctxData = getDpiCtx(cvs); if (!ctxData) return;
@@ -1525,6 +1611,21 @@
       drawFreqGrid(ctx, w, h, zeroY);
       let logMin = Math.log10(20), logMax = Math.log10(20000);
       let dbToY = (db) => Math.max(8, Math.min(h - 16, zeroY - db * (h / 36.0)));
+
+      // Draw Selected Output Crossover Passband Windows (Matches Flutter V1.6 FrizhWizardGraphPainter)
+      const chColors = ['#00ADB5', '#ff9800', '#e040fb', '#69f0ae'];
+      for (let ch = 0; ch < 4; ch++) {
+        if (!wizardSelectedOuts[ch]) continue;
+        let fLow = (dspState.xt && dspState.xt[ch] > 0) ? dspState.xfl[ch] : 20.0;
+        let fHigh = (dspState.xth && dspState.xth[ch] > 0) ? dspState.xfh[ch] : 20000.0;
+        let x0 = ((Math.log10(Math.max(20, fLow)) - logMin) / (logMax - logMin)) * w;
+        let x1 = ((Math.log10(Math.min(20000, fHigh)) - logMin) / (logMax - logMin)) * w;
+        ctx.fillStyle = chColors[ch]; ctx.globalAlpha = 0.06;
+        ctx.fillRect(x0, 0, Math.max(0, x1 - x0), h - 16);
+        ctx.strokeStyle = chColors[ch]; ctx.globalAlpha = 0.32; ctx.lineWidth = 1.0;
+        ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, h - 16); ctx.moveTo(x1, 0); ctx.lineTo(x1, h - 16); ctx.stroke();
+      }
+      ctx.globalAlpha = 1.0;
 
       if (wizardMeasurement.length > 0) {
         let refDb = getWizardGlobalRefLevel();
@@ -1596,10 +1697,11 @@
         wizardActivePreset = 7;
         drawFrizhWizardGraph();
       };
-      let onUp = () => { if (dragging) { dragging = false; buildUI(); setTimeout(() => drawFrizhWizardGraph(), 20); } };
+      let onUp = () => { if (dragging) { dragging = false; buildUI(); } };
       cvs.addEventListener('mousedown', onDown); cvs.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
       cvs.addEventListener('touchstart', onDown, {passive:false}); cvs.addEventListener('touchmove', onMove, {passive:false}); window.addEventListener('touchend', onUp);
     }
+
     // 6. DYNAMIC EQ & COMPRESSOR GRAPH PAINTERS
     function drawDeqGraph(ch) {
       let cvs = document.getElementById(`cvs-deq-${ch}`);
@@ -1700,7 +1802,7 @@
         sendUpdate('deq', ch, 'f', newF, b); sendUpdate('deq', ch, 'd', newD, b);
         drawDeqGraph(ch);
       };
-      let onUp = () => { if (dragging) { dragging = false; buildUI(); setTimeout(() => drawDeqGraph(ch), 20); } };
+      let onUp = () => { if (dragging) { dragging = false; buildUI(); } };
       cvs.addEventListener('mousedown', onDown); cvs.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
       cvs.addEventListener('touchstart', onDown, {passive:false}); cvs.addEventListener('touchmove', onMove, {passive:false}); window.addEventListener('touchend', onUp);
     }
@@ -1820,7 +1922,13 @@
         computeFirPreview(ch); drawFirPreviewGraph(ch); return;
       }
       if (type === 'wiz') {
-        if (p === 'node') { wizardTargetGains[wizardSelectedNode] = realVal; wizardActivePreset = 7; drawFrizhWizardGraph(); }
+        if (p === 'node') {
+          wizardTargetGains[wizardSelectedNode] = realVal;
+          wizardActivePreset = 7;
+          let pillVal = document.getElementById(`wiz-node-val-${wizardSelectedNode}`);
+          if (pillVal) pillVal.innerText = `${realVal >= 0 ? '+' : ''}${realVal.toFixed(1)}dB`;
+          drawFrizhWizardGraph();
+        }
         if (p === 'boost') { wizardMaxBoost = realVal; drawFrizhWizardGraph(); }
         if (p === 'cut') { wizardMaxCut = realVal; drawFrizhWizardGraph(); }
         return;
@@ -1884,20 +1992,18 @@
               </div>`;
     }
 
-    /* --- CHANNEL ACTIONS & RESETS --- */
+    /* --- COMPLETE RESET & FACTORY RESET FUNCTIONS (MATCHING FLUTTER V1.6 & WEB 2.1.6) --- */
     function toggleMute(type, ch) {
       if (type === 'in') dspState.in_mute[ch] = !dspState.in_mute[ch];
       else dspState.out_mute[ch] = !dspState.out_mute[ch];
       sendBLE(`/api/mute?type=${type}&ch=${ch}`);
       buildUI();
-      setTimeout(() => redrawActiveTabCanvases(), 20);
     }
 
     function togglePolarity(ch) {
       dspState.ph[ch] = dspState.ph[ch] === 1 ? 0 : 1;
       sendUpdate('ph', ch, 'v', dspState.ph[ch]);
       buildUI();
-      setTimeout(() => redrawActiveTabCanvases(), 20);
     }
 
     function renameChannel(type, ch) {
@@ -1928,37 +2034,187 @@
       }
     }
 
+    function resetBbeSection(ch, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset BBE Sonic Maximizer on ${dspState.in_n[ch]}?`)) return;
+      dspState.bbe_e[ch] = 0; dspState.bbe_l[ch] = 50; dspState.bbe_p[ch] = 50;
+      sendBLE(`/api/set?type=bbe&ch=${ch}&p=e&v=0`);
+      sendBLE(`/api/set?type=bbe&ch=${ch}&p=l&v=50`);
+      sendBLE(`/api/set?type=bbe&ch=${ch}&p=p&v=50`);
+      buildUI();
+    }
+
+    function resetGateSection(ch, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset Noise Gate on ${dspState.in_n[ch]}?`)) return;
+      dspState.gth[ch] = -75; dspState.gat[ch] = 10; dspState.gre[ch] = 200;
+      sendBLE(`/api/set?type=gate&ch=${ch}&p=thr&v=-75`);
+      sendBLE(`/api/set?type=gate&ch=${ch}&p=atk&v=10`);
+      sendBLE(`/api/set?type=gate&ch=${ch}&p=rel&v=200`);
+      buildUI();
+    }
+
+    function resetCompSection(ch, isInput, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset ${isInput ? 'Input' : 'Output'} Compressor?`)) return;
+      let pfx = isInput ? 'incomp' : 'comp';
+      if (isInput) {
+        dspState.ict[ch] = 0; dspState.icr[ch] = 4; dspState.icm[ch] = 0; dspState.ica[ch] = 10; dspState.icrel[ch] = 100;
+      } else {
+        dspState.ct[ch] = 0; dspState.cr[ch] = 4; dspState.cm[ch] = 0; dspState.ca[ch] = 10; dspState.crel[ch] = 100;
+      }
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&p=thr&v=0`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&p=rat&v=4`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&p=mak&v=0`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&p=atk&v=10`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&p=rel&v=100`);
+      buildUI();
+    }
+
+    function resetXOverSection(ch, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset Crossover Filters on ${dspState.out_n[ch]}?`)) return;
+      dspState.xt[ch] = 0; dspState.xth[ch] = 0; dspState.xfl[ch] = 80; dspState.xfh[ch] = 5000; dspState.xo_gn[ch] = 0;
+      sendBLE(`/api/set?type=xo&ch=${ch}&p=t&v=0`);
+      sendBLE(`/api/set?type=xo&ch=${ch}&p=th&v=0`);
+      sendBLE(`/api/set?type=xo&ch=${ch}&p=fl&v=80`);
+      sendBLE(`/api/set?type=xo&ch=${ch}&p=fh&v=5000`);
+      sendBLE(`/api/set?type=xo&ch=${ch}&p=g&v=0`);
+      buildUI();
+    }
+
+    function resetApfSection(ch, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset All-Pass / Phase Rotation on ${dspState.out_n[ch]}?`)) return;
+      dspState.apfe[ch] = 0; dspState.apfm[ch] = 0; dspState.apff[ch] = 1000; dspState.apfq[ch] = 0.7; dspState.apfd[ch] = 0;
+      sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`);
+      sendBLE(`/api/set?type=apf&ch=${ch}&p=m&v=0`);
+      sendBLE(`/api/set?type=apf&ch=${ch}&p=f&v=1000`);
+      sendBLE(`/api/set?type=apf&ch=${ch}&p=q&v=0.7`);
+      sendBLE(`/api/set?type=apf&ch=${ch}&p=d&v=0`);
+      buildUI();
+    }
+
+    function resetEqBand(ch, band, isInput) {
+      let defF = [60, 150, 400, 1000, 2400, 6000, 12000][band];
+      let pfx = isInput ? 'ineq' : 'eq';
+      if (isInput) {
+        dspState.ieqf[ch][band] = defF; dspState.ieqg[ch][band] = 0; dspState.ieqq[ch][band] = 1.41; dspState.ieqt[ch][band] = 0;
+      } else {
+        dspState.eqf[ch][band] = defF; dspState.eq_gn[ch][band] = 0; dspState.eqq[ch][band] = 1.41; dspState.eqt[ch][band] = 0;
+      }
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${band}&p=f&v=${defF}`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${band}&p=g&v=0`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${band}&p=q&v=1.41`);
+      sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${band}&p=t&v=0`);
+      buildUI();
+    }
+
+    function resetAllEqBands(ch, isInput, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset all 7 EQ bands on ${isInput ? dspState.in_n[ch] : dspState.out_n[ch]}?`)) return;
+      let defF = [60, 150, 400, 1000, 2400, 6000, 12000];
+      let pfx = isInput ? 'ineq' : 'eq';
+      let bypCmd = isInput ? 'ineqb' : 'eqb';
+      if (isInput) dspState.ieqb[ch] = 0; else dspState.eqb[ch] = 0;
+      sendBLE(`/api/set?type=${bypCmd}&ch=${ch}&p=v&v=0`);
+      for (let b = 0; b < 7; b++) {
+        if (isInput) {
+          dspState.ieqf[ch][b] = defF[b]; dspState.ieqg[ch][b] = 0; dspState.ieqq[ch][b] = 1.41; dspState.ieqt[ch][b] = 0;
+        } else {
+          dspState.eqf[ch][b] = defF[b]; dspState.eq_gn[ch][b] = 0; dspState.eqq[ch][b] = 1.41; dspState.eqt[ch][b] = 0;
+        }
+        sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${b}&p=f&v=${defF[b]}`);
+        sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${b}&p=g&v=0`);
+        sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${b}&p=q&v=1.41`);
+        sendBLE(`/api/set?type=${pfx}&ch=${ch}&b=${b}&p=t&v=0`);
+      }
+      buildUI();
+    }
+
+    function resetDeqBand(ch, b) {
+      let defF = [150, 1000, 5000][b];
+      dspState.deq_f[ch][b] = defF; dspState.deq_q[ch][b] = 1.4; dspState.deq_t[ch][b] = -20; dspState.deq_r[ch][b] = 4; dspState.deq_d[ch][b] = 0;
+      sendBLE(`/api/set?type=deq&ch=${ch}&b=${b}&p=f&v=${defF}`);
+      sendBLE(`/api/set?type=deq&ch=${ch}&b=${b}&p=q&v=1.4`);
+      sendBLE(`/api/set?type=deq&ch=${ch}&b=${b}&p=t&v=-20`);
+      sendBLE(`/api/set?type=deq&ch=${ch}&b=${b}&p=r&v=4`);
+      sendBLE(`/api/set?type=deq&ch=${ch}&b=${b}&p=d&v=0`);
+      buildUI();
+    }
+
+    function resetAllDeqBands(ch, skipConfirm = false) {
+      if (!skipConfirm && !confirm(`Reset all 3 Dynamic EQ bands on ${dspState.in_n[ch]}?`)) return;
+      for (let b = 0; b < 3; b++) resetDeqBand(ch, b);
+    }
+
+    function resetToneGen() {
+      dspState.tm = 0; dspState.tf = 1000; dspState.tg = -20; dspState.tr = 0;
+      sendBLE(`/api/set?type=tone&ch=0&p=m&v=0`);
+      sendBLE(`/api/set?type=tone&ch=0&p=f&v=1000`);
+      sendBLE(`/api/set?type=tone&ch=0&p=g&v=-20`);
+      sendBLE(`/api/set?type=tone&ch=0&p=r&v=0`);
+      buildUI();
+    }
+
+    function resetAllInputCh(ch) {
+      if (!confirm(`Reset all DSP settings for ${dspState.in_n[ch]}?`)) return;
+      if (ch === 0) dspState.vA = 0; else dspState.vB = 0;
+      sendBLE(`/api/set?type=in&ch=${ch}&p=gain&v=0`);
+      dspState.idl[ch] = 0; sendBLE(`/api/set?type=idl&ch=${ch}&p=v&v=0`);
+      resetAllEqBands(ch, true, true);
+      dspState.deq_e[ch] = 0; sendBLE(`/api/set?type=deq&ch=${ch}&p=e&v=0`);
+      resetAllDeqBands(ch, true);
+      dspState.afs_e[ch] = 0; dspState.afs_s[ch] = 3; dspState.afs_f[ch] = [0, 0, 0, 0];
+      sendBLE(`/api/set?type=afs&ch=${ch}&p=e&v=0`);
+      sendBLE(`/api/set?type=afs&ch=${ch}&p=s&v=3`);
+      sendBLE(`/api/set?type=afs&ch=${ch}&p=clr&v=1`);
+      resetBbeSection(ch, true);
+      resetGateSection(ch, true);
+      resetCompSection(ch, true, true);
+      buildUI();
+    }
+
     function resetAllOutputCh(ch) {
       if (!confirm(`Reset all DSP settings for ${dspState.out_n[ch]}?`)) return;
-      dspState.xt[ch] = 0; dspState.xth[ch] = 0; dspState.xfl[ch] = 80; dspState.xfh[ch] = 5000; dspState.xo_gn[ch] = 0;
-      sendBLE(`/api/set?type=xo&ch=${ch}&p=t&v=0`); sendBLE(`/api/set?type=xo&ch=${ch}&p=th&v=0`);
-      sendBLE(`/api/set?type=xo&ch=${ch}&p=fl&v=80`); sendBLE(`/api/set?type=xo&ch=${ch}&p=fh&v=5000`); sendBLE(`/api/set?type=xo&ch=${ch}&p=g&v=0`);
-      let defF = [60, 150, 400, 1000, 2400, 6000, 12000];
-      dspState.eqb[ch] = 0; sendBLE(`/api/set?type=eqb&ch=${ch}&p=v&v=0`);
-      for (let b = 0; b < 7; b++) {
-        dspState.eqf[ch][b] = defF[b]; dspState.eq_gn[ch][b] = 0; dspState.eqq[ch][b] = 1.41; dspState.eqt[ch][b] = 0;
-        sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=f&v=${defF[b]}`); sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=g&v=0`);
-        sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=q&v=1.41`); sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=t&v=0`);
-      }
+      resetXOverSection(ch, true);
+      resetAllEqBands(ch, false, true);
       resetFirChannel(ch);
-      dspState.apfe[ch] = 0; dspState.apfm[ch] = 0; dspState.apff[ch] = 1000; dspState.apfq[ch] = 0.7; dspState.apfd[ch] = 0;
-      sendBLE(`/api/set?type=apf&ch=${ch}&p=e&v=0`); sendBLE(`/api/set?type=apf&ch=${ch}&p=m&v=0`); sendBLE(`/api/set?type=apf&ch=${ch}&p=d&v=0`);
-      dspState.ct[ch] = 0; dspState.cr[ch] = 4; dspState.cm[ch] = 0; dspState.ca[ch] = 10; dspState.crel[ch] = 100;
-      sendBLE(`/api/set?type=comp&ch=${ch}&p=thr&v=0`); sendBLE(`/api/set?type=comp&ch=${ch}&p=rat&v=4`); sendBLE(`/api/set?type=comp&ch=${ch}&p=mak&v=0`);
+      resetApfSection(ch, true);
+      resetCompSection(ch, false, true);
+      dspState.ph[ch] = 0; sendBLE(`/api/set?type=ph&ch=${ch}&p=v&v=0`);
       dspState.dl[ch] = 0; sendBLE(`/api/set?type=dl&ch=${ch}&p=v&v=0`);
-      buildUI(); setTimeout(() => redrawActiveTabCanvases(), 30);
+      dspState.rt[ch] = (ch % 2) + 1; sendBLE(`/api/set?type=rt&ch=${ch}&p=v&v=${(ch % 2) + 1}`);
+      buildUI();
     }
 
     function resetFirChannel(ch) {
       loadedMeasurements[ch] = []; loadedFileNames[ch] = "No file loaded";
       previewFirMagDb[ch] = new Array(257).fill(0); activeInjectedFirDb[ch] = new Array(257).fill(0);
-      activeCustomFirTaps[ch] = []; firUiTab[ch] = 0;
+      activeCustomFirTaps[ch] = [];
+      firMinFreq[ch] = 80; firMaxFreq[ch] = 16000; firMaxBoost[ch] = 6.0; firMaxCut[ch] = -12.0; firCorrectPhase[ch] = false;
+      firUiTab[ch] = 0;
       dspState.firm[ch] = 0; dspState.firt[ch] = 0;
       sendBLE(`/api/set?type=fir&ch=${ch}&p=m&v=0`);
       sendBLE(`/api/set?type=fir&ch=${ch}&p=t&v=0`);
-      buildUI(); setTimeout(() => redrawActiveTabCanvases(), 20);
+      buildUI();
     }
 
+    // GLOBAL HARDWARE FACTORY RESET (Matches Flutter V1.6: 1 single /api/preset?act=factory command!)
+    function doFactoryReset() {
+      if (!confirm("FACTORY RESET ALL CHANNELS?\nAre you sure? This will wipe all current input and output settings and return them to default values.")) return;
+      Object.values(timers).forEach(t => clearTimeout(t));
+      timers = {};
+      bleQueue = [];
+
+      for (let ch = 0; ch < 4; ch++) {
+        loadedMeasurements[ch] = [];
+        loadedFileNames[ch] = "No file loaded";
+        previewFirMagDb[ch] = new Array(257).fill(0.0);
+        activeInjectedFirDb[ch] = new Array(257).fill(0.0);
+        activeCustomFirTaps[ch] = [];
+        firUiTab[ch] = 0;
+      }
+
+      dspState = {};
+      ensureDspStateDefaults();
+      sendBLE("/api/preset?act=factory");
+      buildUI();
+    }
     function selectFirTab(ch, tab) {
       firUiTab[ch] = tab;
       if (tab === 0 || tab === 1) {
@@ -1969,15 +2225,20 @@
           dspState.firm[ch] = 2;
           sendBLE(`/api/set?type=fir&ch=${ch}&p=m&v=2`);
         }
+        if (loadedMeasurements[ch].length > 0) {
+          if (dspState.xt[ch] > 0) firMinFreq[ch] = Math.max(20, Math.min(10000, dspState.xfl[ch]));
+          if (dspState.xth[ch] > 0) firMaxFreq[ch] = Math.max(firMinFreq[ch] + 50, Math.min(20000, dspState.xfh[ch]));
+          computeFirPreview(ch);
+        }
       }
-      buildUI(); setTimeout(() => drawFirPreviewGraph(ch), 20);
+      buildUI();
     }
 
     function setChannelTapMode(ch, tapMode) {
       dspState.firt[ch] = tapMode;
       sendBLE(`/api/set?type=fir&ch=${ch}&p=t&v=${tapMode}`);
       if (loadedMeasurements[ch].length > 0) computeFirPreview(ch);
-      buildUI(); setTimeout(() => drawFirPreviewGraph(ch), 20);
+      buildUI();
     }
 
     async function fetchGithubReleases() {
@@ -2050,15 +2311,15 @@
           <div style="font-size:10px; color:#9ca3af; font-weight:bold;">🟢 LVL (Bottom-Up) &nbsp;|&nbsp; 🟠 COMP GR (Top-Down)</div>
         </div>
         <div class="panel-scroll" style="justify-content:center;">
-          <div class="widget" style="flex:1;"><div class="widget-body" style="flex:1;"><div class="monitor-grid">${vuCols}</div></div></div>
+          <div class="widget" style="flex:1;"><div class="widget-body" style="flex:1; justify-content:center;"><div class="monitor-grid">${vuCols}</div></div></div>
         </div>`;
 
-      // 2. UNIFIED 6-CHANNEL RTA TAB
+      // 2. UNIFIED 6-CHANNEL RTA TAB (Proportioned height so it isn't overly tall)
       const rtaCols = ['#00ADB5', '#ffd740', '#69f0ae', '#ff6e40', '#e040fb', '#40c4ff'];
       const rtaNames = [dspState.in_n[0], dspState.in_n[1], dspState.out_n[0], dspState.out_n[1], dspState.out_n[2], dspState.out_n[3]];
       let rtaBtns = rtaNames.map((nm, idx) => {
         let sel = rtaVis[idx], c = rtaCols[idx];
-        return `<button class="pill-btn" style="${sel ? `background:${c}38; border-color:${c}; color:#fff;` : ''}" onclick="rtaVis[${idx}]=!rtaVis[${idx}]; buildUI(); setTimeout(()=>drawUnified6ChRTA(),20);">${nm}</button>`;
+        return `<button class="pill-btn" style="${sel ? `background:${c}38; border-color:${c}; color:#fff;` : ''}" onclick="rtaVis[${idx}]=!rtaVis[${idx}]; buildUI();">${nm}</button>`;
       }).join('');
 
       document.getElementById('t-rta').innerHTML = `
@@ -2066,38 +2327,41 @@
           <div class="slim-title">6-CH REALTIME SPECTRUM ANALYZER</div>
         </div>
         <div class="panel-scroll">
-          <div class="widget" style="flex:1; display:flex; flex-direction:column;">
-            <div class="widget-body" style="flex:1; display:flex; flex-direction:column;">
+          <div class="widget">
+            <div class="widget-header"><span>SELECT ACTIVE RTA CHANNELS (INPUTS & OUTPUTS)</span></div>
+            <div class="widget-body">
               <div class="pill-group">${rtaBtns}</div>
-              <div class="graph-container" style="flex:1; min-height:220px;"><canvas id="cvs-rta-6ch"></canvas></div>
+              <div class="graph-container graph-rta"><canvas id="cvs-rta-6ch"></canvas></div>
             </div>
           </div>
         </div>`;
 
-      // 3. INPUT VIEWS (IN A & IN B WITH 6 SUB-TABS)
+      // 3. INPUT VIEWS (IN A & IN B WITH 6 SUB-TABS & ALL RESET BUTTONS)
       ['A','B'].forEach((n, ch) => {
         let st = inSubTab[ch], muted = dspState.in_mute[ch];
         let bodyHtml = '';
 
         if (st === 0) {
           bodyHtml = `
-            <div class="widget"><div class="widget-header"><span>MASTER GAIN</span></div><div class="widget-body">${createFader('Input Gain', 'in', ch, 'gain', -12, 12, ch === 0 ? dspState.vA : dspState.vB, 'dB')}</div></div>
+            <div class="widget"><div class="widget-header"><span>MASTER GAIN</span><button class="btn btn-slim btn-danger" onclick="dspState.${ch===0?'vA':'vB'}=0; sendBLE('/api/set?type=in&ch=${ch}&p=gain&v=0'); buildUI();">RST</button></div><div class="widget-body">${createFader('Input Gain', 'in', ch, 'gain', -12, 12, ch === 0 ? dspState.vA : dspState.vB, 'dB')}</div></div>
             <div class="widget"><div class="widget-header"><span>INPUT DELAY</span><button class="btn btn-slim btn-danger" onclick="dspState.idl[${ch}]=0; sendBLE('/api/set?type=idl&ch=${ch}&p=v&v=0'); buildUI();">RST</button></div><div class="widget-body">${createFader('Delay', 'idl', ch, 'v', 0, 200, dspState.idl[ch], 'ms', '', '0.1')}</div></div>`;
         } else if (st === 1) {
           bodyHtml = build7BandEqCardHtml(ch, true);
         } else if (st === 2) {
           let b = activeDeqBand[ch], en = dspState.deq_e[ch] === 1;
-          let bTabs = [0,1,2].map(i => `<div class="pill-btn ${b === i ? 'active-cyan' : ''}" onclick="activeDeqBand[${ch}]=${i}; buildUI(); setTimeout(()=>drawDeqGraph(${ch}),20);">BAND ${i + 1}</div>`).join('');
+          let bTabs = [0,1,2].map(i => `<div class="pill-btn ${b === i ? 'active-cyan' : ''}" onclick="activeDeqBand[${ch}]=${i}; buildUI();">BAND ${i + 1}</div>`).join('');
           bodyHtml = `
             <div class="widget ${!en ? 'bypassed' : ''}">
               <div class="widget-header">
                 <span>DYNAMIC EQ (3-BAND)</span>
-                <button class="btn btn-slim ${en ? 'btn-primary' : 'btn-danger'}" onclick="dspState.deq_e[${ch}]=${en ? 0 : 1}; sendBLE('/api/set?type=deq&ch=${ch}&p=e&v=${en ? 0 : 1}'); buildUI(); setTimeout(()=>drawDeqGraph(${ch}),20);">${en ? 'ACTIVE' : 'BYPASSED'}</button>
+                <div class="widget-actions">
+                  <button class="btn btn-slim ${en ? 'btn-primary' : 'btn-danger'}" onclick="dspState.deq_e[${ch}]=${en ? 0 : 1}; sendBLE('/api/set?type=deq&ch=${ch}&p=e&v=${en ? 0 : 1}'); buildUI();">${en ? 'ACTIVE' : 'BYPASSED'}</button>
+                </div>
               </div>
               <div class="widget-body">
                 <div class="graph-container graph-medium">
                   <canvas id="cvs-deq-${ch}"></canvas>
-                  <button class="graph-lock-btn ${!lockDeq[ch] ? 'unlocked' : ''}" onclick="lockDeq[${ch}]=!lockDeq[${ch}]; buildUI(); setTimeout(()=>drawDeqGraph(${ch}),20);">${lockDeq[ch] ? '🔒 LOCKED' : '🔓 EDIT'}</button>
+                  <button class="graph-lock-btn ${!lockDeq[ch] ? 'unlocked' : ''}" onclick="lockDeq[${ch}]=!lockDeq[${ch}]; buildUI();">${lockDeq[ch] ? '🔒 LOCKED' : '🔓 EDIT'}</button>
                 </div>
                 <div class="pill-group">${bTabs}</div>
                 ${createFader('Frequency', 'deq', ch, 'f', 20, 20000, dspState.deq_f[ch][b], 'Hz', b)}
@@ -2108,6 +2372,10 @@
                 <div class="ctrl-row">
                   ${createFader('Threshold', 'deq', ch, 't', -60, 0, dspState.deq_t[ch][b], 'dB', b)}
                   ${createFader('Ratio', 'deq', ch, 'r', 1, 20, dspState.deq_r[ch][b], ':1', b)}
+                </div>
+                <div class="ctrl-row" style="margin-top:4px;">
+                  <button class="btn" style="flex:1; padding:9px;" onclick="resetDeqBand(${ch}, ${b})">🔄 RESET B${b + 1}</button>
+                  <button class="btn btn-danger" style="flex:1; padding:9px;" onclick="resetAllDeqBands(${ch})">⚠️ RESET ALL</button>
                 </div>
               </div>
             </div>`;
@@ -2130,14 +2398,20 @@
           let bbeOn = dspState.bbe_e[ch] === 1;
           bodyHtml = `
             <div class="widget">
-              <div class="widget-header"><span>BBE SONIC MAXIMIZER</span><button class="btn btn-slim ${bbeOn ? 'btn-primary' : ''}" onclick="dspState.bbe_e[${ch}]=${bbeOn ? 0 : 1}; sendBLE('/api/set?type=bbe&ch=${ch}&p=e&v=${bbeOn ? 0 : 1}'); buildUI();">${bbeOn ? 'ENABLED' : 'BYPASS'}</button></div>
+              <div class="widget-header">
+                <span>BBE SONIC MAXIMIZER</span>
+                <div class="widget-actions">
+                  <button class="btn btn-slim btn-danger" onclick="resetBbeSection(${ch})">RST</button>
+                  <button class="btn btn-slim ${bbeOn ? 'btn-primary' : ''}" onclick="dspState.bbe_e[${ch}]=${bbeOn ? 0 : 1}; sendBLE('/api/set?type=bbe&ch=${ch}&p=e&v=${bbeOn ? 0 : 1}'); buildUI();">${bbeOn ? 'ENABLED' : 'BYPASS'}</button>
+                </div>
+              </div>
               <div class="widget-body">
                 ${createFader('Lo Contour', 'bbe', ch, 'l', 0, 100, dspState.bbe_l[ch], '%')}
                 ${createFader('Process', 'bbe', ch, 'p', 0, 100, dspState.bbe_p[ch], '%')}
               </div>
             </div>
             <div class="widget">
-              <div class="widget-header"><span>NOISE GATE</span></div>
+              <div class="widget-header"><span>NOISE GATE</span><button class="btn btn-slim btn-danger" onclick="resetGateSection(${ch})">RST</button></div>
               <div class="widget-body">
                 ${createFader('Threshold', 'gate', ch, 'thr', -90, 0, dspState.gth[ch], 'dB')}
                 <div class="ctrl-row">
@@ -2154,6 +2428,7 @@
           <div class="slim-header">
             <div class="slim-title">${dspState.in_n[ch]} <span style="cursor:pointer; opacity:0.6;" onclick="renameChannel('in', ${ch})">✏️</span></div>
             <div class="slim-actions">
+              <button class="btn btn-slim btn-danger" onclick="resetAllInputCh(${ch})">RST CH</button>
               <button class="btn btn-slim" onclick="copyChannelPrompt('in', ${ch})">📋 COPY</button>
               <button id="btn-mute-in-${ch}" class="btn btn-slim btn-danger ${muted ? 'active' : ''}" onclick="toggleMute('in', ${ch})">${muted ? 'MUTED' : 'MUTE'}</button>
             </div>
@@ -2161,7 +2436,7 @@
           <div class="panel-scroll">${bodyHtml}</div>`;
       });
 
-      // 4. OUTPUT VIEWS (OUT 1..4 WITH 6 SUB-TABS)
+      // 4. OUTPUT VIEWS (OUT 1..4 WITH 6 SUB-TABS & ALL RESET BUTTONS)
       const chColors = ['#00ADB5', '#ff9800', '#e040fb', '#69f0ae'];
       for (let ch = 0; ch < 4; ch++) {
         let st = outSubTab[ch], muted = dspState.out_mute[ch], inv = dspState.ph[ch] === 1;
@@ -2170,7 +2445,7 @@
         if (st === 0) {
           let visBtns = [0,1,2,3].map(i => {
             let v = outXoverVis[ch][i], c = chColors[i];
-            return `<button class="pill-btn" style="${v ? `background:${c}38; border-color:${c}; color:#fff;` : ''}" onclick="outXoverVis[${ch}][${i}]=!outXoverVis[${ch}][${i}]; buildUI(); setTimeout(()=>drawGlobalOutPreview(${ch}),20);">${dspState.out_n[i]}</button>`;
+            return `<button class="pill-btn" style="${v ? `background:${c}38; border-color:${c}; color:#fff;` : ''}" onclick="outXoverVis[${ch}][${i}]=!outXoverVis[${ch}][${i}]; buildUI();">${dspState.out_n[i]}</button>`;
           }).join('');
           bodyHtml = `
             <div class="widget">
@@ -2185,7 +2460,7 @@
               </div>
             </div>
             <div class="widget">
-              <div class="widget-header"><span>CROSSOVER FILTERS</span></div>
+              <div class="widget-header"><span>CROSSOVER FILTERS</span><button class="btn btn-slim btn-danger" onclick="resetXOverSection(${ch})">RST</button></div>
               <div class="widget-body">
                 <div class="ctrl-row">${createSelect('HPF Type', 'xo', ch, 't', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xt[ch])}${createFader('HPF Freq', 'xo', ch, 'fl', 20, 20000, dspState.xfl[ch], 'Hz')}</div>
                 <div class="ctrl-row">${createSelect('LPF Type', 'xo', ch, 'th', ['OFF', 'BW12', 'BW24', 'BW48', 'LR12', 'LR24', 'LR48'], dspState.xth[ch])}${createFader('LPF Freq', 'xo', ch, 'fh', 20, 20000, dspState.xfh[ch], 'Hz')}</div>
@@ -2210,10 +2485,23 @@
                   <div class="pill-btn ${tapMode === 1 ? 'active-orange' : ''}" onclick="setChannelTapMode(${ch}, 1)">512 TAPS (HI-RES 5.33ms)</div>
                 </div>
                 ${uiT === 0 ? `<div style="padding:18px; text-align:center; background:#121317; border-radius:6px; color:#888;">STANDARD MINIMUM-PHASE IIR ACTIVE (0.0 ms extra FIR latency)</div>` : ''}
-                ${uiT > 0 ? `<div class="graph-container graph-large"><canvas id="cvs-fir-${ch}"></canvas></div>` : ''}
+                ${uiT > 0 ? `
+                  <div class="graph-container graph-large">
+                    <canvas id="cvs-fir-${ch}"></canvas>
+                    ${uiT === 2 ? `
+                      <div class="graph-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#ff5252;"></span>MEASURED</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#00ADB5;"></span>FIR FILTER</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#69f0ae;"></span>PREDICTED</span>
+                      </div>` : `
+                      <div class="graph-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#00ADB5;"></span>${activeTaps}-TAP LINEAR-PHASE (XOVER + 7-BAND EQ)</span>
+                      </div>`}
+                  </div>` : ''}
                 ${uiT === 2 ? `
                   <div class="ctrl-row">
                     <button class="btn btn-primary" style="flex:1; padding:10px;" onclick="triggerFirFilePicker(${ch})">📂 ${hasF ? loadedFileNames[ch] : (espM === 2 ? `CUSTOM ${activeTaps}T FIR IN ESP32 MEMORY (IMPORT NEW)` : 'IMPORT MEASUREMENT (.TXT / .CSV)')}</button>
+                    ${(hasF || espM === 2) ? `<button class="btn btn-danger" style="padding:10px;" onclick="clearLoadedMeasurement(${ch})" title="Erase Imported File">🗑️</button>` : ''}
                   </div>
                   ${hasF ? `
                     <div class="ctrl-row">${createFader('Start Freq', 'firdes', ch, 'minF', 20, 20000, firMinFreq[ch], 'Hz')}${createFader('End Freq', 'firdes', ch, 'maxF', 20, 20000, firMaxFreq[ch], 'Hz')}</div>
@@ -2232,7 +2520,13 @@
           let apfOn = dspState.apfe[ch] === 1, m = dspState.apfm[ch] || 0;
           bodyHtml = `
             <div class="widget">
-              <div class="widget-header"><span>ALL-PASS / PHASE ROTATION</span><button class="btn btn-slim ${apfOn ? 'btn-primary' : ''}" onclick="dspState.apfe[${ch}]=${apfOn ? 0 : 1}; sendBLE('/api/set?type=apf&ch=${ch}&p=e&v=${apfOn ? 0 : 1}'); buildUI();">${apfOn ? 'ENABLED' : 'BYPASS'}</button></div>
+              <div class="widget-header">
+                <span>ALL-PASS / PHASE ROTATION</span>
+                <div class="widget-actions">
+                  <button class="btn btn-slim btn-danger" onclick="resetApfSection(${ch})">RST</button>
+                  <button class="btn btn-slim ${apfOn ? 'btn-primary' : ''}" onclick="dspState.apfe[${ch}]=${apfOn ? 0 : 1}; sendBLE('/api/set?type=apf&ch=${ch}&p=e&v=${apfOn ? 0 : 1}'); buildUI();">${apfOn ? 'ENABLED' : 'BYPASS'}</button>
+                </div>
+              </div>
               <div class="widget-body">
                 <div class="pill-group">
                   <div class="pill-btn ${m === 0 ? 'active-cyan' : ''}" onclick="dspState.apfm[${ch}]=0; sendBLE('/api/set?type=apf&ch=${ch}&p=m&v=0'); buildUI();">MANUAL APF (Q)</div>
@@ -2260,7 +2554,7 @@
           <div class="panel-scroll">${bodyHtml}</div>`;
       }
 
-      // 5. SYSTEM TAB
+      // 5. SYSTEM TAB (Now includes Tone Gen RST + Global Factory Reset Card matching Flutter V1.6!)
       document.getElementById('t-sys').innerHTML = `
         <div class="slim-header"><div class="slim-title">SYSTEM CONFIGURATION</div></div>
         <div class="panel-scroll">
@@ -2281,7 +2575,7 @@
             </div>
           </div>
           <div class="widget">
-            <div class="widget-header"><span>TONE GENERATOR</span></div>
+            <div class="widget-header"><span>TONE GENERATOR</span><button class="btn btn-slim btn-danger" onclick="resetToneGen()">RST</button></div>
             <div class="widget-body">
               <div class="ctrl-row">${createSelect('Mode', 'tone', 0, 'm', ['OFF', 'PINK NOISE', 'SINE WAVE'], dspState.tm)}${createSelect('Route To', 'tone', 0, 'r', ['ALL IN', 'IN A', 'IN B', 'OUT 1', 'OUT 2', 'OUT 3', 'OUT 4'], dspState.tr)}</div>
               <div class="ctrl-row">${createFader('Frequency', 'tone', 0, 'f', 20, 20000, dspState.tf, 'Hz')}${createFader('Gain', 'tone', 0, 'g', -60, 0, dspState.tg, 'dB')}</div>
@@ -2294,6 +2588,12 @@
               <div class="ctrl-row"><select id="ota-version" class="pro-sel" style="flex:2;"><option>Click FETCH...</option></select><button class="btn btn-primary" style="flex:1;" onclick="fetchGithubReleases()">FETCH GITHUB</button><button class="btn btn-danger" style="flex:1;" onclick="triggerOTA()">UPDATE</button></div>
             </div>
           </div>
+          <div class="widget">
+            <div class="widget-header"><span>RESET ALL INPUTS AND OUTPUTS</span></div>
+            <div class="widget-body">
+              <button class="btn btn-danger" style="padding:14px; font-size:11px; letter-spacing:1px;" onclick="doFactoryReset()">⚠️ FACTORY RESET ALL CHANNELS</button>
+            </div>
+          </div>
         </div>`;
 
       // 6. FRIZH FIR 4-WAY SMART AUTO-TUNE WIZARD TAB
@@ -2302,13 +2602,13 @@
       let presetChips = presetNames.map((nm, idx) => `<div class="pill-btn ${wizardActivePreset === idx ? 'active-amber' : ''}" onclick="applyWizardTargetPreset(${idx})">${nm}</div>`).join('');
       let nodePills = nodeLabels.map((nl, i) => {
         let g = wizardTargetGains[i];
-        return `<div class="pill-btn ${wizardSelectedNode === i ? 'active-amber' : ''}" onclick="wizardSelectedNode=${i}; buildUI(); setTimeout(()=>drawFrizhWizardGraph(),20);"><div>${nl}</div><div style="font-family:monospace; color:#fff;">${g >= 0 ? '+' : ''}${g.toFixed(1)}dB</div></div>`;
+        return `<div class="pill-btn ${wizardSelectedNode === i ? 'active-amber' : ''}" onclick="wizardSelectedNode=${i}; buildUI();"><div>${nl}</div><div id="wiz-node-val-${i}" style="font-family:monospace; color:#fff;">${g >= 0 ? '+' : ''}${g.toFixed(1)}dB</div></div>`;
       }).join('');
       let outCards = [0,1,2,3].map(c => {
         let sel = wizardSelectedOuts[c], col = chColors[c];
         let hpf = dspState.xt[c] > 0 ? dspState.xfl[c] + 'Hz' : '20Hz';
         let lpf = dspState.xth[c] > 0 ? (dspState.xfh[c] >= 1000 ? (dspState.xfh[c]/1000).toFixed(1)+'k' : dspState.xfh[c]+'Hz') : '20k';
-        return `<div class="pill-btn" style="${sel ? `background:${col}33; border-color:${col}; color:#fff;` : ''}" onclick="wizardSelectedOuts[${c}]=!wizardSelectedOuts[${c}]; buildUI(); setTimeout(()=>drawFrizhWizardGraph(),20);"><div>${sel ? '☑️' : '⬜'} ${dspState.out_n[c]}</div><div style="font-size:8.5px; color:${col}; font-family:monospace; margin-top:2px;">${hpf} - ${lpf}</div></div>`;
+        return `<div class="pill-btn" style="${sel ? `background:${col}33; border-color:${col}; color:#fff;` : ''}" onclick="wizardSelectedOuts[${c}]=!wizardSelectedOuts[${c}]; buildUI();"><div>${sel ? '☑️' : '⬜'} ${dspState.out_n[c]}</div><div style="font-size:8.5px; color:${col}; font-family:monospace; margin-top:2px;">${hpf} - ${lpf}</div></div>`;
       }).join('');
 
       document.getElementById('t-frizh').innerHTML = `
@@ -2317,11 +2617,19 @@
           <div class="widget">
             <div class="widget-header"><span>1. REFERENCE FILE & 7-NODE TARGET CURVE</span></div>
             <div class="widget-body">
-              <button class="btn btn-primary" style="padding:10px;" onclick="document.getElementById('wiz-file-input').click()">📂 ${wizardMeasurement.length > 0 ? `REF: ${wizardFileName} (${wizardMeasurement.length} pts)` : 'LOAD 20Hz-20kHz REFERENCE (.TXT / .CSV / .FRD)'}</button>
+              <div class="ctrl-row">
+                <button class="btn btn-primary" style="flex:1; padding:10px;" onclick="document.getElementById('wiz-file-input').click()">📂 ${wizardMeasurement.length > 0 ? `REF: ${wizardFileName} (${wizardMeasurement.length} pts)` : 'LOAD 20Hz-20kHz REFERENCE (.TXT / .CSV / .FRD)'}</button>
+                ${wizardMeasurement.length > 0 ? `<button class="btn btn-danger" style="padding:10px;" onclick="wizardMeasurement=[]; wizardFileName='No reference file loaded'; buildUI();" title="Clear Reference File">🗑️</button>` : ''}
+              </div>
               <div class="pill-group" style="overflow-x:auto;">${presetChips}</div>
               <div class="graph-container graph-xl">
                 <canvas id="cvs-frizh-wiz"></canvas>
-                <button class="graph-lock-btn ${!lockWizCurve ? 'unlocked' : ''}" onclick="lockWizCurve=!lockWizCurve; buildUI(); setTimeout(()=>drawFrizhWizardGraph(),20);">${lockWizCurve ? '🔒 LOCKED' : '👆 DRAW TARGET'}</button>
+                <div class="graph-legend">
+                  <span class="legend-item"><span class="legend-dot" style="background:#ff5252;"></span>MEASURED</span>
+                  <span class="legend-item"><span class="legend-dot" style="background:#ffd740;"></span>TARGET CURVE</span>
+                  <span class="legend-item"><span class="legend-dot" style="background:#69f0ae;"></span>PREDICTED</span>
+                </div>
+                <button class="graph-lock-btn ${!lockWizCurve ? 'unlocked' : ''}" onclick="lockWizCurve=!lockWizCurve; buildUI();">${lockWizCurve ? '🔒 LOCKED' : '👆 DRAW TARGET'}</button>
               </div>
               <div class="pill-group" style="overflow-x:auto;">${nodePills}</div>
               ${createFader(`Target Node ${nodeLabels[wizardSelectedNode]}`, 'wiz', 0, 'node', -12, 12, wizardTargetGains[wizardSelectedNode], 'dB', '', '0.5')}
@@ -2352,6 +2660,12 @@
             </div>
           </div>
         </div>`;
+
+      // Automatically repaint the active tab's canvas right after DOM rebuild so graphs NEVER go blank!
+      requestAnimationFrame(() => {
+        redrawActiveTabCanvases();
+        setTimeout(redrawActiveTabCanvases, 30);
+      });
     }
 
     function build7BandEqCardHtml(ch, isInput) {
@@ -2368,24 +2682,24 @@
       let bandTabs = [0,1,2,3,4,5,6].map(i => {
         let bt = tArr[i] || 0;
         let tag = bt === 1 ? ' LS' : (bt === 2 ? ' HS' : '');
-        return `<div class="pill-btn ${b === i ? 'active-cyan' : ''}" onclick="${isInput ? `activeEqBandIn[${ch}]=${i}` : `activeEqBandOut[${ch}]=${i}`}; buildUI(); setTimeout(()=>drawEqGraph(${ch},${isInput}),20);">B${i + 1}${tag}</div>`;
+        return `<div class="pill-btn ${b === i ? 'active-cyan' : ''}" onclick="${isInput ? `activeEqBandIn[${ch}]=${i}` : `activeEqBandOut[${ch}]=${i}`}; buildUI();">B${i + 1}${tag}</div>`;
       }).join('');
 
       let curT = tArr[b] || 0;
       let typeChips = ['PEAKING (BELL)', 'LOW SHELF', 'HIGH SHELF'].map((lbl, tv) => `
-        <div class="pill-btn ${curT === tv ? 'active-cyan' : ''}" onclick="${isInput ? `dspState.ieqt[${ch}][${b}]=${tv}` : `dspState.eqt[${ch}][${b}]=${tv}`}; sendUpdate('${prefix}', ${ch}, 't', ${tv}, ${b}); buildUI(); setTimeout(()=>drawEqGraph(${ch},${isInput}),20);">${lbl}</div>
+        <div class="pill-btn ${curT === tv ? 'active-cyan' : ''}" onclick="${isInput ? `dspState.ieqt[${ch}][${b}]=${tv}` : `dspState.eqt[${ch}][${b}]=${tv}`}; sendUpdate('${prefix}', ${ch}, 't', ${tv}, ${b}); buildUI();">${lbl}</div>
       `).join('');
 
       return `
         <div class="widget ${byp ? 'bypassed' : ''}">
           <div class="widget-header">
             <span>${isInput ? 'INPUT 7-BAND EQUALIZER' : 'OUTPUT 7-BAND PARAMETRIC EQ'}</span>
-            <button class="btn btn-slim ${!byp ? 'btn-primary' : 'btn-danger'}" onclick="${isInput ? `dspState.ieqb[${ch}]=${byp ? 0 : 1}` : `dspState.eqb[${ch}]=${byp ? 0 : 1}`}; sendBLE('/api/set?type=${bypCmd}&ch=${ch}&p=v&v=${byp ? 0 : 1}'); buildUI(); setTimeout(()=>drawEqGraph(${ch},${isInput}),20);">${byp ? 'BYPASSED' : 'ACTIVE'}</button>
+            <button class="btn btn-slim ${!byp ? 'btn-primary' : 'btn-danger'}" onclick="${isInput ? `dspState.ieqb[${ch}]=${byp ? 0 : 1}` : `dspState.eqb[${ch}]=${byp ? 0 : 1}`}; sendBLE('/api/set?type=${bypCmd}&ch=${ch}&p=v&v=${byp ? 0 : 1}'); buildUI();">${byp ? 'BYPASSED' : 'ACTIVE'}</button>
           </div>
           <div class="widget-body">
             <div class="graph-container graph-large">
               <canvas id="cvs-eq-${isInput ? 'in' : 'out'}-${ch}"></canvas>
-              <button class="graph-lock-btn ${!isLocked ? 'unlocked' : ''}" onclick="${isInput ? `lockInEq[${ch}]=!lockInEq[${ch}]` : `lockOutEq[${ch}]=!lockOutEq[${ch}]`}; buildUI(); setTimeout(()=>drawEqGraph(${ch},${isInput}),20);">${isLocked ? '🔒 LOCKED' : '🔓 EDIT'}</button>
+              <button class="graph-lock-btn ${!isLocked ? 'unlocked' : ''}" onclick="${isInput ? `lockInEq[${ch}]=!lockInEq[${ch}]` : `lockOutEq[${ch}]=!lockOutEq[${ch}]`}; buildUI();">${isLocked ? '🔒 LOCKED' : '🔓 EDIT'}</button>
             </div>
             <div class="pill-group" style="overflow-x:auto;">${bandTabs}</div>
             <div class="pill-group">${typeChips}</div>
@@ -2393,6 +2707,10 @@
             <div class="ctrl-row">
               ${createFader('Gain', prefix, ch, 'g', -12, 12, gArr[b], 'dB', b)}
               ${createFader('Q-Factor', prefix, ch, 'q', 0.1, 10, qArr[b], '', b, '0.1')}
+            </div>
+            <div class="ctrl-row" style="margin-top:4px;">
+              <button class="btn" style="flex:1; padding:9px;" onclick="resetEqBand(${ch}, ${b}, ${isInput})">🔄 RESET B${b + 1}</button>
+              <button class="btn btn-danger" style="flex:1; padding:9px;" onclick="resetAllEqBands(${ch}, ${isInput})">⚠️ RESET ALL</button>
             </div>
           </div>
         </div>`;
@@ -2407,7 +2725,10 @@
       let rl = isInput ? dspState.icrel[ch] : dspState.crel[ch];
       return `
         <div class="widget">
-          <div class="widget-header"><span>${isInput ? 'INPUT COMPRESSOR' : 'OUTPUT COMPRESSOR / LIMITER'}</span></div>
+          <div class="widget-header">
+            <span>${isInput ? 'INPUT COMPRESSOR' : 'OUTPUT COMPRESSOR / LIMITER'}</span>
+            <button class="btn btn-slim btn-danger" onclick="resetCompSection(${ch}, ${isInput})">RST</button>
+          </div>
           <div class="widget-body">
             <div class="comp-layout">
               <div class="graph-container" style="flex:1;"><canvas id="cvs-comp-${isInput ? 'in' : 'out'}-${ch}"></canvas></div>
