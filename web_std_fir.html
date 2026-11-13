@@ -530,13 +530,21 @@
           let delayStep = 0;
           for (let i = 0; i < 4; i++) {
             let m = dspState.firm[i] || 0;
-            if (!(firUiTab[i] === 2 && loadedMeasurements[i].length > 0)) firUiTab[i] = m;
-            if (m === 2 && activeCustomFirTaps[i].length === 0) {
+            firUiTab[i] = m;
+            if (m === 2) {
+              activeCustomFirTaps[i] = [];
               let chIdx = i;
               setTimeout(() => {
                 if (bleDevice && bleDevice.gatt.connected) sendBLE(`/api/getfir?ch=${chIdx}`);
               }, 200 + delayStep * 450);
               delayStep++;
+            } else {
+              activeCustomFirTaps[i] = [];
+              activeInjectedFirDb[i] = new Array(257).fill(0);
+              if (loadedMeasurements[i].length === 0) {
+                previewFirMagDb[i] = new Array(257).fill(0);
+                loadedFileNames[i] = "No file loaded";
+              }
             }
           }
           buildUI();
