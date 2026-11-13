@@ -410,6 +410,7 @@
       let taps = activeCustomFirTaps[ch];
       if (!taps || taps.length === 0) return;
       let N = taps.length, halfN = N >> 1;
+      if (dspState.firt) dspState.firt[ch] = (N === 512) ? 1 : 0;
       let bins = new Array(257).fill(0.0);
       for (let k = 0; k <= halfN && k < 257; k++) {
         let w = (2.0 * Math.PI * k) / N;
@@ -423,10 +424,11 @@
         bins[k] = Math.max(-40.0, Math.min(20.0, 20.0 * Math.log10(mag + 1e-12)));
       }
       activeInjectedFirDb[ch] = bins;
-      previewFirMagDb[ch] = [...bins];
-      if (loadedFileNames[ch] === "No file loaded") {
+      if (loadedMeasurements[ch].length === 0) {
+        previewFirMagDb[ch] = [...bins];
         loadedFileNames[ch] = `ESP32 Memory (${N}T)`;
       }
+      requestAnimationFrame(redrawActiveTabCanvases);
     }
 
     function handleNotifications(event) {
@@ -888,7 +890,11 @@
         previewFirMagDb[ch][k] = 0.25 * prev + 0.5 * curr + 0.25 * next;
       }
     }
-
+    async function waitBleQueueDrain() {
+      while (bleQueue.length > 0 || isWriting) {
+        await new Promise(r => setTimeout(r, 25));
+      }
+    }
     async function uploadTapsToEsp32(ch, taps, targetTaps) {
       if (isUploadingFir[ch]) return false;
       let N = targetTaps || getChannelTaps(ch);
@@ -905,14 +911,15 @@
         for (let i = 0; i < N; i++) cleanTaps[i] /= (rmsGain / 2.0);
       }
 
+      await waitBleQueueDrain();
       for (let idx = 0; idx < N; idx += 32) {
         let chunkStr = cleanTaps.slice(idx, Math.min(idx + 32, N)).map(e => e.toFixed(6)).join(',');
         let nParam = (idx === 0) ? `&n=${N}` : '';
         sendBLE(`/api/fir?ch=${ch}&idx=${idx}${nParam}&t=${chunkStr}`);
+        await waitBleQueueDrain();
         firUploadProgress[ch] = Math.min(1.0, (idx + 32) / N);
         let progEl = document.getElementById(`fir-prog-txt-${ch}`);
         if (progEl) progEl.innerText = `Injecting ${N} Taps... ${Math.round(firUploadProgress[ch] * 100)}%`;
-        await new Promise(r => setTimeout(r, 55));
       }
 
       activeCustomFirTaps[ch] = [...cleanTaps];
@@ -1078,7 +1085,7 @@
         sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=f&v=${bands[b].f}`);
         sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=g&v=${bands[b].g}`);
         sendBLE(`/api/set?type=eq&ch=${ch}&b=${b}&p=q&v=${bands[b].q}`);
-        await new Promise(r => setTimeout(r, 90));
+        await waitBleQueueDrain();
       }
     }
 
