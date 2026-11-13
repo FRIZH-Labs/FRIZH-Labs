@@ -185,6 +185,16 @@
       </div>
     </div>
   </div>
+  <!-- HEAVY BLE / DSP TRANSACTION LOADING OVERLAY -->
+  <div id="busy-loading-overlay" class="overlay hidden" style="z-index: 20000;">
+    <div class="dialog" style="border-color: var(--accent-cyan); min-width: 310px;">
+      <div style="font-size: 14px; font-weight: 900; color: var(--accent-cyan); letter-spacing: 1.2px; margin-bottom: 10px;" id="busy-title">PROCESSING DSP...</div>
+      <div style="font-size: 11px; color: var(--text-main); margin-bottom: 14px;" id="busy-subtitle">Muting audio & syncing 512-Tap FIR...</div>
+      <div style="width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden;">
+        <div id="busy-prog-bar" style="width: 100%; height: 100%; background: var(--accent-orange); transition: width 0.15s;"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="app-wrapper">
     <!-- MAIN SIDEBAR NAV (10 TABS Matching Flutter App V1.6) -->
@@ -388,6 +398,27 @@
       setTimeout(processBleQueue, 40);
     }
     function sendBLE(cmd) { bleQueue.push(cmd); processBleQueue(); }
+    let isHeavyBusy = false;
+    function showBusyModal(show, title = "PROCESSING DSP...", subtitle = "Please wait, syncing with ESP32...", progPct = null) {
+      isHeavyBusy = show;
+      let el = document.getElementById('busy-loading-overlay');
+      if (!el) return;
+      if (show) {
+        document.getElementById('busy-title').innerText = title;
+        document.getElementById('busy-subtitle').innerText = subtitle;
+        let bar = document.getElementById('busy-prog-bar');
+        bar.style.width = (progPct !== null ? Math.round(progPct * 100) : 100) + '%';
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    async function waitBleQueueDrain() {
+      while (bleQueue.length > 0 || isWriting) {
+        await new Promise(r => setTimeout(r, 20));
+      }
+    }
 
     function calcSimGr(isInput, ch) {
       if (!dspState.ct || !dspState.ict) return 0;
@@ -424,8 +455,8 @@
         bins[k] = Math.max(-40.0, Math.min(20.0, 20.0 * Math.log10(mag + 1e-12)));
       }
       activeInjectedFirDb[ch] = bins;
-      if (loadedMeasurements[ch].length === 0) {
-        previewFirMagDb[ch] = [...bins];
+      previewFirMagDb[ch] = [...bins];
+      if (loadedFileNames[ch] === "No file loaded") {
         loadedFileNames[ch] = `ESP32 Memory (${N}T)`;
       }
       requestAnimationFrame(redrawActiveTabCanvases);
@@ -918,17 +949,67 @@
         sendBLE(`/api/fir?ch=${ch}&idx=${idx}${nParam}&t=${chunkStr}`);
         await waitBleQueueDrain();
         firUploadProgress[ch] = Math.min(1.0, (idx + 32) / N);
-        let progEl = document.getElementById(`fir-prog-txt-${ch}`);
-        if (progEl) progEl.innerText = `Injecting ${N} Taps... ${Math.round(firUploadProgress[ch] * 100)}%`;
+        showBusyModal(true, `INJECTING ${N}-TAP FIR (OUT ${ch + 1})`, `Uploading tap ${Math.min(idx + 32, N)} / ${N} (${Math.round(firUploadProgress[ch] * 100)}%)...`, firUploadProgress[ch]);
       }
 
       activeCustomFirTaps[ch] = [...cleanTaps];
       dspState.firm[ch] = 2;
       dspState.firt[ch] = (N === 512) ? 1 : 0;
       firUiTab[ch] = 2;
+      recomputeCustomFirCurveFromTaps(ch);
       isUploadingFir[ch] = false;
       buildUI();
       return true;
+    }
+
+    async function synthesizeAndInjectAutoFir(ch) {
+      if (!loadedMeasurements[ch] || loadedMeasurements[ch].length === 0) return;
+      computeFirPreview(ch);
+      let N = getChannelTaps(ch);
+      let halfN = N >> 1;
+      let minF = firMinFreq[ch], maxF = firMaxFreq[ch];
+      let usePhase = firCorrectPhase[ch];
+
+      showBusyModal(true, `SYNTHESIZING ${N}-TAP FIR`, `Computing ${N}-Tap impulse response for Output ${ch + 1}...`, 0.05);
+      await waitBleQueueDrain();
+      sendBLE('/api/busy?v=1');
+      await waitBleQueueDrain();
+
+      let magLin = new Array(halfN + 1).fill(1.0);
+      let phaseRad = new Array(halfN + 1).fill(0.0);
+      for (let k = 1; k <= halfN; k++) {
+        let f = (k * 48000.0) / N;
+        magLin[k] = Math.pow(10.0, previewFirMagDb[ch][k] / 20.0);
+        if (usePhase && f >= minF && f <= maxF) {
+          let m = interpolateMeas(loadedMeasurements[ch], f);
+          phaseRad[k] = -(m.p * Math.PI / 180.0) * m.c;
+        }
+      }
+
+      let taps = new Array(N).fill(0.0);
+      let center = (N - 1) / 2.0;
+      for (let n = 0; n < N; n++) {
+        let m = n - center;
+        let sum = magLin[0];
+        for (let k = 1; k < halfN; k++) {
+          sum += 2.0 * magLin[k] * Math.cos((2.0 * Math.PI * k * m / N) + phaseRad[k]);
+        }
+        sum += magLin[halfN] * math.cos(Math.PI * m);
+        let h = sum / N;
+        let wNorm = (2.0 * Math.PI * n) / (N - 1);
+        let win = 0.35875 - 0.48829 * Math.cos(wNorm) + 0.14128 * Math.cos(2.0 * wNorm) - 0.01168 * Math.cos(3.0 * wNorm);
+        taps[n] = h * win;
+      }
+
+      let ok = await uploadTapsToEsp32(ch, taps, N);
+      if (ok) {
+        sendBLE('/api/save_now');
+        await waitBleQueueDrain();
+        await new Promise(r => setTimeout(r, 350));
+      }
+      sendBLE('/api/busy?v=0');
+      await waitBleQueueDrain();
+      showBusyModal(false);
     }
 
     async function synthesizeAndInjectAutoFir(ch) {
@@ -1158,6 +1239,10 @@
       if (isWizardRunning) return;
 
       isWizardRunning = true;
+      showBusyModal(true, `FRIZH FIR SMART AUTO-TUNE (${wizardTapMode === 1 ? 512 : 256}T)`, "Muting audio & analyzing 20Hz-20kHz reference...", 0.05);
+      await waitBleQueueDrain();
+      sendBLE('/api/busy?v=1');
+      await waitBleQueueDrain();
       wizardStatusText = "Analyzing 20Hz-20kHz acoustic reference...";
       buildUI();
 
@@ -1293,9 +1378,18 @@
             if (ok) activeInjectedFirDb[ch] = [...previewFirMagDb[ch]];
           }
         }
+        showBusyModal(true, "SAVING TO ESP32 FLASH", "Committing all 4 channels & 512-Tap FIR filters...", 0.98);
+        sendBLE('/api/save_now');
+        await waitBleQueueDrain();
+        await new Promise(r => setTimeout(r, 500));
+        sendBLE('/api/busy?v=0');
+        await waitBleQueueDrain();
+        showBusyModal(false);
         wizardStatusText = "FRIZH FIR Auto-Tune Complete!";
-        alert("FRIZH FIR Auto-Tune applied to selected outputs!");
+        alert("FRIZH FIR Auto-Tune applied & saved to selected outputs!");
       } catch (err) {
+        sendBLE('/api/busy?v=0');
+        showBusyModal(false);
         wizardStatusText = "Error: " + err;
       }
       isWizardRunning = false;
@@ -2209,13 +2303,13 @@
       buildUI();
     }
 
-    // GLOBAL HARDWARE FACTORY RESET (Matches Flutter V1.6: 1 single /api/preset?act=factory command!)
-    function doFactoryReset() {
+    async function doFactoryReset() {
       if (!confirm("FACTORY RESET ALL CHANNELS?\nAre you sure? This will wipe all current input and output settings and return them to default values.")) return;
       Object.values(timers).forEach(t => clearTimeout(t));
       timers = {};
       bleQueue = [];
 
+      showBusyModal(true, "FACTORY RESETTING DSP", "Muting audio & restoring all channels to flat default...");
       for (let ch = 0; ch < 4; ch++) {
         loadedMeasurements[ch] = [];
         loadedFileNames[ch] = "No file loaded";
@@ -2227,8 +2321,42 @@
 
       dspState = {};
       ensureDspStateDefaults();
+      sendBLE("/api/busy?v=1");
       sendBLE("/api/preset?act=factory");
+      await waitBleQueueDrain();
+      await new Promise(r => setTimeout(r, 900));
+      sendBLE("/api/busy?v=0");
+      await waitBleQueueDrain();
+      showBusyModal(false);
       buildUI();
+    }
+
+    async function doPreset(act) {
+      let slot = parseInt(document.getElementById('sys-preset-slot').value);
+      if ((act === 'save' || act === 'rename') && slot >= 6) return alert("Slots 6-8 are factory protected.");
+      if (act === 'rename') {
+        let n = prompt(`New name for Slot ${slot} (Max 5 chars):`);
+        if (n !== null) {
+          showBusyModal(true, `RENAMING SLOT ${slot}`, "Saving preset name...");
+          sendBLE(`/api/preset?act=rename&slot=${slot}&name=${n.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g,'')}`);
+          await waitBleQueueDrain();
+          await new Promise(r => setTimeout(r, 400));
+          showBusyModal(false);
+        }
+      } else if (confirm(`${act.toUpperCase()} Slot ${slot}?`)) {
+        showBusyModal(true, `${act.toUpperCase()}ING SLOT ${slot}`, "Muting audio & syncing 512-Tap FIR flash memory...");
+        sendBLE("/api/busy?v=1");
+        if (act === 'load') {
+          for (let i = 0; i < 4; i++) activeCustomFirTaps[i] = [];
+        }
+        sendBLE(`/api/preset?act=${act}&slot=${slot}`);
+        await waitBleQueueDrain();
+        await new Promise(r => setTimeout(r, act === 'load' ? 2200 : 900));
+        sendBLE("/api/busy?v=0");
+        await waitBleQueueDrain();
+        showBusyModal(false);
+        buildUI();
+      }
     }
     function selectFirTab(ch, tab) {
       firUiTab[ch] = tab;
@@ -2272,18 +2400,6 @@
       let ssid = document.getElementById('ota-ssid').value, pass = document.getElementById('ota-pass').value, ver = document.getElementById('ota-version').value;
       if(!ssid || !ver || ver.includes('Fetching')) return alert("Enter WiFi SSID and select a firmware version.");
       if(confirm("Start OTA Firmware Update?")) sendBLE(`/api/ota?s=${ssid}&p=${pass}&v=${ver}`);
-    }
-
-    function doPreset(act) {
-      let slot = parseInt(document.getElementById('sys-preset-slot').value);
-      if ((act === 'save' || act === 'rename') && slot >= 6) return alert("Slots 6-8 are factory protected.");
-      if (act === 'rename') {
-        let n = prompt(`New name for Slot ${slot} (Max 5 chars):`);
-        if (n !== null) sendBLE(`/api/preset?act=rename&slot=${slot}&name=${n.substring(0,5).toUpperCase().replace(/[^A-Z0-9 ]/g,'')}`);
-      } else if (confirm(`${act.toUpperCase()} Slot ${slot}?`)) {
-        sendBLE(`/api/preset?act=${act}&slot=${slot}`);
-        if (act === 'load') setTimeout(() => sendBLE('/api/dump'), 1000);
-      }
     }
 
     /* --- MASTER SUB-TABBED UI BUILDER --- */
