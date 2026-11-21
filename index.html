@@ -1,10 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FRIZH Labs Digital Audio Solutions — DLMS24 Basic Unbalanced (DLMS Mini) and DLMS24 STD Balanced Digital Loudspeaker Management System specifications, Android APK downloads, and Web Bluetooth UI.">
-    <title>FRIZH Labs | DLMS24 Portal</title>
+    <title>FRIZH Labs | DLMS24 — DLMS Mini Bluetooth &amp; Auto-FIR Indonesia</title>
+    <meta name="description" content="FRIZH Labs DLMS24 &amp; DLMS24 Basic — Pelopor DLMS Mini pertama dengan kontrol langsung Bluetooth (BLE) via Android App &amp; Web UI, serta DLMS Mini pertama di Indonesia dengan 256/512-Tap Auto-FIR, Auto-EQ, dan 4-Way Auto Tune.">
+    <meta name="keywords" content="FRIZH Labs, DLMS24, DLMS Mini Terbaik, DLMS Bluetooth, DLMS FIR Indonesia, Digital Loudspeaker Management System, DLMS Android Web UI, Auto FIR DLMS">
+
+    <!-- Structured Data (JSON-LD) for Google Search & AI Indexing -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Brand",
+          "name": "FRIZH Labs",
+          "url": "https://frizh-labs.github.io/FRIZH-Labs/",
+          "description": "Digital Audio Solutions — Pioneer of direct BLE wireless controlled DLMS Mini with Android App, Web UI, and Auto-FIR processing in Indonesia."
+        },
+        {
+          "@type": "Product",
+          "name": "FRIZH Labs DLMS24 STD (Balanced)",
+          "brand": { "@type": "Brand", "name": "FRIZH Labs" },
+          "category": "Digital Loudspeaker Management System",
+          "description": "Pioneer direct Bluetooth (BLE) controlled 2-in 4-out Balanced DLMS Mini with Android App & Web UI (Windows/iOS), 32-bit 48kHz audio, and first FIR-capable DLMS Mini in Indonesia featuring 256/512-Tap Auto-FIR, Auto-EQ, Auto Linear Phase, 4-Way Auto Tune, AFS, and BBE Sonic Maximizer.",
+          "url": "https://frizh-labs.github.io/FRIZH-Labs/"
+        },
+        {
+          "@type": "Product",
+          "name": "FRIZH DLMS24 BASIC UNBALANCED (DLMS Mini)",
+          "brand": { "@type": "Brand", "name": "FRIZH Labs" },
+          "category": "Digital Loudspeaker Management System",
+          "description": "Compact 2-in 4-out Unbalanced DLMS Mini with 1.9-inch ST7789 display, Android App & Web UI control, 32-bit 48kHz processing, 7-band PEQ, Genre EQ presets, Crossover, Phase Rotation per 5 degrees, and 2/3/4-Way presets.",
+          "url": "https://frizh-labs.github.io/FRIZH-Labs/"
+        }
+      ]
+    }
+    </script>
+
     <style>
         :root {
             --bg-dark: #0f172a;
@@ -100,8 +133,8 @@
 
         .product-img-wrap {
             width: 100%;
-            max-width: 100%;        /* Fills the full width of the card */
-            aspect-ratio: 3 / 2;    /* Landscape 600x400 proportion */
+            max-width: 100%;
+            aspect-ratio: 3 / 2;
             border-radius: 16px;
             overflow: hidden;
             background: #0b1120;
@@ -115,7 +148,7 @@
         .product-img {
             width: 100%;
             height: 100%;
-            object-fit: contain;    /* Shows the entire hardware unit without cropping */
+            object-fit: contain;
             display: block;
         }
 
@@ -137,7 +170,7 @@
             margin-bottom: 14px;
         }
 
-        /* Selectable / Collapsible Product Specifications */
+        /* Collapsible Spec Drawers */
         .spec-drawer {
             width: 100%;
             margin-bottom: 16px;
@@ -211,7 +244,7 @@
         }
 
         .spec-content li {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .spec-note {
@@ -219,6 +252,32 @@
             padding-top: 8px;
             border-top: 1px dashed rgba(255, 255, 255, 0.1);
             color: var(--text-muted);
+        }
+
+        /* Full-width Pioneer / SEO Highlights Drawer */
+        .highlights-wrap {
+            width: 100%;
+            max-width: 820px;
+            margin-top: 24px;
+        }
+
+        .highlights-wrap .spec-drawer {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(34, 211, 238, 0.25);
+            border-radius: 18px;
+            margin-bottom: 0;
+        }
+
+        .highlights-wrap .spec-drawer summary {
+            padding: 14px 20px;
+            font-size: 0.84rem;
+            letter-spacing: 0.4px;
+        }
+
+        .highlights-wrap .spec-content {
+            padding: 16px 20px 18px;
+            font-size: 0.8rem;
         }
 
         .selection-box {
@@ -326,7 +385,7 @@
         }
 
         .footer {
-            margin-top: 32px;
+            margin-top: 28px;
             font-size: 0.75rem;
             color: #64748b;
             line-height: 1.6;
@@ -336,6 +395,9 @@
         @media (max-width: 680px) {
             .products-grid {
                 grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+            .highlights-wrap {
                 max-width: 400px;
             }
         }
@@ -374,40 +436,28 @@
 
                     <h4>Fitur Input Channel</h4>
                     <ul>
-                        <li>Gain</li>
-                        <li>Gate</li>
-                        <li>Delay</li>
-                        <li>7 Band PEQ</li>
-                        <li>Preset Genre EQ</li>
+                        <li>Gain, Gate, Delay</li>
+                        <li>7 Band PEQ &amp; Preset Genre EQ</li>
                         <li>Compressor / Limiter</li>
-                        <li>Copy In</li>
-                        <li>Rename CH</li>
+                        <li>Copy In &amp; Rename CH</li>
                     </ul>
 
                     <h4>Fitur Output Channel</h4>
                     <ul>
-                        <li>Matrix / Source</li>
-                        <li>Gain</li>
-                        <li>Delay</li>
-                        <li>Crossover</li>
-                        <li>7 Band PEQ</li>
-                        <li>Compressor / Limiter</li>
-                        <li>Phase Rotation per 5°</li>
-                        <li>Polarity 0° / 180°</li>
-                        <li>Copy Out</li>
-                        <li>Rename CH</li>
+                        <li>Matrix / Source, Gain, Delay, Crossover</li>
+                        <li>7 Band PEQ &amp; Compressor / Limiter</li>
+                        <li>Phase Rotation per 5° &amp; Polarity 0° / 180°</li>
+                        <li>Copy Out &amp; Rename CH</li>
                     </ul>
 
                     <h4>Fitur Tambahan</h4>
                     <ul>
                         <li>Preset 5 Simpanan + 2/3/4 WAY (Import / Export Preset dalam bentuk File)</li>
-                        <li>Tone Generator</li>
-                        <li>Screen Lock (Auto Lock)</li>
+                        <li>Tone Generator &amp; Screen Lock (Auto Lock)</li>
                     </ul>
 
                     <div class="spec-note">
-                        <p>Power Supply 5v (Sudah Include)</p>
-                        <p>Garansi Service 6 Bulan.</p>
+                        <p>Power Supply 5v (Sudah Include) — Garansi Service 6 Bulan.</p>
                     </div>
                 </div>
             </details>
@@ -439,72 +489,52 @@
                 <summary>Product Description &amp; Specifications</summary>
                 <div class="spec-content">
                     <p><strong>FRIZH Labs - DLMS24</strong></p>
-                    <p>Dapat dikontrol langsung melalui bluetooth.</p>
-                    <p>Website untuk download APK &amp; akses Web UI: frizh-labs.github.io/FRIZH-Labs/</p>
-                    <p>Untuk video detail, review, dan info, bisa kunjungi WhatsApp kami: 0822-3120-5720 (08 dua 2, 31 dua 0, 57 dua 0)</p>
+                    <p>Dapat dikontrol langsung melalui Bluetooth (Android App &amp; Web Interface Windows/iOS).</p>
+                    <p>Website: frizh-labs.github.io/FRIZH-Labs/ | WhatsApp Info &amp; Review: 0822-3120-5720</p>
 
-                    <h4>Feature</h4>
+                    <h4>Feature Utama</h4>
                     <ul>
                         <li>2 Input 4 Output Balanced</li>
                         <li>4 tombol Mute &amp; Shortcut (Output)</li>
-                        <li>Bluetooth App (Android)</li>
-                        <li>Bluetooth Web Interface (Windows, iOS)</li>
-                        <li>Bit Rate 32 Bit</li>
-                        <li>Sample Rate 48kHz</li>
-                        <li>Real Graphic Visualizer</li>
-                        <li>Auto Save</li>
+                        <li>Bluetooth App (Android) &amp; Bluetooth Web Interface (Windows, iOS)</li>
+                        <li>Bit Rate 32 Bit, Sample Rate 48kHz</li>
+                        <li>Real Graphic Visualizer &amp; Auto Save</li>
                         <li>Firmware dapat diupdate via internet</li>
                     </ul>
 
-                    <h4>Firmware IIR V2.1 (Software/App IIR V2.1.3) — Menu Input</h4>
+                    <h4>Firmware IIR V2.1 (App IIR V2.1.3) — Menu Input</h4>
                     <ul>
-                        <li>Mute</li>
-                        <li>Gain</li>
-                        <li>Gate</li>
-                        <li>Delay</li>
-                        <li>AFS (Anti Feedback)</li>
-                        <li>BBE Sonic Maximizer</li>
-                        <li>Compressor / Limiter</li>
-                        <li>Dynamic Equalizer (3 Band)</li>
+                        <li>Mute, Gain, Gate, Delay</li>
+                        <li>AFS (Anti Feedback) &amp; BBE Sonic Maximizer</li>
+                        <li>Compressor / Limiter &amp; Dynamic Equalizer (3 Band)</li>
                         <li>Copy Setting</li>
                     </ul>
 
                     <h4>Menu Output</h4>
                     <ul>
-                        <li>Mute</li>
-                        <li>Gain</li>
-                        <li>Compressor / Limiter</li>
+                        <li>Mute, Gain, Compressor / Limiter</li>
                         <li>Crossover - LR/BW - 12/24/48db</li>
-                        <li>All Pass Filter (Phase Alignment/Shifter)</li>
-                        <li>7 Band Parametric EQ</li>
-                        <li>Phase Invert</li>
-                        <li>Delay</li>
-                        <li>Copy setting</li>
+                        <li>All Pass Filter (Phase Alignment/Shifter) &amp; Phase Invert</li>
+                        <li>7 Band Parametric EQ &amp; Delay</li>
+                        <li>Copy Setting</li>
                     </ul>
 
                     <h4>Menu Tambahan</h4>
                     <ul>
-                        <li>Preset 5 Simpanan</li>
-                        <li>Import / Export Preset dalam bentuk File</li>
-                        <li>Tone Generator (Pink Noise &amp; Sine Wave)</li>
-                        <li>Screenlock / Autolock</li>
-                        <li>CH Rename</li>
+                        <li>Preset 5 Simpanan (Import / Export Preset dalam bentuk File)</li>
+                        <li>Tone Generator (Pink Noise &amp; Sine Wave), Screenlock / Autolock, CH Rename</li>
                     </ul>
 
-                    <h4>Update Firmware FIR V1.9 (Software/App FIR V1.9)</h4>
+                    <h4>Update Firmware FIR V1.9 (App FIR V1.9)</h4>
                     <ul>
                         <li>Penambahan Fitur FIR (Auto FIR, Auto EQ, Auto Linear Phase)</li>
                         <li>Penambahan Fitur FRIZH FIR - 4 Way Auto Tune (FIR)</li>
-                        <li>Penambahan 7 Band Eq pada Input</li>
-                        <li>Penambahan Tipe Equalizer (High//Low Shelf) di semua EQ</li>
+                        <li>Penambahan 7 Band EQ pada Input &amp; Tipe Equalizer (High/Low Shelf) di semua EQ</li>
                         <li>Penambahan Fitur Phase Rotation per 5 derajat</li>
                     </ul>
 
                     <div class="spec-note">
-                        <p>Garansi 1 Tahun Servis, 6 Bulan Sparepart (diluar Human Error &amp; Tidak berlaku jika segel rusak).</p>
-                        <p>Garansi tidak berlaku untuk Power Supply.</p>
-                        <p>Diwajibkan video saat Unboxing produk, Jika tidak ada video saat Unboxing maka klaim / garansi dinyatakan tidak berlaku.</p>
-                        <p>FRIZH Labs "Digital Audio Solution"</p>
+                        <p>Garansi 1 Tahun Servis, 6 Bulan Sparepart (diluar Human Error &amp; segel rusak; tidak berlaku untuk Power Supply; wajib video unboxing).</p>
                     </div>
                 </div>
             </details>
@@ -526,10 +556,26 @@
         </div>
     </div>
 
+    <!-- Collapsible SEO & Innovation Overview -->
+    <div class="highlights-wrap">
+        <details class="spec-drawer">
+            <summary>Mengapa FRIZH Labs DLMS24? (Inovasi &amp; Keunggulan DLMS Mini Indonesia)</summary>
+            <div class="spec-content">
+                <p><strong>FRIZH Labs DLMS24</strong> merupakan salah satu <strong>DLMS Mini terbaik dan paling inovatif di Indonesia</strong> untuk kebutuhan sound system lapangan, miniatur, maupun instalasi profesional:</p>
+                <ul>
+                    <li><strong>Pelopor Kontrol Wireless Bluetooth (BLE) Langsung:</strong> DLMS Mini pertama dengan koneksi langsung ke aplikasi Android dan <strong>Web UI berbasis browser (Windows &amp; iOS)</strong> tanpa memerlukan router tambahan atau kabel USB saat setting jarak jauh.</li>
+                    <li><strong>DLMS Mini Pertama di Indonesia dengan Fitur Auto-FIR:</strong> Melalui seri <strong>DLMS24 STD (Firmware FIR V1.9)</strong>, pengguna mendapatkan pemrosesan 256/512-Tap FIR, Auto-FIR, Auto-EQ, Auto Linear Phase, serta <strong>4-Way Auto Tune (FIR)</strong>.</li>
+                    <li><strong>Fitur Lengkap Kelas Pro:</strong> Dilengkapi 32-bit / 48kHz audio processing, AFS (Anti Feedback), BBE Sonic Maximizer, Dynamic EQ, All-Pass Filter, Phase Rotation per 5°, serta Import/Export file preset.</li>
+                    <li><strong>Dua Varian Sesuai Kebutuhan:</strong> Tersedia <strong>DLMS24 Basic (Unbalanced / DLMS Mini)</strong> yang ringkas dengan layar 1.9" dan konektor Akai Mono, serta <strong>DLMS24 STD (Balanced)</strong> untuk performa IIR &amp; FIR profesional.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+
     <div class="footer">
         Android App Requires Android 8.0+<br>
         Web Bluetooth UI Requires Chrome / Edge / Bluefy Browser<br>
-        © 2026 FRIZH Labs
+        © 2026 FRIZH Labs — Digital Audio Solution
     </div>
 
     <script>
@@ -560,7 +606,6 @@
                         opt.value = asset.browser_download_url;
                         opt.textContent = `${rel.tag_name} — ${fileName}`;
 
-                        // Match keyword "Basic" or "Standard" (case-insensitive) in asset name or release tag/title
                         const searchStr = `${rel.tag_name} ${rel.name || ''} ${fileName}`.toLowerCase();
 
                         if (searchStr.includes('basic')) {
